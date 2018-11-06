@@ -11,15 +11,15 @@ check_cxx_source_compiles("
 #include <execinfo.h>
 
 int main() {
-    void *buffer[5];
-    int nptrs = backtrace(buffer, 5);
-    char **strings = backtrace_symbols(buffer, nptrs);
+void *buffer[5];
+int nptrs = backtrace(buffer, 5);
+char **strings = backtrace_symbols(buffer, nptrs);
 
-    return !!strings;
-    }"  HAVE_BACKTRACE)
+return !!strings;
+}"  HAVE_BACKTRACE)
 
 
-check_cxx_compiler_flag("-flto" LTO_CAPABLE)
+check_cxx_compiler_flag("-Wl,-flto" LTO_CAPABLE)
 
 add_library(${PROJECT_NAME}
     "src/logging.cpp"
@@ -54,17 +54,27 @@ else ()
     target_compile_definitions(${PROJECT_NAME} PRIVATE "-DAWS_LAMBDA_LOG=0")
 endif()
 
-if (${LTO_CAPABLE})
+if ((BUILD_SHARED_LIBS) AND (LTO_CAPABLE))
     target_compile_options(${PROJECT_NAME} PRIVATE "-flto")
     target_link_libraries(${PROJECT_NAME} PRIVATE "-flto")
 endif()
 
 target_compile_features(${PROJECT_NAME} PRIVATE "cxx_std_11")
 
+#tests
+if (DISABLE_TESTS)
+    add_subdirectory(tests/resources)
+else()
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
 # installation
-install(FILES
-    "include/aws/lambda-runtime/runtime.h"
+install(FILES "include/aws/lambda-runtime/runtime.h"
     DESTINATION "include/aws/lambda-runtime")
+
+install(FILES "include/aws/logging/logging.h"
+    DESTINATION "include/aws/logging")
 
 install(TARGETS ${PROJECT_NAME}
     EXPORT ${PROJECT_NAME}-targets
@@ -74,7 +84,7 @@ install(TARGETS ${PROJECT_NAME}
 
 configure_file("${CMAKE_SOURCE_DIR}/cmake/${PROJECT_NAME}-config.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
-  @ONLY)
+    @ONLY)
 
 export(EXPORT "${PROJECT_NAME}-targets" NAMESPACE AWS::)
 
@@ -83,5 +93,8 @@ install(EXPORT "${PROJECT_NAME}-targets"
     NAMESPACE AWS::)
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+    DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/${PROJECT_NAME}/cmake/")
+
+install(PROGRAMS "${CMAKE_SOURCE_DIR}/packaging/packager"
     DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/${PROJECT_NAME}/cmake/")
 

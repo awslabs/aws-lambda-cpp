@@ -15,11 +15,11 @@
 
 #include "aws/lambda-runtime/runtime.h"
 #include "aws/lambda-runtime/outcome.h"
-#include "aws/lambda-runtime/logging.h"
+#include "aws/logging/logging.h"
 #include "aws/http/response.h"
 
 #include <curl/curl.h>
-#include <climits>
+#include <climits> // for ULONG_MAX
 #include <cassert>
 #include <chrono>
 #include <algorithm>
@@ -30,15 +30,13 @@
 namespace aws {
 namespace lambda_runtime {
 
-static const char LOG_TAG[] = "LAMBDA_RUNTIME";
-static const char REQUEST_ID_HEADER[] = "lambda-runtime-aws-request-id";
-static const char TRACE_ID_HEADER[] = "Lambda-Runtime-Trace-Id";
-static const char CLIENT_CONTEXT_HEADER[] = "lambda-runtime-client-context";
-static const char COGNITO_IDENTITY_HEADER[] = "lambda-runtime-cognito-identity";
-static const char DEADLINE_MS_HEADER[] = "lambda-runtime-deadline-ms";
-static const char FUNCTION_ARN_HEADER[] = "lambda-runtime-invoked-function-arn";
-
-// static const char DEADLINE_NS[] = "X-Amz-Deadline-Ns";
+static char const LOG_TAG[] = "LAMBDA_RUNTIME";
+static char const REQUEST_ID_HEADER[] = "lambda-runtime-aws-request-id";
+static char const TRACE_ID_HEADER[] = "lambda-runtime-trace-id";
+static char const CLIENT_CONTEXT_HEADER[] = "lambda-runtime-client-context";
+static char const COGNITO_IDENTITY_HEADER[] = "lambda-runtime-cognito-identity";
+static char const DEADLINE_MS_HEADER[] = "lambda-runtime-deadline-ms";
+static char const FUNCTION_ARN_HEADER[] = "lambda-runtime-invoked-function-arn";
 
 enum Endpoints {
     INIT,
@@ -48,7 +46,7 @@ enum Endpoints {
 
 static bool is_success(aws::http::response_code httpcode)
 {
-    auto code = static_cast<int>(httpcode);
+    auto const code = static_cast<int>(httpcode);
     return code >= 200 && code <= 299;
 }
 
@@ -58,7 +56,7 @@ static size_t write_data(char* ptr, size_t size, size_t nmemb, void* userdata)
         return 0;
     }
 
-    http::response* resp = static_cast<http::response*>(userdata);
+    auto const resp = static_cast<http::response*>(userdata);
     assert(size == 1);
     (void)size; // avoid warning in release builds
     assert(resp);
@@ -69,9 +67,9 @@ static size_t write_data(char* ptr, size_t size, size_t nmemb, void* userdata)
 static inline std::string trim(std::string s)
 {
     // trim right
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return !::isspace(ch); }).base(), s.end());
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return ::isspace(ch) == 0; }).base(), s.end());
     // trim left
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !::isspace(ch); }));
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return ::isspace(ch) == 0; }));
     return s;
 }
 
@@ -83,10 +81,12 @@ static size_t write_header(char* ptr, size_t size, size_t nmemb, void* userdata)
 
     logging::log_debug(LOG_TAG, "received header: %s", std::string(ptr, nmemb).c_str());
 
-    http::response* resp = static_cast<http::response*>(userdata);
+    auto const resp = static_cast<http::response*>(userdata);
+    assert(resp);
     for (size_t i = 0; i < nmemb; i++) {
-        if (ptr[i] != ':')
+        if (ptr[i] != ':') {
             continue;
+        }
         std::string key{ptr, i};
         std::string value{ptr + i + 1, nmemb - i - 1};
         resp->add_header(trim(key), trim(value));
@@ -97,9 +97,10 @@ static size_t write_header(char* ptr, size_t size, size_t nmemb, void* userdata)
 
 static size_t read_data(char* buffer, size_t size, size_t nitems, void* userdata)
 {
-    const auto limit = size * nitems;
+    auto const limit = size * nitems;
     auto ctx = static_cast<std::pair<std::string const&, size_t>*>(userdata);
-    const auto unread = ctx->first.length() - ctx->second;
+    assert(ctx);
+    auto const unread = ctx->first.length() - ctx->second;
     if (0 == unread) {
         return 0;
     }
@@ -120,8 +121,8 @@ struct no_result {
 
 class runtime {
 public:
-    using get_next_outcome = aws::lambda_runtime::outcome<invocation_request, aws::http::response_code>;
-    using post_result_outcome = aws::lambda_runtime::outcome<no_result, aws::http::response_code>;
+    using next_outcome = aws::lambda_runtime::outcome<invocation_request, aws::http::response_code>;
+    using post_outcome = aws::lambda_runtime::outcome<no_result, aws::http::response_code>;
 
     runtime(std::string const& endpoint);
     ~runtime();
@@ -129,37 +130,34 @@ public:
     /**
      * Ask lambda for an invocation.
      */
-    get_next_outcome get_next();
+    next_outcome get_next();
 
     /**
      * Tells lambda that the function has succeeded.
      */
-    post_result_outcome post_success(std::string const& invocation_id, invocation_response const& response);
+    post_outcome post_success(std::string const& request_id, invocation_response const& response);
 
     /**
      * Tells lambda that the function has failed.
      */
-    post_result_outcome post_failure(std::string const& invocation_id, invocation_response const& response);
+    post_outcome post_failure(std::string const& request_id, invocation_response const& response);
 
 private:
     void set_curl_next_options();
     void set_curl_post_result_options();
-    post_result_outcome do_post(
-        std::string const& url,
-        std::string const& invocation_id,
-        invocation_response const& response);
+    post_outcome do_post(std::string const& url, std::string const& request_id, invocation_response const& response);
 
 private:
-    const std::array<std::string const, 3> m_endpoints;
-    CURL* m_curl_handle;
+    std::array<std::string const, 3> const m_endpoints;
+    CURL* const m_curl_handle;
 };
 
 runtime::runtime(std::string const& endpoint)
     : m_endpoints{{endpoint + "/2018-06-01/runtime/init/error",
                    endpoint + "/2018-06-01/runtime/invocation/next",
-                   endpoint + "/2018-06-01/runtime/invocation/"}}
+                   endpoint + "/2018-06-01/runtime/invocation/"}},
+      m_curl_handle(curl_easy_init())
 {
-    m_curl_handle = curl_easy_init();
     if (!m_curl_handle) {
         logging::log_error(LOG_TAG, "Failed to acquire curl easy handle for next.");
     }
@@ -185,7 +183,7 @@ void runtime::set_curl_next_options()
     curl_easy_setopt(m_curl_handle, CURLOPT_HEADERFUNCTION, write_header);
 }
 
-runtime::get_next_outcome runtime::get_next()
+runtime::next_outcome runtime::get_next()
 {
 
     http::response resp;
@@ -227,23 +225,44 @@ runtime::get_next_outcome runtime::get_next()
     invocation_request req;
     req.payload = resp.get_body();
     req.request_id = resp.get_header(REQUEST_ID_HEADER);
-    req.xray_trace_id = resp.get_header(TRACE_ID_HEADER);
-    req.client_context = resp.get_header(CLIENT_CONTEXT_HEADER);
-    req.cognito_identity = resp.get_header(COGNITO_IDENTITY_HEADER);
-    req.function_arn = resp.get_header(FUNCTION_ARN_HEADER);
-    const auto deadline_string = resp.get_header(DEADLINE_MS_HEADER);
-    unsigned long ms = strtoul(deadline_string.c_str(), nullptr, 10);
-    assert(ms > 0);
-    assert(ms < ULONG_MAX);
-    req.deadline += std::chrono::milliseconds(ms);
-    logging::log_info(
-        LOG_TAG, "Received payload: %s\nTime remaining: %ld", req.payload.c_str(), req.get_time_remaining().count());
-    return get_next_outcome(req);
+
+    if (resp.has_header(TRACE_ID_HEADER)) {
+        req.xray_trace_id = resp.get_header(TRACE_ID_HEADER);
+    }
+
+    if (resp.has_header(CLIENT_CONTEXT_HEADER)) {
+        req.client_context = resp.get_header(CLIENT_CONTEXT_HEADER);
+    }
+
+    if (resp.has_header(COGNITO_IDENTITY_HEADER)) {
+        req.cognito_identity = resp.get_header(COGNITO_IDENTITY_HEADER);
+    }
+
+    if (resp.has_header(FUNCTION_ARN_HEADER)) {
+        req.function_arn = resp.get_header(FUNCTION_ARN_HEADER);
+    }
+
+    if (resp.has_header(DEADLINE_MS_HEADER)) {
+        auto const& deadline_string = resp.get_header(DEADLINE_MS_HEADER);
+        unsigned long ms = strtoul(deadline_string.c_str(), nullptr, 10);
+        assert(ms > 0);
+        assert(ms < ULONG_MAX);
+        req.deadline += std::chrono::milliseconds(ms);
+        logging::log_info(
+            LOG_TAG,
+            "Received payload: %s\nTime remaining: %ld",
+            req.payload.c_str(),
+            req.get_time_remaining().count());
+    }
+    return next_outcome(req);
 }
 
 #ifndef NDEBUG
-static int rt_curl_debug_callback(CURL*, curl_infotype, char* data, size_t size, void*)
+static int rt_curl_debug_callback(CURL* handle, curl_infotype type, char* data, size_t size, void* userdata)
 {
+    (void)handle;
+    (void)type;
+    (void)userdata;
     std::string s(data, size);
     logging::log_debug(LOG_TAG, "CURL DBG: %s", s.c_str());
     return 0;
@@ -267,23 +286,19 @@ void runtime::set_curl_post_result_options()
 #endif
 }
 
-runtime::post_result_outcome runtime::post_success(
-    std::string const& request_id,
-    invocation_response const& handler_response)
+runtime::post_outcome runtime::post_success(std::string const& request_id, invocation_response const& handler_response)
 {
-    const std::string url = m_endpoints[Endpoints::RESULT] + request_id + "/response";
+    std::string const url = m_endpoints[Endpoints::RESULT] + request_id + "/response";
     return do_post(url, request_id, handler_response);
 }
 
-runtime::post_result_outcome runtime::post_failure(
-    std::string const& request_id,
-    invocation_response const& handler_response)
+runtime::post_outcome runtime::post_failure(std::string const& request_id, invocation_response const& handler_response)
 {
-    const std::string url = m_endpoints[Endpoints::RESULT] + request_id + "/error";
+    std::string const url = m_endpoints[Endpoints::RESULT] + request_id + "/error";
     return do_post(url, request_id, handler_response);
 }
 
-runtime::post_result_outcome runtime::do_post(
+runtime::post_outcome runtime::do_post(
     std::string const& url,
     std::string const& request_id,
     invocation_response const& handler_response)
@@ -302,15 +317,12 @@ runtime::post_result_outcome runtime::do_post(
 
     headers = curl_slist_append(headers, "Expect:");
     headers = curl_slist_append(headers, "transfer-encoding:");
+    auto const& payload = handler_response.get_payload();
     logging::log_debug(
-        LOG_TAG,
-        "calculating content length... %s",
-        ("content-length: " + std::to_string(handler_response.get_payload().length())).c_str());
-    headers = curl_slist_append(
-        headers, ("content-length: " + std::to_string(handler_response.get_payload().length())).c_str());
+        LOG_TAG, "calculating content length... %s", ("content-length: " + std::to_string(payload.length())).c_str());
+    headers = curl_slist_append(headers, ("content-length: " + std::to_string(payload.length())).c_str());
 
-    // set the body
-    std::pair<std::string const&, size_t> ctx{handler_response.get_payload(), 0};
+    std::pair<std::string const&, size_t> ctx{payload, 0};
     aws::http::response resp;
     curl_easy_setopt(m_curl_handle, CURLOPT_WRITEDATA, &resp);
     curl_easy_setopt(m_curl_handle, CURLOPT_HEADERDATA, &resp);
@@ -338,10 +350,10 @@ runtime::post_result_outcome runtime::do_post(
         return aws::http::response_code(http_response_code);
     }
 
-    return post_result_outcome(no_result{});
+    return post_outcome(no_result{});
 }
 
-static bool handle_post_outcome(runtime::post_result_outcome const& o, std::string const& request_id)
+static bool handle_post_outcome(runtime::post_outcome const& o, std::string const& request_id)
 {
     if (o.is_success()) {
         return true;
@@ -360,12 +372,12 @@ static bool handle_post_outcome(runtime::post_result_outcome const& o, std::stri
     return false;
 }
 
-LAMBDA_RUNTIME_API void run_handler(std::function<invocation_response(invocation_request const&)> handler)
+LAMBDA_RUNTIME_API
+void run_handler(handler_t* handler)
 {
     logging::log_info(LOG_TAG, "Initializing the C++ Lambda Runtime.");
     std::string endpoint("http://");
     if (auto ep = std::getenv("AWS_LAMBDA_RUNTIME_API")) {
-        puts(ep);
         assert(ep);
         logging::log_debug(LOG_TAG, "LAMBDA_SERVER_ADDRESS defined in environment as: %s", ep);
         endpoint += ep;
@@ -388,7 +400,7 @@ LAMBDA_RUNTIME_API void run_handler(std::function<invocation_response(invocation
             continue;
         }
 
-        const auto req = next_outcome.get_result();
+        auto const& req = next_outcome.get_result();
         logging::log_info(LOG_TAG, "Invoking user handler");
         invocation_response res = handler(req);
         logging::log_info(LOG_TAG, "Invoking user handler completed.");
@@ -411,19 +423,19 @@ LAMBDA_RUNTIME_API void run_handler(std::function<invocation_response(invocation
 static std::string json_escape(std::string const& in)
 {
     std::string out;
-    out.reserve(in.length() * 2);
-    for (size_t i = 0; i < in.length(); i++) {
-        if ((in[i] > 31) && in[i] != '\"' && (in[i] != '\\')) {
-            out.append(1, in[i]);
+    out.reserve(in.length()); // most strings will end up identical
+    for (char ch : in) {
+        if (ch > 31 && ch != '\"' && ch != '\\') {
+            out.append(1, ch);
         }
         else {
             out.append(1, '\\');
-            switch (in[i]) {
+            switch (ch) {
                 case '\\':
                     out.append(1, '\\');
                     break;
-                case '\"':
-                    out.append(1, '\"');
+                case '"':
+                    out.append(1, '"');
                     break;
                 case '\b':
                     out.append(1, 'b');
@@ -441,10 +453,10 @@ static std::string json_escape(std::string const& in)
                     out.append(1, 't');
                     break;
                 default:
-                    /* escape and print as unicode codepoint */
-                    char buf[6];
-                    sprintf(buf, "u%04x", in[i]);
-                    out.append(buf, 5);
+                    // escape and print as unicode codepoint
+                    char buf[6]; // 4 hex + letter 'u' + \0
+                    sprintf(buf, "u%04x", ch);
+                    out.append(buf, 5); // add only five, discarding the null terminator.
                     break;
             }
         }
@@ -452,7 +464,8 @@ static std::string json_escape(std::string const& in)
     return out;
 }
 
-LAMBDA_RUNTIME_API invocation_response invocation_response::success(std::string const& payload, std::string const& content_type)
+LAMBDA_RUNTIME_API
+invocation_response invocation_response::success(std::string const& payload, std::string const& content_type)
 {
     invocation_response r;
     r.m_success = true;
@@ -461,17 +474,14 @@ LAMBDA_RUNTIME_API invocation_response invocation_response::success(std::string 
     return r;
 }
 
-LAMBDA_RUNTIME_API invocation_response invocation_response::failure(std::string const& error_message, std::string const& error_type)
+LAMBDA_RUNTIME_API
+invocation_response invocation_response::failure(std::string const& error_message, std::string const& error_type)
 {
     invocation_response r;
     r.m_success = false;
     r.m_content_type = "application/json";
-    r.m_payload = "{\"errorMessage\":\"" + json_escape(error_message) +
-                  "\","
-                  "\"errorType\":\"" +
-                  json_escape(error_type) +
-                  "\","
-                  "\"stackTrace\": null}";
+    r.m_payload = R"({"errorMessage":")" + json_escape(error_message) + R"(","errorType":")" + json_escape(error_type) +
+                  R"(", "stackTrace":[]})";
     return r;
 }
 

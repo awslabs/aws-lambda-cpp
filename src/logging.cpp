@@ -12,9 +12,11 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-#include "aws/lambda-runtime/logging.h"
+#include "aws/logging/logging.h"
 #include <cstdio>
 #include <chrono>
+
+#define LAMBDA_RUNTIME_API __attribute__((visibility("default")))
 
 namespace aws {
 namespace logging {
@@ -33,6 +35,7 @@ static inline char const* get_prefix(verbosity v)
     }
 }
 
+LAMBDA_RUNTIME_API
 void log(verbosity v, char const* tag, char const* msg, va_list args)
 {
     va_list copy;
