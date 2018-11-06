@@ -23,7 +23,9 @@ template <typename TResult, typename TFailure>
 class outcome {
 public:
     outcome(TResult const& s) : s(s), success(true) {}
+
     outcome(TFailure const& f) : f(f), success(false) {}
+
     outcome(outcome&& other) : success(other.success)
     {
         if (success) {

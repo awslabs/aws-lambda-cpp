@@ -32,13 +32,11 @@ namespace lambda_runtime {
 
 static const char LOG_TAG[] = "LAMBDA_RUNTIME";
 static const char REQUEST_ID_HEADER[] = "lambda-runtime-aws-request-id";
-static const char TRACE_ID_HEADER[] = "Lambda-Runtime-Trace-Id";
+static const char TRACE_ID_HEADER[] = "lambda-runtime-trace-id";
 static const char CLIENT_CONTEXT_HEADER[] = "lambda-runtime-client-context";
 static const char COGNITO_IDENTITY_HEADER[] = "lambda-runtime-cognito-identity";
 static const char DEADLINE_MS_HEADER[] = "lambda-runtime-deadline-ms";
 static const char FUNCTION_ARN_HEADER[] = "lambda-runtime-invoked-function-arn";
-
-// static const char DEADLINE_NS[] = "X-Amz-Deadline-Ns";
 
 enum Endpoints {
     INIT,
@@ -48,7 +46,7 @@ enum Endpoints {
 
 static bool is_success(aws::http::response_code httpcode)
 {
-    auto code = static_cast<int>(httpcode);
+    const auto code = static_cast<int>(httpcode);
     return code >= 200 && code <= 299;
 }
 
@@ -58,7 +56,7 @@ static size_t write_data(char* ptr, size_t size, size_t nmemb, void* userdata)
         return 0;
     }
 
-    http::response* resp = static_cast<http::response*>(userdata);
+    http::response* const resp = static_cast<http::response*>(userdata);
     assert(size == 1);
     (void)size; // avoid warning in release builds
     assert(resp);
@@ -83,7 +81,7 @@ static size_t write_header(char* ptr, size_t size, size_t nmemb, void* userdata)
 
     logging::log_debug(LOG_TAG, "received header: %s", std::string(ptr, nmemb).c_str());
 
-    http::response* resp = static_cast<http::response*>(userdata);
+    http::response* const resp = static_cast<http::response*>(userdata);
     for (size_t i = 0; i < nmemb; i++) {
         if (ptr[i] != ':')
             continue;
@@ -360,12 +358,12 @@ static bool handle_post_outcome(runtime::post_result_outcome const& o, std::stri
     return false;
 }
 
-LAMBDA_RUNTIME_API void run_handler(std::function<invocation_response(invocation_request const&)> handler)
+LAMBDA_RUNTIME_API
+void run_handler(std::function<invocation_response(invocation_request const&)> handler)
 {
     logging::log_info(LOG_TAG, "Initializing the C++ Lambda Runtime.");
     std::string endpoint("http://");
     if (auto ep = std::getenv("AWS_LAMBDA_RUNTIME_API")) {
-        puts(ep);
         assert(ep);
         logging::log_debug(LOG_TAG, "LAMBDA_SERVER_ADDRESS defined in environment as: %s", ep);
         endpoint += ep;
@@ -411,7 +409,7 @@ LAMBDA_RUNTIME_API void run_handler(std::function<invocation_response(invocation
 static std::string json_escape(std::string const& in)
 {
     std::string out;
-    out.reserve(in.length() * 2);
+    out.reserve(in.length()); // most strings will end up identical
     for (size_t i = 0; i < in.length(); i++) {
         if ((in[i] > 31) && in[i] != '\"' && (in[i] != '\\')) {
             out.append(1, in[i]);
@@ -422,8 +420,8 @@ static std::string json_escape(std::string const& in)
                 case '\\':
                     out.append(1, '\\');
                     break;
-                case '\"':
-                    out.append(1, '\"');
+                case '"':
+                    out.append(1, '"');
                     break;
                 case '\b':
                     out.append(1, 'b');
@@ -441,10 +439,10 @@ static std::string json_escape(std::string const& in)
                     out.append(1, 't');
                     break;
                 default:
-                    /* escape and print as unicode codepoint */
-                    char buf[6];
+                    // escape and print as unicode codepoint
+                    char buf[6]; // 4 hex + letter 'u' + \0
                     sprintf(buf, "u%04x", in[i]);
-                    out.append(buf, 5);
+                    out.append(buf, 5); // add only five, discarding the null terminator.
                     break;
             }
         }
@@ -452,7 +450,8 @@ static std::string json_escape(std::string const& in)
     return out;
 }
 
-LAMBDA_RUNTIME_API invocation_response invocation_response::success(std::string const& payload, std::string const& content_type)
+LAMBDA_RUNTIME_API
+invocation_response invocation_response::success(std::string const& payload, std::string const& content_type)
 {
     invocation_response r;
     r.m_success = true;
@@ -461,17 +460,14 @@ LAMBDA_RUNTIME_API invocation_response invocation_response::success(std::string 
     return r;
 }
 
-LAMBDA_RUNTIME_API invocation_response invocation_response::failure(std::string const& error_message, std::string const& error_type)
+LAMBDA_RUNTIME_API
+invocation_response invocation_response::failure(std::string const& error_message, std::string const& error_type)
 {
     invocation_response r;
     r.m_success = false;
     r.m_content_type = "application/json";
-    r.m_payload = "{\"errorMessage\":\"" + json_escape(error_message) +
-                  "\","
-                  "\"errorType\":\"" +
-                  json_escape(error_type) +
-                  "\","
-                  "\"stackTrace\": null}";
+    r.m_payload = R"({"errorMessage":")" + json_escape(error_message) + R"(","errorType":")" + json_escape(error_type) +
+                  R"(", "stackTrace":[]})";
     return r;
 }
 

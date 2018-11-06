@@ -116,7 +116,6 @@ public:
     bool is_success() const { return m_success; }
 };
 
-
 inline std::chrono::milliseconds invocation_request::get_time_remaining() const
 {
     using namespace std::chrono;
