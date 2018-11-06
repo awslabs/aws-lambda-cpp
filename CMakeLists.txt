@@ -61,6 +61,10 @@ endif()
 
 target_compile_features(${PROJECT_NAME} PRIVATE "cxx_std_11")
 
+#tests
+enable_testing()
+add_subdirectory(tests)
+
 # installation
 install(FILES
     "include/aws/lambda-runtime/runtime.h"
