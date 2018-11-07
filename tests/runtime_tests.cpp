@@ -31,7 +31,6 @@ struct LambdaRuntimeTest : public ::testing::Test {
     {
         // clean up in case we exited one test abnormally
         delete_function("echo_success", false /*assert*/);
-        delete_function("echo_unicode", false /*assert*/);
         delete_function("echo_failure", false /*assert*/);
         delete_function("binary_response", false /*assert*/);
     }
@@ -91,11 +90,12 @@ TEST_F(LambdaRuntimeTest, echo_success)
     auto const jsonResponse = Aws::Utils::Json::JsonValue(invokeOutcome.GetResult().GetPayload());
     EXPECT_TRUE(jsonResponse.WasParseSuccessful());
     EXPECT_STREQ(payloadContent, jsonResponse.View().GetString("barbaz").c_str());
+    delete_function(funcname);
 }
 
 TEST_F(LambdaRuntimeTest, echo_unicode)
 {
-    Aws::String const funcname = "echo_success";
+    Aws::String const funcname = "echo_success"; // re-use the echo method but with Unicode input
     char const payloadContent[] = "画像は1000語の価値がある";
     create_function(funcname);
     Model::InvokeRequest invokeRequest;
@@ -121,6 +121,7 @@ TEST_F(LambdaRuntimeTest, echo_unicode)
     auto const jsonResponse = Aws::Utils::Json::JsonValue(invokeOutcome.GetResult().GetPayload());
     EXPECT_TRUE(jsonResponse.WasParseSuccessful());
     EXPECT_STREQ(payloadContent, jsonResponse.View().GetString("UnicodeText").c_str());
+    delete_function(funcname);
 }
 
 TEST_F(LambdaRuntimeTest, echo_failure)

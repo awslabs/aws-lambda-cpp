@@ -1,5 +1,5 @@
 #include <aws/lambda-runtime/runtime.h>
-#include <aws/lambda-runtime/logging.h>
+#include <aws/logging/logging.h>
 
 #include <unordered_map>
 #include <string>

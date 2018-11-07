@@ -15,7 +15,7 @@
 
 #include "aws/lambda-runtime/runtime.h"
 #include "aws/lambda-runtime/outcome.h"
-#include "aws/lambda-runtime/logging.h"
+#include "aws/logging/logging.h"
 #include "aws/http/response.h"
 
 #include <curl/curl.h>

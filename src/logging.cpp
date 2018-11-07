@@ -12,7 +12,7 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-#include "aws/lambda-runtime/logging.h"
+#include "aws/logging/logging.h"
 #include <cstdio>
 #include <chrono>
 

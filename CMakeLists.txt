@@ -63,16 +63,18 @@ target_compile_features(${PROJECT_NAME} PRIVATE "cxx_std_11")
 
 #tests
 if (DISABLE_TESTS)
-	add_subdirectory(tests/resources)
+    add_subdirectory(tests/resources)
 else()
-	enable_testing()
-	add_subdirectory(tests)
+    enable_testing()
+    add_subdirectory(tests)
 endif()
 
 # installation
-install(FILES
-    "include/aws/lambda-runtime/runtime.h"
+install(FILES "include/aws/lambda-runtime/runtime.h"
     DESTINATION "include/aws/lambda-runtime")
+
+install(FILES "include/aws/logging/logging.h"
+    DESTINATION "include/aws/logging")
 
 install(TARGETS ${PROJECT_NAME}
     EXPORT ${PROJECT_NAME}-targets
