@@ -31,6 +31,7 @@ struct LambdaRuntimeTest : public ::testing::Test {
     {
         // clean up in case we exited one test abnormally
         delete_function("echo_success", false /*assert*/);
+        delete_function("echo_unicode", false /*assert*/);
         delete_function("echo_failure", false /*assert*/);
         delete_function("binary_response", false /*assert*/);
     }
@@ -78,11 +79,10 @@ TEST_F(LambdaRuntimeTest, echo_success)
     *payload << jsonPayload.View().WriteCompact();
     invokeRequest.SetBody(payload);
 
-
     Model::InvokeOutcome invokeOutcome = m_client.Invoke(invokeRequest);
     EXPECT_TRUE(invokeOutcome.IsSuccess());
     Aws::StringStream output;
-    if(!invokeOutcome.IsSuccess()) {
+    if (!invokeOutcome.IsSuccess()) {
         delete_function(funcname);
         return;
     }
@@ -91,6 +91,36 @@ TEST_F(LambdaRuntimeTest, echo_success)
     auto const jsonResponse = Aws::Utils::Json::JsonValue(invokeOutcome.GetResult().GetPayload());
     EXPECT_TRUE(jsonResponse.WasParseSuccessful());
     EXPECT_STREQ(payloadContent, jsonResponse.View().GetString("barbaz").c_str());
+}
+
+TEST_F(LambdaRuntimeTest, echo_unicode)
+{
+    Aws::String const funcname = "echo_success";
+    char const payloadContent[] = "画像は1000語の価値がある";
+    create_function(funcname);
+    Model::InvokeRequest invokeRequest;
+    invokeRequest.SetFunctionName(funcname);
+    invokeRequest.SetInvocationType(Model::InvocationType::RequestResponse);
+    invokeRequest.SetContentType("application/json");
+
+    std::shared_ptr<Aws::IOStream> payload = Aws::MakeShared<Aws::StringStream>("FunctionTest");
+    Aws::Utils::Json::JsonValue jsonPayload;
+    jsonPayload.WithString("UnicodeText", payloadContent);
+    *payload << jsonPayload.View().WriteCompact();
+    invokeRequest.SetBody(payload);
+
+    Model::InvokeOutcome invokeOutcome = m_client.Invoke(invokeRequest);
+    EXPECT_TRUE(invokeOutcome.IsSuccess());
+    Aws::StringStream output;
+    if (!invokeOutcome.IsSuccess()) {
+        delete_function(funcname);
+        return;
+    }
+    EXPECT_EQ(200, invokeOutcome.GetResult().GetStatusCode());
+    EXPECT_TRUE(invokeOutcome.GetResult().GetFunctionError().empty());
+    auto const jsonResponse = Aws::Utils::Json::JsonValue(invokeOutcome.GetResult().GetPayload());
+    EXPECT_TRUE(jsonResponse.WasParseSuccessful());
+    EXPECT_STREQ(payloadContent, jsonResponse.View().GetString("UnicodeText").c_str());
 }
 
 TEST_F(LambdaRuntimeTest, echo_failure)
