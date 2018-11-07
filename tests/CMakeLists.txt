@@ -11,14 +11,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE  ${AWSSDK_LINK_LIBRARIES} aws-lamb
 gtest_discover_tests(${PROJECT_NAME})
 
 if (GNU)
-    # lambda must be built on Linux platforms
-    add_executable(lambda_fun lambda_function.cpp)
-    target_include_directories(lambda_fun PRIVATE ${CMAKE_SOURCE_DIR}/include)
-    target_link_libraries(lambda_fun PRIVATE aws-lambda-runtime)
-    # package the lambda function into lambda.zip and upload to s3
-    add_custom_command(TARGET lambda_fun POST_BUILD
-        COMMAND "${CMAKE_SOURCE_DIR}/packaging/packager" "${CMAKE_CURRENT_BINARY_DIR}/lambda_fun" lambda_fun
-        COMMAND aws s3 cp lambda_fun.zip s3://aws-lambda-cpp-runtime-tests/lambda_fun.zip
-        )
+	add_subdirectory(resources)
 endif()
 

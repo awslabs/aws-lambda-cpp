@@ -62,8 +62,12 @@ endif()
 target_compile_features(${PROJECT_NAME} PRIVATE "cxx_std_11")
 
 #tests
-enable_testing()
-add_subdirectory(tests)
+if (DISABLE_TESTS)
+	add_subdirectory(tests/resources)
+else()
+	enable_testing()
+	add_subdirectory(tests)
+endif()
 
 # installation
 install(FILES
