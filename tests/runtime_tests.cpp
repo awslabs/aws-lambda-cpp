@@ -32,6 +32,7 @@ struct LambdaRuntimeTest : public ::testing::Test {
         // clean up in case we exited one test abnormally
         delete_function("echo_success", false /*assert*/);
         delete_function("echo_failure", false /*assert*/);
+        delete_function("binary_response", false /*assert*/);
     }
 
     void create_function(Aws::String const& name)
@@ -107,7 +108,19 @@ TEST_F(LambdaRuntimeTest, echo_failure)
     delete_function(funcname);
 }
 
-TEST(sample, happy_case)
+TEST_F(LambdaRuntimeTest, binary_response)
 {
-    ASSERT_TRUE(true);
+    Aws::String const funcname = "binary_response";
+    unsigned long constexpr expected_length = 1451;
+    create_function(funcname);
+    Model::InvokeRequest invokeRequest;
+    invokeRequest.SetFunctionName(funcname);
+    invokeRequest.SetInvocationType(Model::InvocationType::RequestResponse);
+
+    Model::InvokeOutcome invokeOutcome = m_client.Invoke(invokeRequest);
+    EXPECT_TRUE(invokeOutcome.IsSuccess());
+    EXPECT_EQ(200, invokeOutcome.GetResult().GetStatusCode());
+    EXPECT_TRUE(invokeOutcome.GetResult().GetFunctionError().empty());
+    EXPECT_EQ(expected_length, invokeOutcome.GetResult().GetPayload().tellp());
+    delete_function(funcname);
 }
