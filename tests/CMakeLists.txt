@@ -11,6 +11,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE  ${AWSSDK_LINK_LIBRARIES} aws-lamb
 gtest_discover_tests(${PROJECT_NAME})
 
 if (GNU)
-	add_subdirectory(resources)
+    # lambda must be built on Linux platforms
+    # resources are the actual lambda functions deployed and exercised by the tests
+    add_subdirectory(resources)
 endif()
 

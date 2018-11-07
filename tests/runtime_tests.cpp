@@ -2,6 +2,7 @@
 #include <aws/core/client/ClientConfiguration.h>
 #include <aws/core/utils/Outcome.h>
 #include <aws/core/utils/memory/stl/AWSString.h>
+#include <aws/core/utils/memory/stl/AWSStringStream.h>
 #include <aws/lambda/LambdaClient.h>
 #include <aws/lambda/model/DeleteFunctionRequest.h>
 #include <aws/lambda/model/GetFunctionRequest.h>
@@ -20,7 +21,6 @@ struct LambdaRuntimeTest : public ::testing::Test {
     {
         Aws::Client::ClientConfiguration config;
         config.requestTimeoutMs = 15 * 1000;
-        // config.region = Aws::Region::US_WEST_2;
         config.region = Aws::Region::EU_WEST_1;
         return config;
     }
@@ -64,16 +64,32 @@ struct LambdaRuntimeTest : public ::testing::Test {
 TEST_F(LambdaRuntimeTest, echo_success)
 {
     Aws::String const funcname = "echo_success";
+    char const payloadContent[] = "Hello, Lambda!";
     create_function(funcname);
     Model::InvokeRequest invokeRequest;
     invokeRequest.SetFunctionName(funcname);
-    invokeRequest.SetInvocationType(Model::InvocationType::Event);
+    invokeRequest.SetInvocationType(Model::InvocationType::RequestResponse);
+    invokeRequest.SetContentType("application/json");
+
+    std::shared_ptr<Aws::IOStream> payload = Aws::MakeShared<Aws::StringStream>("FunctionTest");
+    Aws::Utils::Json::JsonValue jsonPayload;
+    jsonPayload.WithString("barbaz", payloadContent);
+    *payload << jsonPayload.View().WriteCompact();
+    invokeRequest.SetBody(payload);
+
 
     Model::InvokeOutcome invokeOutcome = m_client.Invoke(invokeRequest);
     EXPECT_TRUE(invokeOutcome.IsSuccess());
-    EXPECT_EQ(202, invokeOutcome.GetResult().GetStatusCode());
+    Aws::StringStream output;
+    if(!invokeOutcome.IsSuccess()) {
+        delete_function(funcname);
+        return;
+    }
+    EXPECT_EQ(200, invokeOutcome.GetResult().GetStatusCode());
     EXPECT_TRUE(invokeOutcome.GetResult().GetFunctionError().empty());
-    delete_function(funcname);
+    auto const jsonResponse = Aws::Utils::Json::JsonValue(invokeOutcome.GetResult().GetPayload());
+    EXPECT_TRUE(jsonResponse.WasParseSuccessful());
+    EXPECT_STREQ(payloadContent, jsonResponse.View().GetString("barbaz").c_str());
 }
 
 TEST_F(LambdaRuntimeTest, echo_failure)
