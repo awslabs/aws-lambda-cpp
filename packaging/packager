@@ -82,3 +82,5 @@ popd > /dev/null
 rm -r $PKG_DIR
 echo "Created $ORIGIN_DIR/$PKG_DIR.zip"
 
+# detect OS by doing:
+# cat /etc/os-release | awk -F= '/ID_LIKE/{print $NF}'
