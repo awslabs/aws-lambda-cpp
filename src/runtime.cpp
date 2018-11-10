@@ -225,17 +225,35 @@ runtime::get_next_outcome runtime::get_next()
     invocation_request req;
     req.payload = resp.get_body();
     req.request_id = resp.get_header(REQUEST_ID_HEADER);
-    req.xray_trace_id = resp.get_header(TRACE_ID_HEADER);
-    req.client_context = resp.get_header(CLIENT_CONTEXT_HEADER);
-    req.cognito_identity = resp.get_header(COGNITO_IDENTITY_HEADER);
-    req.function_arn = resp.get_header(FUNCTION_ARN_HEADER);
-    const auto deadline_string = resp.get_header(DEADLINE_MS_HEADER);
-    unsigned long ms = strtoul(deadline_string.c_str(), nullptr, 10);
-    assert(ms > 0);
-    assert(ms < ULONG_MAX);
-    req.deadline += std::chrono::milliseconds(ms);
-    logging::log_info(
-        LOG_TAG, "Received payload: %s\nTime remaining: %ld", req.payload.c_str(), req.get_time_remaining().count());
+
+    if (resp.has_header(TRACE_ID_HEADER)) {
+        req.xray_trace_id = resp.get_header(TRACE_ID_HEADER);
+    }
+
+    if (resp.has_header(CLIENT_CONTEXT_HEADER)) {
+        req.client_context = resp.get_header(CLIENT_CONTEXT_HEADER);
+    }
+
+    if (resp.has_header(COGNITO_IDENTITY_HEADER)) {
+        req.cognito_identity = resp.get_header(COGNITO_IDENTITY_HEADER);
+    }
+
+    if (resp.has_header(FUNCTION_ARN_HEADER)) {
+        req.function_arn = resp.get_header(FUNCTION_ARN_HEADER);
+    }
+
+    if (resp.has_header(DEADLINE_MS_HEADER)) {
+        const auto deadline_string = resp.get_header(DEADLINE_MS_HEADER);
+        unsigned long ms = strtoul(deadline_string.c_str(), nullptr, 10);
+        assert(ms > 0);
+        assert(ms < ULONG_MAX);
+        req.deadline += std::chrono::milliseconds(ms);
+        logging::log_info(
+            LOG_TAG,
+            "Received payload: %s\nTime remaining: %ld",
+            req.payload.c_str(),
+            req.get_time_remaining().count());
+    }
     return get_next_outcome(req);
 }
 
