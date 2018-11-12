@@ -121,8 +121,8 @@ struct no_result {
 
 class runtime {
 public:
-    using get_next_outcome = aws::lambda_runtime::outcome<invocation_request, aws::http::response_code>;
-    using post_result_outcome = aws::lambda_runtime::outcome<no_result, aws::http::response_code>;
+    using next_outcome = aws::lambda_runtime::outcome<invocation_request, aws::http::response_code>;
+    using post_outcome = aws::lambda_runtime::outcome<no_result, aws::http::response_code>;
 
     runtime(std::string const& endpoint);
     ~runtime();
@@ -130,37 +130,34 @@ public:
     /**
      * Ask lambda for an invocation.
      */
-    get_next_outcome get_next();
+    next_outcome get_next();
 
     /**
      * Tells lambda that the function has succeeded.
      */
-    post_result_outcome post_success(std::string const& request_id, invocation_response const& response);
+    post_outcome post_success(std::string const& request_id, invocation_response const& response);
 
     /**
      * Tells lambda that the function has failed.
      */
-    post_result_outcome post_failure(std::string const& request_id, invocation_response const& response);
+    post_outcome post_failure(std::string const& request_id, invocation_response const& response);
 
 private:
     void set_curl_next_options();
     void set_curl_post_result_options();
-    post_result_outcome do_post(
-        std::string const& url,
-        std::string const& request_id,
-        invocation_response const& response);
+    post_outcome do_post(std::string const& url, std::string const& request_id, invocation_response const& response);
 
 private:
     std::array<std::string const, 3> const m_endpoints;
-    CURL* m_curl_handle;
+    CURL* const m_curl_handle;
 };
 
 runtime::runtime(std::string const& endpoint)
     : m_endpoints{{endpoint + "/2018-06-01/runtime/init/error",
                    endpoint + "/2018-06-01/runtime/invocation/next",
-                   endpoint + "/2018-06-01/runtime/invocation/"}}
+                   endpoint + "/2018-06-01/runtime/invocation/"}},
+      m_curl_handle(curl_easy_init())
 {
-    m_curl_handle = curl_easy_init();
     if (!m_curl_handle) {
         logging::log_error(LOG_TAG, "Failed to acquire curl easy handle for next.");
     }
@@ -186,7 +183,7 @@ void runtime::set_curl_next_options()
     curl_easy_setopt(m_curl_handle, CURLOPT_HEADERFUNCTION, write_header);
 }
 
-runtime::get_next_outcome runtime::get_next()
+runtime::next_outcome runtime::get_next()
 {
 
     http::response resp;
@@ -257,7 +254,7 @@ runtime::get_next_outcome runtime::get_next()
             req.payload.c_str(),
             req.get_time_remaining().count());
     }
-    return get_next_outcome(req);
+    return next_outcome(req);
 }
 
 #ifndef NDEBUG
@@ -289,23 +286,19 @@ void runtime::set_curl_post_result_options()
 #endif
 }
 
-runtime::post_result_outcome runtime::post_success(
-    std::string const& request_id,
-    invocation_response const& handler_response)
+runtime::post_outcome runtime::post_success(std::string const& request_id, invocation_response const& handler_response)
 {
     std::string const url = m_endpoints[Endpoints::RESULT] + request_id + "/response";
     return do_post(url, request_id, handler_response);
 }
 
-runtime::post_result_outcome runtime::post_failure(
-    std::string const& request_id,
-    invocation_response const& handler_response)
+runtime::post_outcome runtime::post_failure(std::string const& request_id, invocation_response const& handler_response)
 {
     std::string const url = m_endpoints[Endpoints::RESULT] + request_id + "/error";
     return do_post(url, request_id, handler_response);
 }
 
-runtime::post_result_outcome runtime::do_post(
+runtime::post_outcome runtime::do_post(
     std::string const& url,
     std::string const& request_id,
     invocation_response const& handler_response)
@@ -324,15 +317,13 @@ runtime::post_result_outcome runtime::do_post(
 
     headers = curl_slist_append(headers, "Expect:");
     headers = curl_slist_append(headers, "transfer-encoding:");
+    auto const& payload = handler_response.get_payload();
     logging::log_debug(
-        LOG_TAG,
-        "calculating content length... %s",
-        ("content-length: " + std::to_string(handler_response.get_payload().length())).c_str());
-    headers = curl_slist_append(
-        headers, ("content-length: " + std::to_string(handler_response.get_payload().length())).c_str());
+        LOG_TAG, "calculating content length... %s", ("content-length: " + std::to_string(payload.length())).c_str());
+    headers = curl_slist_append(headers, ("content-length: " + std::to_string(payload.length())).c_str());
 
     // set the body
-    std::pair<std::string const&, size_t> ctx{handler_response.get_payload(), 0};
+    std::pair<std::string const&, size_t> ctx{payload, 0};
     aws::http::response resp;
     curl_easy_setopt(m_curl_handle, CURLOPT_WRITEDATA, &resp);
     curl_easy_setopt(m_curl_handle, CURLOPT_HEADERDATA, &resp);
@@ -360,10 +351,10 @@ runtime::post_result_outcome runtime::do_post(
         return aws::http::response_code(http_response_code);
     }
 
-    return post_result_outcome(no_result{});
+    return post_outcome(no_result{});
 }
 
-static bool handle_post_outcome(runtime::post_result_outcome const& o, std::string const& request_id)
+static bool handle_post_outcome(runtime::post_outcome const& o, std::string const& request_id)
 {
     if (o.is_success()) {
         return true;
