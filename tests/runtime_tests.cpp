@@ -27,7 +27,7 @@ struct LambdaRuntimeTest : public ::testing::Test {
 
     LambdaRuntimeTest() : m_client(create_lambda_config()) {}
 
-    ~LambdaRuntimeTest()
+    ~LambdaRuntimeTest() override
     {
         // clean up in case we exited one test abnormally
         delete_function("echo_success", false /*assert*/);
@@ -42,7 +42,6 @@ struct LambdaRuntimeTest : public ::testing::Test {
         createFunctionRequest.SetFunctionName(name);
         createFunctionRequest.SetRole("arn:aws:iam::383981755760:role/lambda-lab"); // TODO: create this dynamically
         Model::FunctionCode funcode;
-        Aws::String s3key(name);
         funcode.WithS3Bucket(S3BUCKET).WithS3Key(S3KEY);
         createFunctionRequest.SetCode(funcode);
         createFunctionRequest.SetRuntime(Aws::Lambda::Model::Runtime::provided);

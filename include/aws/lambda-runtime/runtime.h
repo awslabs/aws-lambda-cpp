@@ -14,7 +14,6 @@
  * permissions and limitations under the License.
  */
 
-#include <functional>
 #include <chrono>
 #include <array>
 #include <string>
@@ -123,7 +122,8 @@ inline std::chrono::milliseconds invocation_request::get_time_remaining() const
 }
 
 // Entry method
-void run_handler(std::function<invocation_response(invocation_request const&)> handler);
+using handler_t = invocation_response(invocation_request const&);
+void run_handler(handler_t* handler);
 
 } // namespace lambda_runtime
 } // namespace aws
