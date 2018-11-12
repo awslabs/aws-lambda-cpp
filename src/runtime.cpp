@@ -19,7 +19,7 @@
 #include "aws/http/response.h"
 
 #include <curl/curl.h>
-#include <climits>
+#include <climits> // for ULONG_MAX
 #include <cassert>
 #include <chrono>
 #include <algorithm>
@@ -322,7 +322,6 @@ runtime::post_outcome runtime::do_post(
         LOG_TAG, "calculating content length... %s", ("content-length: " + std::to_string(payload.length())).c_str());
     headers = curl_slist_append(headers, ("content-length: " + std::to_string(payload.length())).c_str());
 
-    // set the body
     std::pair<std::string const&, size_t> ctx{payload, 0};
     aws::http::response resp;
     curl_easy_setopt(m_curl_handle, CURLOPT_WRITEDATA, &resp);
