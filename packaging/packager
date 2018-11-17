@@ -33,9 +33,23 @@ if ! type zip > /dev/null 2>&1; then
     exit 1
 fi
 
+function package_libc_via_dpkg() {
+    if type dpkg-query > /dev/null 2>&1; then
+        dpkg-query --listfiles libc6 | sed -E '/\.so$|\.so\.[0-9]+$/!d'
+    fi
+}
+
+function package_libc_via_rpm() {
+    if type rpm > /dev/null 2>&1; then
+        rpm -ql | sed -E '/\.so$|\.so\.[0-9]+$/!d'
+    fi
+}
+
 PKG_BIN_FILENAME=`basename $PKG_BIN_PATH`
 
 list=`ldd $PKG_BIN_PATH | awk '{print $(NF-1)}'`
+list=$list:$(package_libc_via_dpkg):$(package_libc_via_rpm)
+
 mkdir -p $PKG_DIR/bin
 mkdir $PKG_DIR/lib
 
@@ -81,6 +95,7 @@ mv $PKG_DIR.zip $ORIGIN_DIR
 popd > /dev/null
 rm -r $PKG_DIR
 echo "Created $ORIGIN_DIR/$PKG_DIR.zip"
+
 
 # detect OS by doing:
 # if [ $(cat /etc/os-release | awk -F= '/ID_LIKE/{print $NF}') =~ "rhel" ]; then
