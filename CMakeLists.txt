@@ -19,7 +19,7 @@ int main() {
     }"  HAVE_BACKTRACE)
 
 
-check_cxx_compiler_flag("-flto" LTO_CAPABLE)
+check_cxx_compiler_flag("-Wl,-flto" LTO_CAPABLE)
 
 add_library(${PROJECT_NAME}
     "src/logging.cpp"
@@ -54,7 +54,7 @@ else ()
     target_compile_definitions(${PROJECT_NAME} PRIVATE "-DAWS_LAMBDA_LOG=0")
 endif()
 
-if (BUILD_SHARED_LIBS AND ${LTO_CAPABLE})
+if ((BUILD_SHARED_LIBS) AND (LTO_CAPABLE))
     target_compile_options(${PROJECT_NAME} PRIVATE "-flto")
     target_link_libraries(${PROJECT_NAME} PRIVATE "-flto")
 endif()
