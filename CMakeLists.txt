@@ -11,12 +11,12 @@ check_cxx_source_compiles("
 #include <execinfo.h>
 
 int main() {
-    void *buffer[5];
-    int nptrs = backtrace(buffer, 5);
-    char **strings = backtrace_symbols(buffer, nptrs);
+void *buffer[5];
+int nptrs = backtrace(buffer, 5);
+char **strings = backtrace_symbols(buffer, nptrs);
 
-    return !!strings;
-    }"  HAVE_BACKTRACE)
+return !!strings;
+}"  HAVE_BACKTRACE)
 
 
 check_cxx_compiler_flag("-Wl,-flto" LTO_CAPABLE)
@@ -84,7 +84,7 @@ install(TARGETS ${PROJECT_NAME}
 
 configure_file("${CMAKE_SOURCE_DIR}/cmake/${PROJECT_NAME}-config.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
-  @ONLY)
+    @ONLY)
 
 export(EXPORT "${PROJECT_NAME}-targets" NAMESPACE AWS::)
 
@@ -92,6 +92,8 @@ install(EXPORT "${PROJECT_NAME}-targets"
     DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/${PROJECT_NAME}/cmake/"
     NAMESPACE AWS::)
 
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+install(FILES "${CMAKE_SOURCE_DIR}/packaging/packager"
+    "${CMAKE_SOURCE_DIR}/cmake/AwsLambdaPackaging.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
     DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/${PROJECT_NAME}/cmake/")
 
