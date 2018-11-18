@@ -14,9 +14,9 @@
 
 set -euo pipefail
 
-if [ $# -ne 2 ]; then
+if [ $# -ne 1 ]; then
     echo "Error: missing arguments\n"
-    echo "Usage: packager.sh <binary name> <output filename>"
+    echo "Usage: packager.sh <binary name>"
     exit 1
 fi
 
