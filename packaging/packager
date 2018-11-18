@@ -21,7 +21,6 @@ if [ $# -ne 2 ]; then
 fi
 
 PKG_BIN_PATH=$1
-PKG_DIR=$2
 
 if [ ! -f $PKG_BIN_PATH ]; then
     echo "'$PKG_BIN_PATH' - No such file.";
@@ -46,6 +45,7 @@ function package_libc_via_rpm() {
 }
 
 PKG_BIN_FILENAME=`basename $PKG_BIN_PATH`
+PKG_DIR=tmp
 
 list=`ldd $PKG_BIN_PATH | awk '{print $(NF-1)}'`
 list=$list:$(package_libc_via_dpkg):$(package_libc_via_rpm)
@@ -94,7 +94,7 @@ ORIGIN_DIR=$(dirs -l +1)
 mv $PKG_DIR.zip $ORIGIN_DIR
 popd > /dev/null
 rm -r $PKG_DIR
-echo "Created $ORIGIN_DIR/$PKG_DIR.zip"
+echo "Created $ORIGIN_DIR/$PKG_BIN_FILENAME.zip"
 
 
 # detect OS by doing:

@@ -92,8 +92,9 @@ install(EXPORT "${PROJECT_NAME}-targets"
     DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/${PROJECT_NAME}/cmake/"
     NAMESPACE AWS::)
 
-install(FILES "${CMAKE_SOURCE_DIR}/packaging/packager"
-    "${CMAKE_SOURCE_DIR}/cmake/AwsLambdaPackaging.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+    DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/${PROJECT_NAME}/cmake/")
+
+install(PROGRAMS "${CMAKE_SOURCE_DIR}/packaging/packager"
     DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/${PROJECT_NAME}/cmake/")
 
