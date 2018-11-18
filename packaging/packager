@@ -89,9 +89,9 @@ cp $PKG_BIN_PATH $PKG_DIR/bin
 echo -e $launch_script > $PKG_DIR/bootstrap
 chmod +x $PKG_DIR/bootstrap
 pushd $PKG_DIR > /dev/null
-zip -r $PKG_DIR.zip *
+zip -r $PKG_BIN_FILENAME.zip *
 ORIGIN_DIR=$(dirs -l +1)
-mv $PKG_DIR.zip $ORIGIN_DIR
+mv $PKG_BIN_FILENAME.zip $ORIGIN_DIR
 popd > /dev/null
 rm -r $PKG_DIR
 echo "Created $ORIGIN_DIR/$PKG_BIN_FILENAME.zip"
