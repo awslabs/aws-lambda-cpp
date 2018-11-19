@@ -14,11 +14,35 @@
 
 set -euo pipefail
 
-if [ $# -ne 1 ]; then
-    echo "Error: missing arguments\n"
-    echo "Usage: packager.sh <binary name>"
+print_help() {
+    echo -e "Usage: packager [OPTIONS] <binary name>\n"
+    echo -e "OPTIONS\n"
+    echo -e "\t-d,--default-libc\t Use the target host libc libraries. This will not package the C library files.\n"
+}
+
+if [ $# -lt 1 ]; then
+    echo -e "Error: missing arguments\n"
+    print_help
     exit 1
 fi
+
+POSITIONAL=()
+INCLUDE_LIBC=true
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+    case $key in
+        -d|--default-libc)
+            INCLUDE_LIBC=false
+            shift # past argument
+            ;;
+        *)    # unknown option
+            POSITIONAL+=("$1") # save it in an array for later
+            shift # past argument
+            ;;
+    esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
 
 PKG_BIN_PATH=$1
 
@@ -48,7 +72,9 @@ PKG_BIN_FILENAME=`basename $PKG_BIN_PATH`
 PKG_DIR=tmp
 
 list=`ldd $PKG_BIN_PATH | awk '{print $(NF-1)}'`
-list=$list:$(package_libc_via_dpkg):$(package_libc_via_rpm)
+if [[ $INCLUDE_LIBC == true ]]; then
+    list=$list:$(package_libc_via_dpkg):$(package_libc_via_rpm)
+fi
 
 mkdir -p $PKG_DIR/bin
 mkdir $PKG_DIR/lib
@@ -61,33 +87,32 @@ do
     cp $i $PKG_DIR/lib
     filename=`basename $i`
     if [[ -z "${filename##ld-*}" ]]; then
-        PKG_LD=$filename
-        echo "Found $i. Using it as the loader."
+        PKG_LD=$filename # Use this file as the loader
     fi
 done
 
-# glibc's libnss_dns and libnss_files are loaded dynamically, so we add them for SSL support
-# RHEL variants store them under /lib64
-if [ -d /lib64 ]; then
-    find /lib64 -name "libnss_dns*" | xargs -I % cp % $PKG_DIR/lib
-    find /lib64 -name "libnss_files*" | xargs -I % cp % $PKG_DIR/lib
-fi
-# Debian variants store them under /lib
-if [ -d /lib ]; then
-    find /lib -name "libnss_dns*" | xargs -I % cp % $PKG_DIR/lib
-    find /lib -name "libnss_files*" | xargs -I % cp % $PKG_DIR/lib
-fi
-
-launch_script="#!/bin/bash\n
+bootstrap_script="#!/bin/bash\n
 \n
 set -euo pipefail\n
 \n
 \$LAMBDA_TASK_ROOT/lib/$PKG_LD --library-path \$LAMBDA_TASK_ROOT/lib \$LAMBDA_TASK_ROOT/bin/$PKG_BIN_FILENAME \${_HANDLER}\n
 "
 
+bootstrap_script_no_libc="#!/bin/bash\n
+\n
+set -euo pipefail\n
+\n
+\$LAMBDA_TASK_ROOT/bin/$PKG_BIN_FILENAME \${_HANDLER}\n
+"
+
 cp $PKG_BIN_PATH $PKG_DIR/bin
-echo -e $launch_script > $PKG_DIR/bootstrap
+if [[ $INCLUDE_LIBC == true ]]; then
+    echo -e $bootstrap_script > $PKG_DIR/bootstrap
+else
+    echo -e $bootstrap_script_no_libc > $PKG_DIR/bootstrap
+fi
 chmod +x $PKG_DIR/bootstrap
+# some shenanigans to create the right layout in the zip file without extraneous directories
 pushd $PKG_DIR > /dev/null
 zip -r $PKG_BIN_FILENAME.zip *
 ORIGIN_DIR=$(dirs -l +1)
@@ -96,8 +121,3 @@ popd > /dev/null
 rm -r $PKG_DIR
 echo "Created $ORIGIN_DIR/$PKG_BIN_FILENAME.zip"
 
-
-# detect OS by doing:
-# if [ $(cat /etc/os-release | awk -F= '/ID_LIKE/{print $NF}') =~ "rhel" ]; then
-# echo RHEL
-# endif
