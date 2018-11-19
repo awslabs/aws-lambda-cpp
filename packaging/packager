@@ -102,7 +102,7 @@ bootstrap_script_no_libc="#!/bin/bash\n
 \n
 set -euo pipefail\n
 \n
-\$LAMBDA_TASK_ROOT/bin/$PKG_BIN_FILENAME \${_HANDLER}\n
+\$LAMBDA_TASK_ROOT/lib/$PKG_LD --library-path \$LD_LIBRARY_PATH:\$LAMBDA_TASK_ROOT/lib \$LAMBDA_TASK_ROOT/bin/$PKG_BIN_FILENAME \${_HANDLER}\n
 "
 
 cp $PKG_BIN_PATH $PKG_DIR/bin
