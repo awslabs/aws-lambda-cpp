@@ -46,8 +46,8 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 PKG_BIN_PATH=$1
 
-if [ ! -f $PKG_BIN_PATH ]; then
-    echo "'$PKG_BIN_PATH' - No such file.";
+if [ ! -f "$PKG_BIN_PATH" ]; then
+    echo "$PKG_BIN_PATH" - No such file.;
     exit 1;
 fi
 
@@ -68,16 +68,15 @@ function package_libc_via_rpm() {
     fi
 }
 
-PKG_BIN_FILENAME=`basename $PKG_BIN_PATH`
+PKG_BIN_FILENAME=`basename "$PKG_BIN_PATH"`
 PKG_DIR=tmp
 
-list=`ldd $PKG_BIN_PATH | awk '{print $(NF-1)}'`
+list=`ldd "$PKG_BIN_PATH" | awk '{print $(NF-1)}'`
 if [[ $INCLUDE_LIBC == true ]]; then
     list=$list:$(package_libc_via_dpkg):$(package_libc_via_rpm)
 fi
 
-mkdir -p $PKG_DIR/bin
-mkdir $PKG_DIR/lib
+mkdir -p "$PKG_DIR/bin" "$PKG_DIR/lib"
 
 for i in $list
 do
@@ -95,29 +94,29 @@ bootstrap_script="#!/bin/bash\n
 \n
 set -euo pipefail\n
 \n
-\$LAMBDA_TASK_ROOT/lib/$PKG_LD --library-path \$LAMBDA_TASK_ROOT/lib \$LAMBDA_TASK_ROOT/bin/$PKG_BIN_FILENAME \${_HANDLER}\n
+exec \$LAMBDA_TASK_ROOT/lib/$PKG_LD --library-path \$LAMBDA_TASK_ROOT/lib \$LAMBDA_TASK_ROOT/bin/$PKG_BIN_FILENAME \${_HANDLER}\n
 "
 
 bootstrap_script_no_libc="#!/bin/bash\n
 \n
 set -euo pipefail\n
 \n
-\$LAMBDA_TASK_ROOT/lib/$PKG_LD --library-path \$LD_LIBRARY_PATH:\$LAMBDA_TASK_ROOT/lib \$LAMBDA_TASK_ROOT/bin/$PKG_BIN_FILENAME \${_HANDLER}\n
+exec \$LAMBDA_TASK_ROOT/lib/$PKG_LD --library-path \$LD_LIBRARY_PATH:\$LAMBDA_TASK_ROOT/lib \$LAMBDA_TASK_ROOT/bin/$PKG_BIN_FILENAME \${_HANDLER}\n
 "
 
-cp $PKG_BIN_PATH $PKG_DIR/bin
+cp "$PKG_BIN_PATH" "$PKG_DIR/bin"
 if [[ $INCLUDE_LIBC == true ]]; then
-    echo -e $bootstrap_script > $PKG_DIR/bootstrap
+    echo -e $bootstrap_script > "$PKG_DIR/bootstrap"
 else
-    echo -e $bootstrap_script_no_libc > $PKG_DIR/bootstrap
+    echo -e $bootstrap_script_no_libc > "$PKG_DIR/bootstrap"
 fi
-chmod +x $PKG_DIR/bootstrap
+chmod +x "$PKG_DIR/bootstrap"
 # some shenanigans to create the right layout in the zip file without extraneous directories
-pushd $PKG_DIR > /dev/null
+pushd "$PKG_DIR" > /dev/null
 zip -r $PKG_BIN_FILENAME.zip *
 ORIGIN_DIR=$(dirs -l +1)
 mv $PKG_BIN_FILENAME.zip $ORIGIN_DIR
 popd > /dev/null
-rm -r $PKG_DIR
-echo "Created $ORIGIN_DIR/$PKG_BIN_FILENAME.zip"
+rm -r "$PKG_DIR"
+echo Created "$ORIGIN_DIR/$PKG_BIN_FILENAME".zip
 
