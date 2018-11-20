@@ -67,20 +67,18 @@ int main()
     return 0;
 }
 
-std::string encode(Aws::IOStream & stream, Aws::String& output)
+std::string encode(Aws::IOStream& stream, Aws::String& output)
 {
     Aws::Vector<unsigned char> bits;
     bits.reserve(stream.tellp());
     stream.seekg(0, stream.beg);
 
     char streamBuffer[1024 * 4];
-    while(stream.good())
-    {
+    while (stream.good()) {
         stream.read(streamBuffer, sizeof(streamBuffer));
         auto bytesRead = stream.gcount();
 
-        if(bytesRead > 0)
-        {
+        if (bytesRead > 0) {
             bits.insert(bits.end(), (unsigned char*)streamBuffer, (unsigned char*)streamBuffer + bytesRead);
         }
     }
@@ -108,7 +106,8 @@ std::string download_and_encode_file(Aws::String const& bucket, Aws::String cons
         AWS_LOGSTREAM_INFO(TAG, "Download completed!");
         auto& s = outcome.GetResult().GetBody();
         return encode(s, encoded_output);
-    } else {
+    }
+    else {
         AWS_LOGSTREAM_ERROR(TAG, "Failed with error: " << outcome.GetError());
         return outcome.GetError().GetMessage();
     }
