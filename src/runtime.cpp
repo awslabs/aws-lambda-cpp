@@ -64,12 +64,22 @@ static size_t write_data(char* ptr, size_t size, size_t nmemb, void* userdata)
     return nmemb;
 }
 
+static inline bool IsSpace(int ch)
+{
+    if (ch < -1 || ch > 255)
+    {
+        return false;
+    }
+
+    return ::isspace(ch) != 0;
+}
+
 static inline std::string trim(std::string s)
 {
     // trim right
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return ::isspace(ch) == 0; }).base(), s.end());
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return !IsSpace(ch); }).base(), s.end());
     // trim left
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return ::isspace(ch) == 0; }));
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !IsSpace(ch); }));
     return s;
 }
 
