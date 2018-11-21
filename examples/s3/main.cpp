@@ -4,6 +4,7 @@
 #include <aws/core/utils/logging/LogMacros.h>
 #include <aws/core/utils/json/JsonSerializer.h>
 #include <aws/core/utils/HashingUtils.h>
+#include <aws/core/platform/Environment.h>
 #include <aws/core/client/ClientConfiguration.h>
 #include <aws/core/auth/AWSCredentialsProvider.h>
 #include <aws/s3/S3Client.h>
@@ -14,11 +15,16 @@
 
 using namespace aws::lambda_runtime;
 
-std::string download_and_encode_file(Aws::String const& bucket, Aws::String const& key, Aws::String& encoded_output);
+std::string download_and_encode_file(
+    Aws::S3::S3Client const& client,
+    Aws::String const& bucket,
+    Aws::String const& key,
+    Aws::String& encoded_output);
+
 std::string encode(Aws::String const& filename, Aws::String& output);
 char const TAG[] = "LAMBDA_ALLOC";
 
-static invocation_response my_handler(invocation_request const& req)
+static invocation_response my_handler(invocation_request const& req, Aws::S3::S3Client const& client)
 {
     using namespace Aws::Utils::Json;
     JsonValue json(req.payload);
@@ -39,7 +45,7 @@ static invocation_response my_handler(invocation_request const& req)
     AWS_LOGSTREAM_INFO(TAG, "Attempting to download file from s3://" << bucket << "/" << key);
 
     Aws::String base64_encoded_file;
-    auto err = download_and_encode_file(bucket, key, base64_encoded_file);
+    auto err = download_and_encode_file(client, bucket, key, base64_encoded_file);
     if (!err.empty()) {
         return invocation_response::failure(err, "DownloadFailure");
     }
@@ -62,7 +68,18 @@ int main()
     options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Trace;
     options.loggingOptions.logger_create_fn = GetConsoleLoggerFactory();
     InitAPI(options);
-    run_handler(my_handler);
+    {
+        Client::ClientConfiguration config;
+        config.region = Aws::Environment::GetEnv("AWS_REGION");
+        config.caFile = "/etc/pki/tls/certs/ca-bundle.crt";
+
+        auto credentialsProvider = Aws::MakeShared<Aws::Auth::EnvironmentAWSCredentialsProvider>(TAG);
+        S3::S3Client client(credentialsProvider, config);
+        auto handler_fn = [&client](aws::lambda_runtime::invocation_request const& req) {
+            return my_handler(req, client);
+        };
+        run_handler(handler_fn);
+    }
     ShutdownAPI(options);
     return 0;
 }
@@ -87,16 +104,13 @@ std::string encode(Aws::IOStream& stream, Aws::String& output)
     return {};
 }
 
-std::string download_and_encode_file(Aws::String const& bucket, Aws::String const& key, Aws::String& encoded_output)
+std::string download_and_encode_file(
+    Aws::S3::S3Client const& client,
+    Aws::String const& bucket,
+    Aws::String const& key,
+    Aws::String& encoded_output)
 {
     using namespace Aws;
-    Client::ClientConfiguration config;
-    config.region = Region::US_WEST_2;
-    config.scheme = Http::Scheme::HTTPS;
-    config.caFile = "/etc/pki/tls/certs/ca-bundle.crt";
-
-    auto credentialsProvider = Aws::MakeShared<Aws::Auth::EnvironmentAWSCredentialsProvider>(TAG);
-    S3::S3Client client(credentialsProvider, config);
 
     S3::Model::GetObjectRequest request;
     request.WithBucket(bucket).WithKey(key);
