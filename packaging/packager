@@ -73,7 +73,7 @@ PKG_DIR=tmp
 
 list=`ldd "$PKG_BIN_PATH" | awk '{print $(NF-1)}'`
 if [[ $INCLUDE_LIBC == true ]]; then
-    list=$list:$(package_libc_via_dpkg):$(package_libc_via_rpm)
+    list=$list $(package_libc_via_dpkg) $(package_libc_via_rpm)
 fi
 
 mkdir -p "$PKG_DIR/bin" "$PKG_DIR/lib"
