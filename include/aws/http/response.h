@@ -139,7 +139,7 @@ inline std::string const& response::get_body() const
 }
 inline void response::add_header(std::string name, std::string const& value)
 {
-    std::transform(name.begin(), name.end(), name.begin(), std::tolower);
+    std::transform(name.begin(), name.end(), name.begin(), ::tolower);
     m_headers.emplace_back(name, value);
 }
 

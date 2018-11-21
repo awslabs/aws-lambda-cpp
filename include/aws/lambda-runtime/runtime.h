@@ -17,6 +17,7 @@
 #include <chrono>
 #include <array>
 #include <string>
+#include <functional>
 
 namespace aws {
 namespace lambda_runtime {
@@ -122,8 +123,7 @@ inline std::chrono::milliseconds invocation_request::get_time_remaining() const
 }
 
 // Entry method
-using handler_t = invocation_response(invocation_request const&);
-void run_handler(handler_t* handler);
+void run_handler(std::function<invocation_response(invocation_request const&)> const& handler);
 
 } // namespace lambda_runtime
 } // namespace aws

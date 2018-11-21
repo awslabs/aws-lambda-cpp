@@ -383,7 +383,7 @@ static bool handle_post_outcome(runtime::post_outcome const& o, std::string cons
 }
 
 LAMBDA_RUNTIME_API
-void run_handler(handler_t* handler)
+void run_handler(std::function<invocation_response(invocation_request const&)> const& handler)
 {
     logging::log_info(LOG_TAG, "Initializing the C++ Lambda Runtime.");
     std::string endpoint("http://");
