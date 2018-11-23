@@ -4,6 +4,8 @@ project(aws-lambda-runtime
     VERSION 0.1
     LANGUAGES CXX)
 
+option(ENABLE_TESTS "Enables building the test project, requires AWS C++ SDK." OFF)
+
 include(CheckCXXSourceCompiles)
 include(CheckCXXCompilerFlag)
 
@@ -59,14 +61,12 @@ if ((BUILD_SHARED_LIBS) AND (LTO_CAPABLE))
     target_link_libraries(${PROJECT_NAME} PRIVATE "-flto")
 endif()
 
-target_compile_features(${PROJECT_NAME} PRIVATE "cxx_std_11")
-
 #tests
-if (DISABLE_TESTS)
-    add_subdirectory(tests/resources)
-else()
+if (ENABLE_TESTS)
     enable_testing()
     add_subdirectory(tests)
+else()
+    add_subdirectory(tests/resources)
 endif()
 
 # installation
