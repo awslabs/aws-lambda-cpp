@@ -183,8 +183,8 @@ void runtime::set_curl_next_options()
     // lambda freezes the container when no further tasks are available. The freezing period could be longer than the
     // request timeout, which causes the following get_next request to fail with a timeout error.
     curl_easy_reset(m_curl_handle);
-    curl_easy_setopt(m_curl_handle, CURLOPT_TIMEOUT_MS, 0L);
-    curl_easy_setopt(m_curl_handle, CURLOPT_CONNECTTIMEOUT_MS, 100L);
+    curl_easy_setopt(m_curl_handle, CURLOPT_TIMEOUT, 0L);
+    curl_easy_setopt(m_curl_handle, CURLOPT_CONNECTTIMEOUT, 1L);
     curl_easy_setopt(m_curl_handle, CURLOPT_NOSIGNAL, 1L);
     curl_easy_setopt(m_curl_handle, CURLOPT_HTTPGET, 1L);
     curl_easy_setopt(m_curl_handle, CURLOPT_URL, m_endpoints[Endpoints::NEXT].c_str());
@@ -282,8 +282,8 @@ static int rt_curl_debug_callback(CURL* handle, curl_infotype type, char* data, 
 void runtime::set_curl_post_result_options()
 {
     curl_easy_reset(m_curl_handle);
-    curl_easy_setopt(m_curl_handle, CURLOPT_TIMEOUT_MS, 100L);
-    curl_easy_setopt(m_curl_handle, CURLOPT_CONNECTTIMEOUT_MS, 100L);
+    curl_easy_setopt(m_curl_handle, CURLOPT_TIMEOUT, 0L);
+    curl_easy_setopt(m_curl_handle, CURLOPT_CONNECTTIMEOUT, 1L);
     curl_easy_setopt(m_curl_handle, CURLOPT_NOSIGNAL, 1L);
     curl_easy_setopt(m_curl_handle, CURLOPT_POST, 1L);
     curl_easy_setopt(m_curl_handle, CURLOPT_READFUNCTION, read_data);
