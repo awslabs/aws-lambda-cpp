@@ -66,8 +66,7 @@ static size_t write_data(char* ptr, size_t size, size_t nmemb, void* userdata)
 
 static inline bool IsSpace(int ch)
 {
-    if (ch < -1 || ch > 255)
-    {
+    if (ch < -1 || ch > 255) {
         return false;
     }
 
@@ -125,6 +124,18 @@ static size_t read_data(char* buffer, size_t size, size_t nitems, void* userdata
     ctx->second += limit;
     return limit;
 }
+
+#ifndef NDEBUG
+static int rt_curl_debug_callback(CURL* handle, curl_infotype type, char* data, size_t size, void* userdata)
+{
+    (void)handle;
+    (void)type;
+    (void)userdata;
+    std::string s(data, size);
+    logging::log_debug(LOG_TAG, "CURL DBG: %s", s.c_str());
+    return 0;
+}
+#endif
 
 struct no_result {
 };
@@ -191,6 +202,28 @@ void runtime::set_curl_next_options()
 
     curl_easy_setopt(m_curl_handle, CURLOPT_WRITEFUNCTION, write_data);
     curl_easy_setopt(m_curl_handle, CURLOPT_HEADERFUNCTION, write_header);
+
+#ifndef NDEBUG
+    curl_easy_setopt(m_curl_handle, CURLOPT_VERBOSE, 1);
+    curl_easy_setopt(m_curl_handle, CURLOPT_DEBUGFUNCTION, rt_curl_debug_callback);
+#endif
+}
+
+void runtime::set_curl_post_result_options()
+{
+    curl_easy_reset(m_curl_handle);
+    curl_easy_setopt(m_curl_handle, CURLOPT_TIMEOUT, 0L);
+    curl_easy_setopt(m_curl_handle, CURLOPT_CONNECTTIMEOUT, 1L);
+    curl_easy_setopt(m_curl_handle, CURLOPT_NOSIGNAL, 1L);
+    curl_easy_setopt(m_curl_handle, CURLOPT_POST, 1L);
+    curl_easy_setopt(m_curl_handle, CURLOPT_READFUNCTION, read_data);
+    curl_easy_setopt(m_curl_handle, CURLOPT_WRITEFUNCTION, write_data);
+    curl_easy_setopt(m_curl_handle, CURLOPT_HEADERFUNCTION, write_header);
+
+#ifndef NDEBUG
+    curl_easy_setopt(m_curl_handle, CURLOPT_VERBOSE, 1);
+    curl_easy_setopt(m_curl_handle, CURLOPT_DEBUGFUNCTION, rt_curl_debug_callback);
+#endif
 }
 
 runtime::next_outcome runtime::get_next()
@@ -200,7 +233,10 @@ runtime::next_outcome runtime::get_next()
     set_curl_next_options();
     curl_easy_setopt(m_curl_handle, CURLOPT_WRITEDATA, &resp);
     curl_easy_setopt(m_curl_handle, CURLOPT_HEADERDATA, &resp);
+
+    logging::log_debug(LOG_TAG, "Making request to %s", m_endpoints[Endpoints::NEXT].c_str());
     CURLcode curl_code = curl_easy_perform(m_curl_handle);
+    logging::log_debug(LOG_TAG, "Completed request to %s", m_endpoints[Endpoints::NEXT].c_str());
 
     if (curl_code != CURLE_OK) {
         logging::log_debug(LOG_TAG, "CURL returned error code %d - %s", curl_code, curl_easy_strerror(curl_code));
@@ -265,35 +301,6 @@ runtime::next_outcome runtime::get_next()
             req.get_time_remaining().count());
     }
     return next_outcome(req);
-}
-
-#ifndef NDEBUG
-static int rt_curl_debug_callback(CURL* handle, curl_infotype type, char* data, size_t size, void* userdata)
-{
-    (void)handle;
-    (void)type;
-    (void)userdata;
-    std::string s(data, size);
-    logging::log_debug(LOG_TAG, "CURL DBG: %s", s.c_str());
-    return 0;
-}
-#endif
-
-void runtime::set_curl_post_result_options()
-{
-    curl_easy_reset(m_curl_handle);
-    curl_easy_setopt(m_curl_handle, CURLOPT_TIMEOUT, 0L);
-    curl_easy_setopt(m_curl_handle, CURLOPT_CONNECTTIMEOUT, 1L);
-    curl_easy_setopt(m_curl_handle, CURLOPT_NOSIGNAL, 1L);
-    curl_easy_setopt(m_curl_handle, CURLOPT_POST, 1L);
-    curl_easy_setopt(m_curl_handle, CURLOPT_READFUNCTION, read_data);
-    curl_easy_setopt(m_curl_handle, CURLOPT_WRITEFUNCTION, write_data);
-    curl_easy_setopt(m_curl_handle, CURLOPT_HEADERFUNCTION, write_header);
-
-#ifndef NDEBUG
-    curl_easy_setopt(m_curl_handle, CURLOPT_VERBOSE, 1);
-    curl_easy_setopt(m_curl_handle, CURLOPT_DEBUGFUNCTION, rt_curl_debug_callback);
-#endif
 }
 
 runtime::post_outcome runtime::post_success(std::string const& request_id, invocation_response const& handler_response)

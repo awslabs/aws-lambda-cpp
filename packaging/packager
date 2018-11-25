@@ -55,6 +55,13 @@ if ! type zip > /dev/null 2>&1; then
     echo "zip utility is not found. Please install it and re-run this script"
     exit 1
 fi
+function package_libc_via_pacman {
+    if [[ $(cat /etc/os-release | sed '/ID_LIKE/!d;s/ID_LIKE=//') == "archlinux" ]]; then
+        if type pacman > /dev/null 2>&1; then
+            pacman --files --list --quiet glibc | sed -E '/\.so$|\.so\.[0-9]+$/!d'
+        fi
+    fi
+}
 
 function package_libc_via_dpkg() {
     if type dpkg-query > /dev/null 2>&1; then
@@ -64,7 +71,7 @@ function package_libc_via_dpkg() {
 
 function package_libc_via_rpm() {
     if type rpm > /dev/null 2>&1; then
-        rpm -ql glibc | sed -E '/\.so$|\.so\.[0-9]+$/!d'
+        rpm --query --list glibc | sed -E '/\.so$|\.so\.[0-9]+$/!d'
     fi
 }
 
@@ -73,7 +80,7 @@ PKG_DIR=tmp
 
 list=`ldd "$PKG_BIN_PATH" | awk '{print $(NF-1)}'`
 if [[ $INCLUDE_LIBC == true ]]; then
-    list="$list $(package_libc_via_dpkg) $(package_libc_via_rpm)"
+    list="$list $(package_libc_via_dpkg) $(package_libc_via_rpm) $(package_libc_via_pacman)"
 fi
 
 mkdir -p "$PKG_DIR/bin" "$PKG_DIR/lib"
