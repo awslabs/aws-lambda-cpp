@@ -34,12 +34,12 @@ struct criteria {
     {
         using namespace Aws::Utils;
         auto path_params = data.GetObject("pathParameters");
-        if (!path_params.ValueExists("productid")) {
+        if (!path_params.ValueExists("productId")) {
             error_msg =  "Missing URL parameter {productId}.";
             return;
         }
 
-        product_id = path_params.GetString("productid");
+        product_id = path_params.GetString("productId");
         auto qs = data.GetObject("queryStringParameters");
 
         if (!qs.ValueExists("startDate")) {
@@ -82,7 +82,8 @@ Aws::Utils::Json::JsonValue query(criteria const cr, Aws::DynamoDB::DynamoDBClie
 
     QueryRequest query;
 
-    query.SetTableName("CustomerReviewAnalysis");
+    auto const& table_name = Aws::Environment::GetEnv("TABLE_NAME");
+    query.SetTableName(table_name);
     query.SetKeyConditionExpression("#H = :h AND #R BETWEEN :s AND :e");
     query.AddExpressionAttributeNames("#H", "product_id");
     query.AddExpressionAttributeNames("#R", "date_time");

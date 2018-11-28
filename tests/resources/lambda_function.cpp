@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <string>
+#include <functional>
 
 using namespace aws::lambda_runtime;
 
@@ -27,7 +28,7 @@ invocation_response binary_response(invocation_request const&)
 
 int main(int argc, char* argv[])
 {
-    std::unordered_map<std::string, handler_t*> handlers;
+    std::unordered_map<std::string, std::function<invocation_response(invocation_request const&)>> handlers;
     handlers.emplace("echo_success", echo_success);
     handlers.emplace("echo_failure", echo_failure);
     handlers.emplace("binary_response", binary_response);

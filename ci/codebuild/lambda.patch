@@ -1,0 +1,46 @@
+diff --git a/aws-cpp-sdk-lambda/include/aws/lambda/model/Runtime.h b/aws-cpp-sdk-lambda/include/aws/lambda/model/Runtime.h
+index f04ab7eacf..7aeb4df9a6 100644
+--- a/aws-cpp-sdk-lambda/include/aws/lambda/model/Runtime.h
++++ b/aws-cpp-sdk-lambda/include/aws/lambda/model/Runtime.h
+@@ -38,7 +38,8 @@ namespace Model
+     dotnetcore2_0,
+     dotnetcore2_1,
+     nodejs4_3_edge,
+-    go1_x
++    go1_x,
++    provided
+   };
+ 
+ namespace RuntimeMapper
+diff --git a/aws-cpp-sdk-lambda/source/model/Runtime.cpp b/aws-cpp-sdk-lambda/source/model/Runtime.cpp
+index e4868ea19c..e5d17df0e7 100644
+--- a/aws-cpp-sdk-lambda/source/model/Runtime.cpp
++++ b/aws-cpp-sdk-lambda/source/model/Runtime.cpp
+@@ -43,6 +43,7 @@ namespace Aws
+         static const int dotnetcore2_1_HASH = HashingUtils::HashString("dotnetcore2.1");
+         static const int nodejs4_3_edge_HASH = HashingUtils::HashString("nodejs4.3-edge");
+         static const int go1_x_HASH = HashingUtils::HashString("go1.x");
++        static const int provided_HASH = HashingUtils::HashString("provided");
+ 
+ 
+         Runtime GetRuntimeForName(const Aws::String& name)
+@@ -100,6 +101,10 @@ namespace Aws
+           {
+             return Runtime::go1_x;
+           }
++          else if (hashCode == provided_HASH)
++          {
++              return Runtime::provided;
++          }
+           EnumParseOverflowContainer* overflowContainer = Aws::GetEnumOverflowContainer();
+           if(overflowContainer)
+           {
+@@ -140,6 +145,8 @@ namespace Aws
+             return "nodejs4.3-edge";
+           case Runtime::go1_x:
+             return "go1.x";
++          case Runtime::provided:
++            return "provided";
+           default:
+             EnumParseOverflowContainer* overflowContainer = Aws::GetEnumOverflowContainer();
+             if(overflowContainer)
