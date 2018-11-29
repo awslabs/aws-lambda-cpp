@@ -198,6 +198,8 @@ void runtime::set_curl_next_options()
     curl_easy_setopt(m_curl_handle, CURLOPT_CONNECTTIMEOUT, 1L);
     curl_easy_setopt(m_curl_handle, CURLOPT_NOSIGNAL, 1L);
     curl_easy_setopt(m_curl_handle, CURLOPT_TCP_NODELAY, 1L);
+    curl_easy_setopt(m_curl_handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+
     curl_easy_setopt(m_curl_handle, CURLOPT_HTTPGET, 1L);
     curl_easy_setopt(m_curl_handle, CURLOPT_URL, m_endpoints[Endpoints::NEXT].c_str());
 
@@ -217,6 +219,8 @@ void runtime::set_curl_post_result_options()
     curl_easy_setopt(m_curl_handle, CURLOPT_CONNECTTIMEOUT, 1L);
     curl_easy_setopt(m_curl_handle, CURLOPT_NOSIGNAL, 1L);
     curl_easy_setopt(m_curl_handle, CURLOPT_TCP_NODELAY, 1L);
+    curl_easy_setopt(m_curl_handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+
     curl_easy_setopt(m_curl_handle, CURLOPT_POST, 1L);
     curl_easy_setopt(m_curl_handle, CURLOPT_READFUNCTION, read_data);
     curl_easy_setopt(m_curl_handle, CURLOPT_WRITEFUNCTION, write_data);
