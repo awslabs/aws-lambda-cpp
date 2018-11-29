@@ -4,6 +4,10 @@
 
 C++ implementation of the lambda runtime API
 
+## Design Goals
+1. Negligible cold-start overhead (single digit millisecond).
+2. Freedom of choice in compilers, build platforms and C standard library versions.
+
 ## Building and Installing the Runtime
 Since AWS Lambda runs on GNU/Linux, you should build this runtime library and your logic on GNU/Linux as well.
 
@@ -69,7 +73,7 @@ $ make aws-lambda-package-demo
 ```
 The last command above `make aws-lambda-package-demo` will create a zip file called `demo.zip` in the current directory.
 
-Now, let's create an IAM role and the Lambda function via the AWS CLI.
+Now, create an IAM role and the Lambda function via the AWS CLI.
 
 First create the following trust policy JSON file
 
@@ -97,13 +101,14 @@ $ aws iam create-role --role-name lambda-demo --assume-role-policy-document file
 
 Note down the role Arn returned to you after running that command. We'll need it in the next steps:
 
-You might want to also attach a policy to that role depending on which services your Lambda function will need access to. In this particular example, you can skip this step. But just as a reference here's how you can attach S3 read-only policy to the role.
-
+Attach the following policy to allow Lambda to write logs in CloudWatch:
 ```bash
-$ aws iam attach-role-policy --role-name lambda-demo --policy-arn arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+$ aws iam attach-role-policy --role-name lambda-demo --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 ```
 
-And finally, create the Lambda function by running the following command:
+Make sure you attach the appropriate policies and/or permissions for any other AWS services that you plan on using.
+
+And finally, create the Lambda function:
 
 ```
 $ aws lambda create-function --function-name demo \
@@ -156,38 +161,44 @@ If you are not using the AWS C++ SDK, but happens to be using libcurl directly, 
 curl_easy_setopt(curl_handle, CURLOPT_CAINFO, "/etc/pki/tls/certs/ca-bundle.crt");
 ```
 
-## FAQ
+## FAQ & Troubleshooting
 1. **Why is the zip file so large? what are all those files?**
    Typically, the zip file is large because we have to package the entire C standard library.
    You can reduce the size by doing some or all of the following:
    - Ensure you're building in release mode `-DCMAKE_BUILD_TYPE=Release`
    - If possible, build your function using musl libc, it's tiny. The easiest way to do this, assuming your code is portable, is to build on Alpine linux, which uses must-libc by default.
-2. **How to upload a zip file that's bigger than 50MB via the CLI?**
-   Upload your zip file to S3 first:
-```bash
-$ aws s3 cp demo.zip s3://mys3bucket/demo.zip
-```
-NOTE: you must use the same region for your S3 bucket as the lambda.
+1. **How to upload a zip file that's bigger than 50MB via the CLI?**
+    Upload your zip file to S3 first:
+    ```bash
+    $ aws s3 cp demo.zip s3://mys3bucket/demo.zip
+    ```
+    NOTE: you must use the same region for your S3 bucket as the lambda.
 
-Then you can create the Lambda function this way:
+    Then you can create the Lambda function this way:
 
-```bash
-$ aws lambda create-function --function-name demo \
---role <specify role arn here> \
---runtime provided --timeout 15 --memory-size 128 \
---handler demo
---code "S3Bucket=mys3bucket,S3Key=demo.zip"
-```
-
-3. **My code is crashing, how can I debug it?**
+    ```bash
+    $ aws lambda create-function --function-name demo \
+    --role <specify role arn here> \
+    --runtime provided --timeout 15 --memory-size 128 \
+    --handler demo
+    --code "S3Bucket=mys3bucket,S3Key=demo.zip"
+    ```
+1. **My code is crashing, how can I debug it?**
    - Turn up the logging verbosity to the maximum.
-     - Build the runtime with the following CMake flag added `-DLOG_VERBOSITY=3`
+     - Build the runtime in Debug mode. `-DCMAKE_BUILD_TYPE=Debug`. Verbose logs are enabled by default in Debug builds.
+     - To enable verbose logs in Release builds, build the runtime with the following CMake flag `-DLOG_VERBOSITY=3`
      - If you are using the AWS C++ SDK, see [this FAQ](https://github.com/aws/aws-sdk-cpp/wiki#how-do-i-turn-on-logging) on how to adjust its logging verbosity
    - Run your code locally on an Amazon Linux AMI or Docker container to reproduce the problem
      - If you go the AMI route, [use the official one](https://docs.aws.amazon.com/lambda/latest/dg/current-supported-versions.html) recommended by AWS Lambda 
      - If you go the Docker route, use the following command to launch a container running AL2017.03
        `$ docker run -v /tmp:/tmp -it --security-opt seccomp=unconfined amazonlinux:2017.03`
        The `security-opt` argument is necessary to run `gdb`, `strace`, etc.
+1. **CURL problem with the SSL CA cert**
+   - Make sure you are using a `libcurl` version built with OpenSSL, or one of its flavors (BoringSSL, LibreSSL)
+   - Make sure you tell `libcurl` where to find the CA bundle file.
+   - You can try hitting the non-TLS version of the endpoint if available. (Not Recommended).
+1. **No known conversion between `std::string` and `Aws::String`**
+    - Either turn off custom memory management in the AWS C++ SDK or build it as a static library (`-DBUILD_SHARED_LIBS=OFF`)
 
 ## License
 
