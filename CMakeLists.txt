@@ -33,7 +33,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     $<INSTALL_INTERFACE:include>)
 
 find_package(CURL REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE curl)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${CURL_LIBRARIES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${CURL_INCLUDE_DIRS})
 
 if(HAVE_BACKTRACE)
     target_compile_definitions(${PROJECT_NAME} PRIVATE -DHAVE_BACKTRACE)
@@ -67,7 +68,6 @@ endif()
 if (ENABLE_TESTS)
     enable_testing()
     add_subdirectory(tests)
-    add_subdirectory(tests/resources)
 endif()
 
 # installation
