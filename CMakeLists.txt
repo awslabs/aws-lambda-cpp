@@ -68,7 +68,6 @@ endif()
 if (ENABLE_TESTS)
     enable_testing()
     add_subdirectory(tests)
-    add_subdirectory(tests/resources)
 endif()
 
 # installation
