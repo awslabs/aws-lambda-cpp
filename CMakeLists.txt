@@ -67,7 +67,6 @@ endif()
 if (ENABLE_TESTS)
     enable_testing()
     add_subdirectory(tests)
-else()
     add_subdirectory(tests/resources)
 endif()
 
