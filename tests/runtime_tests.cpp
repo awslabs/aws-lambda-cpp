@@ -58,7 +58,7 @@ struct LambdaRuntimeTest : public ::testing::Test {
         if (outcome.IsSuccess()) {
             return outcome.GetResult().GetRole().GetArn();
         }
-        return { };
+        return {};
     }
 
     void create_function(Aws::String const& name)
