@@ -234,7 +234,6 @@ void runtime::set_curl_post_result_options()
 
 runtime::next_outcome runtime::get_next()
 {
-
     http::response resp;
     set_curl_next_options();
     curl_easy_setopt(m_curl_handle, CURLOPT_WRITEDATA, &resp);
@@ -412,8 +411,7 @@ void run_handler(std::function<invocation_response(invocation_request const&)> c
         const auto next_outcome = rt.get_next();
         if (!next_outcome.is_success()) {
             if (next_outcome.get_failure() == aws::http::response_code::REQUEST_NOT_MADE) {
-                logging::log_error(LOG_TAG, "Failed to send HTTP request to retrieve next task.");
-                return;
+                continue;
             }
 
             logging::log_info(

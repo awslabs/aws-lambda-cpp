@@ -50,7 +50,6 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     "-Wconversion"
     "-Wno-sign-conversion")
 
-#TODO: make this a CMake option/variable
 if (LOG_VERBOSITY)
     target_compile_definitions(${PROJECT_NAME} PRIVATE "-DAWS_LAMBDA_LOG=${LOG_VERBOSITY}")
 elseif(CMAKE_BUILD_TYPE STREQUAL Debug)
