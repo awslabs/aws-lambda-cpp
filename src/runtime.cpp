@@ -407,10 +407,14 @@ void run_handler(std::function<invocation_response(invocation_request const&)> c
 
     runtime rt(endpoint);
 
-    while (true) {
+    size_t retries = 0;
+    size_t const max_retries = 3;
+
+    while (retries < max_retries) {
         const auto next_outcome = rt.get_next();
         if (!next_outcome.is_success()) {
             if (next_outcome.get_failure() == aws::http::response_code::REQUEST_NOT_MADE) {
+                ++retries;
                 continue;
             }
 
@@ -418,8 +422,11 @@ void run_handler(std::function<invocation_response(invocation_request const&)> c
                 LOG_TAG,
                 "HTTP request was not successful. HTTP response code: %d. Retrying..",
                 static_cast<int>(next_outcome.get_failure()));
+            ++retries;
             continue;
         }
+
+        retries = 0;
 
         auto const& req = next_outcome.get_result();
         logging::log_info(LOG_TAG, "Invoking user handler");
