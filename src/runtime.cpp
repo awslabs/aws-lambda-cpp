@@ -19,6 +19,7 @@
 #include "aws/http/response.h"
 
 #include <curl/curl.h>
+#include <curl/curlver.h>
 #include <climits> // for ULONG_MAX
 #include <cassert>
 #include <chrono>
@@ -445,6 +446,11 @@ void run_handler(std::function<invocation_response(invocation_request const&)> c
                 return; // TODO: implement a better retry strategy
             }
         }
+    }
+
+    if (retries == max_retries) {
+        logging::log_error(
+            LOG_TAG, "Exhausted all retries. This is probably a bug in libcurl v" LIBCURL_VERSION " Exiting!");
     }
 }
 
