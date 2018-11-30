@@ -67,7 +67,7 @@ struct LambdaRuntimeTest : public ::testing::Test {
         createFunctionRequest.SetHandler(name);
         createFunctionRequest.SetFunctionName(name);
         // I ran into eventual-consistency issues when creating the role dynamically as part of the test.
-        createFunctionRequest.SetRole(get_role_arn("lambda-lab"));
+        createFunctionRequest.SetRole(get_role_arn("integration-tests"));
         Model::FunctionCode funcode;
         funcode.WithS3Bucket(S3BUCKET).WithS3Key(S3KEY);
         createFunctionRequest.SetCode(funcode);
