@@ -39,7 +39,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE "-Wall" "-Wextra")
 aws_lambda_package_target(${PROJECT_NAME})
 ```
 
-And here is how a sample `main.cpp` would look like for example:
+And here is how a sample `main.cpp` would look like:
 ```cpp
 #include <aws/lambda-runtime/runtime.h>
 
@@ -63,7 +63,7 @@ int main()
 }
 ```
 
-And finally, here's how you would package it all. Run the following commandsfrom your application's root directory:
+And finally, here's how you would package it all. Run the following commands from your application's root directory:
 
 ```bash
 $ mkdir build
