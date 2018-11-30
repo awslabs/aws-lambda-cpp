@@ -15,7 +15,7 @@
 
 using namespace Aws::Lambda;
 
-static const char S3BUCKET[] = "aws-lambda-cpp-runtime-tests";
+static const char S3BUCKET[] = "aws-lambda-cpp-tests";
 static const char S3KEY[] = "lambda-test-fun.zip";
 
 struct LambdaRuntimeTest : public ::testing::Test {
