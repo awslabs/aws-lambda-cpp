@@ -15,7 +15,7 @@
 
 using namespace Aws::Lambda;
 
-static const char S3BUCKET[] = "aws-lambda-cpp-runtime-tests";
+static const char S3BUCKET[] = "aws-lambda-cpp-tests";
 static const char S3KEY[] = "lambda-test-fun.zip";
 
 struct LambdaRuntimeTest : public ::testing::Test {
@@ -58,7 +58,7 @@ struct LambdaRuntimeTest : public ::testing::Test {
         if (outcome.IsSuccess()) {
             return outcome.GetResult().GetRole().GetArn();
         }
-        return { };
+        return {};
     }
 
     void create_function(Aws::String const& name)
@@ -67,7 +67,7 @@ struct LambdaRuntimeTest : public ::testing::Test {
         createFunctionRequest.SetHandler(name);
         createFunctionRequest.SetFunctionName(name);
         // I ran into eventual-consistency issues when creating the role dynamically as part of the test.
-        createFunctionRequest.SetRole(get_role_arn("lambda-lab"));
+        createFunctionRequest.SetRole(get_role_arn("integration-tests"));
         Model::FunctionCode funcode;
         funcode.WithS3Bucket(S3BUCKET).WithS3Key(S3KEY);
         createFunctionRequest.SetCode(funcode);
