@@ -1,6 +1,6 @@
 ---
 Checks:          'clang-diagnostic-*,clang-analyzer-*,performance-*,readability-*,modernize-*,bugprone-*,misc-*'
-WarningsAsErrors: 'performance-*'
+WarningsAsErrors: '*'
 HeaderFilterRegex: ''
 FormatStyle: 'none'
 CheckOptions:

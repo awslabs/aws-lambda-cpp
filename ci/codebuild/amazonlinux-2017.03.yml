@@ -9,7 +9,8 @@ phases:
   build:
     commands:
       - echo Build started on `date`
-      - ci/codebuild/build.sh
+      - ci/codebuild/build.sh -DENABLE_TESTS=ON
+      - ci/codebuild/run-tests.sh
   post_build:
     commands:
       - echo Build completed on `date`

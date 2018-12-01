@@ -1,0 +1,6 @@
+FROM ubuntu:18.04
+
+RUN apt-get update; apt-get install git clang clang-tidy clang-format libcurl4-openssl-dev wget ninja-build -y
+
+RUN wget -O cmake-install https://github.com/Kitware/CMake/releases/download/v3.13.0/cmake-3.13.0-Linux-x86_64.sh; \
+sh cmake-install --skip-license --prefix=/usr --exclude-subdirectory;

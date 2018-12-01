@@ -21,4 +21,3 @@ int main(int argc, char** argv)
     Aws::ShutdownAPI(options);
     return exitCode;
 }
-

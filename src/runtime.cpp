@@ -24,6 +24,7 @@
 #include <cassert>
 #include <chrono>
 #include <algorithm>
+#include <array>
 #include <cstdlib> // for strtoul
 
 #define LAMBDA_RUNTIME_API __attribute__((visibility("default")))
@@ -157,17 +158,20 @@ public:
     /**
      * Tells lambda that the function has succeeded.
      */
-    post_outcome post_success(std::string const& request_id, invocation_response const& response);
+    post_outcome post_success(std::string const& request_id, invocation_response const& handler_response);
 
     /**
      * Tells lambda that the function has failed.
      */
-    post_outcome post_failure(std::string const& request_id, invocation_response const& response);
+    post_outcome post_failure(std::string const& request_id, invocation_response const& handler_response);
 
 private:
     void set_curl_next_options();
     void set_curl_post_result_options();
-    post_outcome do_post(std::string const& url, std::string const& request_id, invocation_response const& response);
+    post_outcome do_post(
+        std::string const& url,
+        std::string const& request_id,
+        invocation_response const& handler_response);
 
 private:
     std::array<std::string const, 3> const m_endpoints;
