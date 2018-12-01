@@ -19,6 +19,7 @@
 #include "aws/http/response.h"
 
 #include <curl/curl.h>
+#include <curl/curlver.h>
 #include <climits> // for ULONG_MAX
 #include <cassert>
 #include <chrono>
@@ -198,6 +199,8 @@ void runtime::set_curl_next_options()
     curl_easy_setopt(m_curl_handle, CURLOPT_CONNECTTIMEOUT, 1L);
     curl_easy_setopt(m_curl_handle, CURLOPT_NOSIGNAL, 1L);
     curl_easy_setopt(m_curl_handle, CURLOPT_TCP_NODELAY, 1L);
+    curl_easy_setopt(m_curl_handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+
     curl_easy_setopt(m_curl_handle, CURLOPT_HTTPGET, 1L);
     curl_easy_setopt(m_curl_handle, CURLOPT_URL, m_endpoints[Endpoints::NEXT].c_str());
 
@@ -217,6 +220,8 @@ void runtime::set_curl_post_result_options()
     curl_easy_setopt(m_curl_handle, CURLOPT_CONNECTTIMEOUT, 1L);
     curl_easy_setopt(m_curl_handle, CURLOPT_NOSIGNAL, 1L);
     curl_easy_setopt(m_curl_handle, CURLOPT_TCP_NODELAY, 1L);
+    curl_easy_setopt(m_curl_handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+
     curl_easy_setopt(m_curl_handle, CURLOPT_POST, 1L);
     curl_easy_setopt(m_curl_handle, CURLOPT_READFUNCTION, read_data);
     curl_easy_setopt(m_curl_handle, CURLOPT_WRITEFUNCTION, write_data);
@@ -230,7 +235,6 @@ void runtime::set_curl_post_result_options()
 
 runtime::next_outcome runtime::get_next()
 {
-
     http::response resp;
     set_curl_next_options();
     curl_easy_setopt(m_curl_handle, CURLOPT_WRITEDATA, &resp);
@@ -404,20 +408,26 @@ void run_handler(std::function<invocation_response(invocation_request const&)> c
 
     runtime rt(endpoint);
 
-    while (true) {
+    size_t retries = 0;
+    size_t const max_retries = 3;
+
+    while (retries < max_retries) {
         const auto next_outcome = rt.get_next();
         if (!next_outcome.is_success()) {
             if (next_outcome.get_failure() == aws::http::response_code::REQUEST_NOT_MADE) {
-                logging::log_error(LOG_TAG, "Failed to send HTTP request to retrieve next task.");
-                return;
+                ++retries;
+                continue;
             }
 
             logging::log_info(
                 LOG_TAG,
                 "HTTP request was not successful. HTTP response code: %d. Retrying..",
                 static_cast<int>(next_outcome.get_failure()));
+            ++retries;
             continue;
         }
+
+        retries = 0;
 
         auto const& req = next_outcome.get_result();
         logging::log_info(LOG_TAG, "Invoking user handler");
@@ -436,6 +446,11 @@ void run_handler(std::function<invocation_response(invocation_request const&)> c
                 return; // TODO: implement a better retry strategy
             }
         }
+    }
+
+    if (retries == max_retries) {
+        logging::log_error(
+            LOG_TAG, "Exhausted all retries. This is probably a bug in libcurl v" LIBCURL_VERSION " Exiting!");
     }
 }
 
