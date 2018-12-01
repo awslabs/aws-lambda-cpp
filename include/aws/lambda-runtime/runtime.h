@@ -15,7 +15,6 @@
  */
 
 #include <chrono>
-#include <array>
 #include <string>
 #include <functional>
 
