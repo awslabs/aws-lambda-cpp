@@ -113,6 +113,7 @@ done
 bootstrap_script=$(cat <<EOF
 #!/bin/bash
 set -euo pipefail
+export AWS_EXECUTION_ENV=lambda-cpp
 exec \$LAMBDA_TASK_ROOT/lib/$PKG_LD --library-path \$LAMBDA_TASK_ROOT/lib \$LAMBDA_TASK_ROOT/bin/$PKG_BIN_FILENAME \${_HANDLER}
 EOF
 )
@@ -120,6 +121,7 @@ EOF
 bootstrap_script_no_libc=$(cat <<EOF
 #!/bin/bash
 set -euo pipefail
+export AWS_EXECUTION_ENV=lambda-cpp
 export LD_LIBRARY_PATH=\$LAMBDA_TASK_ROOT/lib:\$LD_LIBRARY_PATH
 exec \$LAMBDA_TASK_ROOT/bin/$PKG_BIN_FILENAME \${_HANDLER}
 EOF
