@@ -9,3 +9,6 @@ add_custom_target(aws-lambda-package-lambda-test-fun
     COMMAND "${CMAKE_SOURCE_DIR}/packaging/packager" "${CMAKE_CURRENT_BINARY_DIR}/lambda-test-fun"
     DEPENDS ${PROJECT_NAME})
 
+add_custom_target(aws-lambda-package-lambda-test-fun-no-glibc
+    COMMAND "${CMAKE_SOURCE_DIR}/packaging/packager" -d "${CMAKE_CURRENT_BINARY_DIR}/lambda-test-fun"
+    DEPENDS ${PROJECT_NAME})
