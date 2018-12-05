@@ -23,7 +23,6 @@
 #include <climits> // for ULONG_MAX
 #include <cassert>
 #include <chrono>
-#include <algorithm>
 #include <array>
 #include <cstdlib> // for strtoul
 
