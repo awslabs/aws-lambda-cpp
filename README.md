@@ -157,7 +157,7 @@ For example, if you are using the AWS C++ SDK, it's best to set the following co
 Aws::Client::ClientConfiguration config;
 config.caFile = "/etc/pki/tls/certs/ca-bundle.crt";
 ```
-If you are not using the AWS C++ SDK, but happens to be using libcurl directly, you can set the CA bundle location by doing:
+If you are not using the AWS C++ SDK, but happen to be using libcurl directly, you can set the CA bundle location by doing:
 ```c
 curl_easy_setopt(curl_handle, CURLOPT_CAINFO, "/etc/pki/tls/certs/ca-bundle.crt");
 ```
