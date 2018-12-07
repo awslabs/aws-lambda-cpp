@@ -14,6 +14,7 @@
  */
 
 #include "aws/lambda-runtime/runtime.h"
+#include "aws/lambda-runtime/version.h"
 #include "aws/lambda-runtime/outcome.h"
 #include "aws/logging/logging.h"
 #include "aws/http/response.h"
@@ -26,7 +27,7 @@
 #include <array>
 #include <cstdlib> // for strtoul
 
-#define LAMBDA_RUNTIME_API __attribute__((visibility("default")))
+#define AWS_LAMBDA_RUNTIME_API __attribute__((visibility("default")))
 
 namespace aws {
 namespace lambda_runtime {
@@ -103,6 +104,12 @@ static size_t write_header(char* ptr, size_t size, size_t nmemb, void* userdata)
         break;
     }
     return size * nmemb;
+}
+
+static std::string get_user_agent_header()
+{
+    static std::string user_agent = std::string("User-Agent: AWS_Lambda_Cpp/") + get_version();
+    return user_agent;
 }
 
 static size_t read_data(char* buffer, size_t size, size_t nitems, void* userdata)
@@ -243,9 +250,13 @@ runtime::next_outcome runtime::get_next()
     curl_easy_setopt(m_curl_handle, CURLOPT_WRITEDATA, &resp);
     curl_easy_setopt(m_curl_handle, CURLOPT_HEADERDATA, &resp);
 
+    curl_slist* headers = nullptr;
+    headers = curl_slist_append(headers, get_user_agent_header().c_str());
+
     logging::log_debug(LOG_TAG, "Making request to %s", m_endpoints[Endpoints::NEXT].c_str());
     CURLcode curl_code = curl_easy_perform(m_curl_handle);
     logging::log_debug(LOG_TAG, "Completed request to %s", m_endpoints[Endpoints::NEXT].c_str());
+    curl_slist_free_all(headers);
 
     if (curl_code != CURLE_OK) {
         logging::log_debug(LOG_TAG, "CURL returned error code %d - %s", curl_code, curl_easy_strerror(curl_code));
@@ -343,6 +354,7 @@ runtime::post_outcome runtime::do_post(
 
     headers = curl_slist_append(headers, "Expect:");
     headers = curl_slist_append(headers, "transfer-encoding:");
+    headers = curl_slist_append(headers, get_user_agent_header().c_str());
     auto const& payload = handler_response.get_payload();
     logging::log_debug(
         LOG_TAG, "calculating content length... %s", ("content-length: " + std::to_string(payload.length())).c_str());
@@ -398,7 +410,7 @@ static bool handle_post_outcome(runtime::post_outcome const& o, std::string cons
     return false;
 }
 
-LAMBDA_RUNTIME_API
+AWS_LAMBDA_RUNTIME_API
 void run_handler(std::function<invocation_response(invocation_request const&)> const& handler)
 {
     logging::log_info(LOG_TAG, "Initializing the C++ Lambda Runtime.");
@@ -501,7 +513,7 @@ static std::string json_escape(std::string const& in)
     return out;
 }
 
-LAMBDA_RUNTIME_API
+AWS_LAMBDA_RUNTIME_API
 invocation_response invocation_response::success(std::string const& payload, std::string const& content_type)
 {
     invocation_response r;
@@ -511,7 +523,7 @@ invocation_response invocation_response::success(std::string const& payload, std
     return r;
 }
 
-LAMBDA_RUNTIME_API
+AWS_LAMBDA_RUNTIME_API
 invocation_response invocation_response::failure(std::string const& error_message, std::string const& error_type)
 {
     invocation_response r;
