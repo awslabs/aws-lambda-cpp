@@ -13,10 +13,10 @@ C++ implementation of the lambda runtime API
 Since AWS Lambda runs on GNU/Linux, you should build this runtime library and your logic on GNU/Linux as well.
 
 
-Using CMake, run the following commands:
-```cmake
-$ git clone https://github.com/awslabs/aws-lambda-cpp-runtime.git
-$ cd aws-lambda-cpp-runtime
+In a terminal, run the following commands:
+```bash
+$ git clone https://github.com/awslabs/aws-lambda-cpp.git
+$ cd aws-lambda-cpp
 $ mkdir build
 $ cd build
 $ cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/lambda-install
