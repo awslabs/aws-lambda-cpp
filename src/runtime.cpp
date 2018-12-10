@@ -106,7 +106,7 @@ static size_t write_header(char* ptr, size_t size, size_t nmemb, void* userdata)
     return size * nmemb;
 }
 
-static std::string get_user_agent_header()
+static std::string const& get_user_agent_header()
 {
     static std::string user_agent = std::string("User-Agent: AWS_Lambda_Cpp/") + get_version();
     return user_agent;
