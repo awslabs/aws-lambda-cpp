@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 set(CMAKE_CXX_STANDARD 11)
 project(aws-lambda-runtime
-    VERSION 0.1
+    VERSION 0.1.0
     LANGUAGES CXX)
 
 option(ENABLE_TESTS "Enables building the test project, requires AWS C++ SDK." OFF)
@@ -26,6 +26,7 @@ check_cxx_compiler_flag("-Wl,-flto" LTO_CAPABLE)
 add_library(${PROJECT_NAME}
     "src/logging.cpp"
     "src/runtime.cpp"
+    "${CMAKE_CURRENT_BINARY_DIR}/version.cpp"
     )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -51,11 +52,11 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     "-Wno-sign-conversion")
 
 if (LOG_VERBOSITY)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE "-DAWS_LAMBDA_LOG=${LOG_VERBOSITY}")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE "AWS_LAMBDA_LOG=${LOG_VERBOSITY}")
 elseif(CMAKE_BUILD_TYPE STREQUAL Debug)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE "-DAWS_LAMBDA_LOG=3")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE "AWS_LAMBDA_LOG=3")
 else ()
-    target_compile_definitions(${PROJECT_NAME} PRIVATE "-DAWS_LAMBDA_LOG=0")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE "AWS_LAMBDA_LOG=0")
 endif()
 
 if ((BUILD_SHARED_LIBS) AND (LTO_CAPABLE))
@@ -69,8 +70,14 @@ if (ENABLE_TESTS)
     add_subdirectory(tests)
 endif()
 
+#versioning
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/version.cpp.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/version.cpp"
+    NEWLINE_STYLE LF)
+
 # installation
-install(FILES "include/aws/lambda-runtime/runtime.h"
+install(FILES "include/aws/lambda-runtime/runtime.h" "include/aws/lambda-runtime/version.h"
     DESTINATION "include/aws/lambda-runtime")
 
 install(FILES "include/aws/logging/logging.h"

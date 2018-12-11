@@ -11,7 +11,7 @@ cmake .. -GNinja -DBUILD_ONLY="lambda" \
     -DCMAKE_BUILD_TYPE=Release \
     -DENABLE_UNITY_BUILD=ON \
     -DBUILD_SHARED_LIBS=ON \
-    -DAUTORUN_UNIT_TESTS=OFF \
+    -DENABLE_TESTING=OFF \
     -DCMAKE_INSTALL_PREFIX=/install $@
 ninja
 ninja install
