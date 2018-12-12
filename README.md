@@ -167,7 +167,7 @@ curl_easy_setopt(curl_handle, CURLOPT_CAINFO, "/etc/pki/tls/certs/ca-bundle.crt"
    Typically, the zip file is large because we have to package the entire C standard library.
    You can reduce the size by doing some or all of the following:
    - Ensure you're building in release mode `-DCMAKE_BUILD_TYPE=Release`
-   - If possible, build your function using musl libc, it's tiny. The easiest way to do this, assuming your code is portable, is to build on Alpine linux, which uses must-libc by default.
+   - If possible, build your function using musl libc, it's tiny. The easiest way to do this, assuming your code is portable, is to build on Alpine linux, which uses musl libc by default.
 1. **How to upload a zip file that's bigger than 50MB via the CLI?**
     Upload your zip file to S3 first:
     ```bash
