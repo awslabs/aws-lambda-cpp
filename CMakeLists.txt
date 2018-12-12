@@ -29,6 +29,8 @@ add_library(${PROJECT_NAME}
     "${CMAKE_CURRENT_BINARY_DIR}/version.cpp"
     )
 
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
+
 target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
