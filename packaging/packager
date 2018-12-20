@@ -65,13 +65,17 @@ function package_libc_via_pacman {
 
 function package_libc_via_dpkg() {
     if type dpkg-query > /dev/null 2>&1; then
-        dpkg-query --listfiles libc6 | sed -E '/\.so$|\.so\.[0-9]+$/!d'
+        if [ $(dpkg-query --listfiles libc6 | wc -l) -gt 0 ]; then
+            dpkg-query --listfiles libc6 | sed -E '/\.so$|\.so\.[0-9]+$/!d'
+        fi
     fi
 }
 
 function package_libc_via_rpm() {
     if type rpm > /dev/null 2>&1; then
-        rpm --query --list glibc | sed -E '/\.so$|\.so\.[0-9]+$/!d'
+       if [ $(rpm --query --list --quiet glibc | wc -l) -gt 0 ]; then
+           rpm --query --list glibc | sed -E '/\.so$|\.so\.[0-9]+$/!d'
+       fi
     fi
 }
 
