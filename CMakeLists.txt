@@ -87,9 +87,9 @@ install(FILES "include/aws/logging/logging.h"
 
 install(TARGETS ${PROJECT_NAME}
     EXPORT ${PROJECT_NAME}-targets
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
-    LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
-    RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin)
 
 configure_file("${CMAKE_SOURCE_DIR}/cmake/${PROJECT_NAME}-config.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
@@ -98,12 +98,12 @@ configure_file("${CMAKE_SOURCE_DIR}/cmake/${PROJECT_NAME}-config.cmake"
 export(EXPORT "${PROJECT_NAME}-targets" NAMESPACE AWS::)
 
 install(EXPORT "${PROJECT_NAME}-targets"
-    DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/${PROJECT_NAME}/cmake/"
+    DESTINATION "lib/${PROJECT_NAME}/cmake/"
     NAMESPACE AWS::)
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
-    DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/${PROJECT_NAME}/cmake/")
+    DESTINATION "lib/${PROJECT_NAME}/cmake/")
 
 install(PROGRAMS "${CMAKE_SOURCE_DIR}/packaging/packager"
-    DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/${PROJECT_NAME}/cmake/")
+    DESTINATION "lib/${PROJECT_NAME}/cmake/")
 
