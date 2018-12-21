@@ -89,10 +89,6 @@ libc_libs+=$(package_libc_via_dpkg)
 libc_libs+=$(package_libc_via_rpm)
 libc_libs+=$(package_libc_via_pacman)
 
-if [[ $INCLUDE_LIBC == true ]]; then
-    list+=$libc_libs;
-fi
-
 mkdir -p "$PKG_DIR/bin" "$PKG_DIR/lib"
 
 for i in $list
@@ -101,18 +97,25 @@ do
         continue
     fi
 
-    if [[ $INCLUDE_LIBC == false ]]; then
-        matched=$(echo $libc_libs | grep --count $i) || true # prevent the non-zero exit status from terminating the script
-        if [ $matched -gt 0 ]; then
-            continue
-        fi
+    # Do not copy libc files which are directly linked
+    matched=$(echo $libc_libs | grep --count $i) || true # prevent the non-zero exit status from terminating the script
+    if [ $matched -gt 0 ]; then
+        continue
     fi
+
     cp $i $PKG_DIR/lib
     filename=`basename $i`
     if [[ -z "${filename##ld-*}" ]]; then
         PKG_LD=$filename # Use this file as the loader
     fi
 done
+
+if [[ $INCLUDE_LIBC == true ]]; then
+    for i in $libc_libs
+    do
+        cp --no-dereference $i $PKG_DIR/lib
+    done
+fi
 
 bootstrap_script=$(cat <<EOF
 #!/bin/bash
@@ -140,7 +143,7 @@ fi
 chmod +x "$PKG_DIR/bootstrap"
 # some shenanigans to create the right layout in the zip file without extraneous directories
 pushd "$PKG_DIR" > /dev/null
-zip -r $PKG_BIN_FILENAME.zip *
+zip -yr $PKG_BIN_FILENAME.zip *
 ORIGIN_DIR=$(dirs -l +1)
 mv $PKG_BIN_FILENAME.zip $ORIGIN_DIR
 popd > /dev/null
