@@ -97,22 +97,27 @@ do
         continue
     fi
 
-    # Do not copy libc files which are directly linked
+    # Do not copy libc files which are directly linked unless it's the dynamic loader
     matched=$(echo $libc_libs | grep --count $i) || true # prevent the non-zero exit status from terminating the script
     if [ $matched -gt 0 ]; then
+        filename=`basename $i`
+        if [[ -z "${filename##ld-*}" ]]; then
+            PKG_LD=$filename # Use this file as the loader
+            cp $i $PKG_DIR/lib
+        fi
         continue
     fi
 
     cp $i $PKG_DIR/lib
-    filename=`basename $i`
-    if [[ -z "${filename##ld-*}" ]]; then
-        PKG_LD=$filename # Use this file as the loader
-    fi
 done
 
 if [[ $INCLUDE_LIBC == true ]]; then
     for i in $libc_libs
     do
+        filename=`basename $i`
+        if [[ -z "${filename##ld-*}" ]]; then
+            continue # We don't want the dynamic loader's symlink because its target is an absolute path (/lib/ld-*).
+        fi
         cp --no-dereference $i $PKG_DIR/lib
     done
 fi
@@ -143,7 +148,7 @@ fi
 chmod +x "$PKG_DIR/bootstrap"
 # some shenanigans to create the right layout in the zip file without extraneous directories
 pushd "$PKG_DIR" > /dev/null
-zip -yr $PKG_BIN_FILENAME.zip *
+zip --symlinks --recurse-paths $PKG_BIN_FILENAME.zip *
 ORIGIN_DIR=$(dirs -l +1)
 mv $PKG_BIN_FILENAME.zip $ORIGIN_DIR
 popd > /dev/null
