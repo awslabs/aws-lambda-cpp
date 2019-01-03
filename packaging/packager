@@ -73,7 +73,7 @@ function package_libc_via_dpkg() {
 
 function package_libc_via_rpm() {
     if type rpm > /dev/null 2>&1; then
-       if [ $(rpm --query --list --quiet glibc | wc -l) -gt 0 ]; then
+       if [ $(rpm --query --list glibc | wc -l) -gt 0 ]; then
            rpm --query --list glibc | sed -E '/\.so$|\.so\.[0-9]+$/!d'
        fi
     fi
@@ -98,7 +98,7 @@ do
     fi
 
     # Do not copy libc files which are directly linked unless it's the dynamic loader
-    matched=$(echo $libc_libs | grep --count $i) || true # prevent the non-zero exit status from terminating the script
+    matched=$(echo $libc_libs | grep --fixed-strings --count $i) || true # prevent the non-zero exit status from terminating the script
     if [ $matched -gt 0 ]; then
         filename=`basename $i`
         if [[ -z "${filename##ld-*}" ]]; then
