@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash -x
 #  Copyright 2018-present Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License").
@@ -20,7 +20,7 @@ print_help() {
     echo -e "\t-d,--default-libc\t Use the target host libc libraries. This will not package the C library files.\n"
 }
 
-if [ $# -lt 1 ]; then
+if [[ $# -lt 1 ]]; then
     echo -e "Error: missing arguments\n"
     print_help
     exit 1
@@ -31,7 +31,7 @@ INCLUDE_LIBC=true
 while [[ $# -gt 0 ]]
 do
     key="$1"
-    case $key in
+    case ${key} in
         -d|--default-libc)
             INCLUDE_LIBC=false
             shift # past argument
@@ -46,7 +46,7 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 PKG_BIN_PATH=$1
 
-if [ ! -f "$PKG_BIN_PATH" ]; then
+if [[ ! -f "$PKG_BIN_PATH" ]]; then
     echo "$PKG_BIN_PATH" - No such file.;
     exit 1;
 fi
@@ -65,7 +65,7 @@ function package_libc_via_pacman {
 
 function package_libc_via_dpkg() {
     if type dpkg-query > /dev/null 2>&1; then
-        if [ $(dpkg-query --listfiles libc6 | wc -l) -gt 0 ]; then
+        if [[ $(dpkg-query --listfiles libc6 | wc -l) -gt 0 ]]; then
             dpkg-query --listfiles libc6 | sed -E '/\.so$|\.so\.[0-9]+$/!d'
         fi
     fi
@@ -73,7 +73,7 @@ function package_libc_via_dpkg() {
 
 function package_libc_via_rpm() {
     if type rpm > /dev/null 2>&1; then
-       if [ $(rpm --query --list glibc | wc -l) -gt 0 ]; then
+       if [[ $(rpm --query --list glibc | wc -l) -gt 0 ]]; then
            rpm --query --list glibc | sed -E '/\.so$|\.so\.[0-9]+$/!d'
        fi
     fi
@@ -83,7 +83,20 @@ PKG_BIN_FILENAME=`basename "$PKG_BIN_PATH"`
 PKG_DIR=tmp
 PKG_LD=""
 
-list=$(ldd "$PKG_BIN_PATH" | awk '{print $(NF-1)}')
+ldd_cmd(){
+    osType="`uname`"
+    case ${osType} in
+      'Linux')
+        ldd "$@"
+        ;;
+      'Darwin')
+        otool -L "$@"
+        ;;
+      *) ;;
+    esac
+}
+
+list=$(ldd_cmd "$PKG_BIN_PATH" | awk '{print $(NF-1)}')
 libc_libs=()
 libc_libs+=$(package_libc_via_dpkg)
 libc_libs+=$(package_libc_via_rpm)
@@ -91,15 +104,15 @@ libc_libs+=$(package_libc_via_pacman)
 
 mkdir -p "$PKG_DIR/bin" "$PKG_DIR/lib"
 
-for i in $list
+for i in ${list}
 do
-    if [[ ! -f $i ]]; then # ignore linux-vdso.so.1
+    if [[ ! -f ${i} ]]; then # ignore linux-vdso.so.1
         continue
     fi
 
     # Do not copy libc files which are directly linked unless it's the dynamic loader
     matched=$(echo $libc_libs | grep --fixed-strings --count $i) || true # prevent the non-zero exit status from terminating the script
-    if [ $matched -gt 0 ]; then
+    if [[ $matched -gt 0 ]]; then
         filename=`basename $i`
         if [[ -z "${filename##ld-*}" ]]; then
             PKG_LD=$filename # Use this file as the loader
