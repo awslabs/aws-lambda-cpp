@@ -185,6 +185,11 @@ curl_easy_setopt(curl_handle, CURLOPT_CAINFO, "/etc/pki/tls/certs/ca-bundle.crt"
     --code "S3Bucket=mys3bucket,S3Key=demo.zip"
     ```
 1. **My code is crashing, how can I debug it?**
+
+   - Starting with v0.2.0 you should see a stack-trace of the crash site in the logs (which are typically stored in (CloudWatch). 
+     - To get a more detailed stack-trace with source-code information such as line numbers, file names, etc, you need to install one of the following packages:
+       - On Debian-based systems -  `sudo apt install libdw-dev` or `sudo apt install binutils-dev`
+       - On RHEL based systems -  `sudo yum install elfutils-devel` or `sudo yum install binutils-devel`
    - Turn up the logging verbosity to the maximum.
      - Build the runtime in Debug mode. `-DCMAKE_BUILD_TYPE=Debug`. Verbose logs are enabled by default in Debug builds.
      - To enable verbose logs in Release builds, build the runtime with the following CMake flag `-DLOG_VERBOSITY=3`
