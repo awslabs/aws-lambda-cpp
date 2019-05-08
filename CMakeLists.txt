@@ -1,31 +1,19 @@
 cmake_minimum_required(VERSION 3.5)
 set(CMAKE_CXX_STANDARD 11)
 project(aws-lambda-runtime
-    VERSION 0.1.0
+    VERSION 0.2.0
     LANGUAGES CXX)
 
 option(ENABLE_TESTS "Enables building the test project, requires AWS C++ SDK." OFF)
 
-include(CheckCXXSourceCompiles)
 include(CheckCXXCompilerFlag)
-
-check_cxx_source_compiles("
-#include <execinfo.h>
-
-int main() {
-void *buffer[5];
-int nptrs = backtrace(buffer, 5);
-char **strings = backtrace_symbols(buffer, nptrs);
-
-return !!strings;
-}"  HAVE_BACKTRACE)
-
 
 check_cxx_compiler_flag("-Wl,-flto" LTO_CAPABLE)
 
 add_library(${PROJECT_NAME}
     "src/logging.cpp"
     "src/runtime.cpp"
+    "src/backward.cpp"
     "${CMAKE_CURRENT_BINARY_DIR}/version.cpp"
     )
 
@@ -39,10 +27,6 @@ find_package(CURL REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${CURL_LIBRARIES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${CURL_INCLUDE_DIRS})
 
-if(HAVE_BACKTRACE)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE -DHAVE_BACKTRACE)
-endif()
-
 target_compile_options(${PROJECT_NAME} PRIVATE
     "-fno-exceptions"
     "-fno-rtti"
@@ -52,6 +36,20 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     "-Werror"
     "-Wconversion"
     "-Wno-sign-conversion")
+
+find_library(DW_LIB NAMES dw)
+if (NOT DW_LIB STREQUAL DW_LIB-NOTFOUND)
+    message("-- Enhanced stack-traces are enabled via libdw: ${DW_LIB}")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE "BACKWARD_HAS_DW=1")
+    target_link_libraries(${PROJECT_NAME} PUBLIC "${DW_LIB}")
+else()
+    find_library(BFD_LIB NAMES bfd)
+    if (NOT BFD_LIB STREQUAL BFD_LIB-NOTFOUND)
+        message("-- Enhanced stack-traces are enabled via libbfd: ${BFD_LIB}")
+        target_compile_definitions(${PROJECT_NAME} PRIVATE "BACKWARD_HAS_BFD=1")
+        target_link_libraries(${PROJECT_NAME} PRIVATE "${BFD_LIB}")
+    endif()
+endif()
 
 if (LOG_VERBOSITY)
     target_compile_definitions(${PROJECT_NAME} PRIVATE "AWS_LAMBDA_LOG=${LOG_VERBOSITY}")
