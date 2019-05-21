@@ -12,6 +12,13 @@ C++ implementation of the lambda runtime API
 ## Building and Installing the Runtime
 Since AWS Lambda runs on GNU/Linux, you should build this runtime library and your logic on GNU/Linux as well.
 
+### Prerequisites
+Make sure you have the following packages installed first:
+1. CMake (version 3.5 or later)
+1. git
+1. Make or Ninja
+1. zip
+1. libcurl-devel (on Debian-basded distros it's libcurl4-openssl-dev)
 
 In a terminal, run the following commands:
 ```bash
