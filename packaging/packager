@@ -56,7 +56,7 @@ if ! type zip > /dev/null 2>&1; then
     exit 1
 fi
 function package_libc_via_pacman {
-    if [[ $(cat /etc/os-release | sed '/ID_LIKE/!d;s/ID_LIKE=//') == "archlinux" ]]; then
+    if [[ $(sed '/ID_LIKE/!d;s/ID_LIKE=//' < /etc/os-release) == "archlinux" ]]; then
         if type pacman > /dev/null 2>&1; then
             pacman --files --list --quiet glibc | sed -E '/\.so$|\.so\.[0-9]+$/!d'
         fi
@@ -65,7 +65,7 @@ function package_libc_via_pacman {
 
 function package_libc_via_dpkg() {
     if type dpkg-query > /dev/null 2>&1; then
-        if [ $(dpkg-query --listfiles libc6 | wc -l) -gt 0 ]; then
+        if [[ $(dpkg-query --listfiles libc6 | wc -l) -gt 0 ]]; then
             dpkg-query --listfiles libc6 | sed -E '/\.so$|\.so\.[0-9]+$/!d'
         fi
     fi
@@ -73,21 +73,34 @@ function package_libc_via_dpkg() {
 
 function package_libc_via_rpm() {
     if type rpm > /dev/null 2>&1; then
-       if [ $(rpm --query --list glibc | wc -l) -gt 1 ]; then
+       if [[ $(rpm --query --list glibc | wc -l) -gt 1 ]]; then
            rpm --query --list glibc | sed -E '/\.so$|\.so\.[0-9]+$/!d'
        fi
     fi
 }
 
-PKG_BIN_FILENAME=`basename "$PKG_BIN_PATH"`
+# hasElement expects an element and an array parameter
+# it's equivalent to array.contains(element)
+# e.g. hasElement "needle" ${haystack[@]}
+function hasElement() {
+    local el key=$1
+    shift
+    for el in "$@":
+    do
+        [[ "$el" == "$key" ]] && return 0
+    done
+    return 1
+}
+
+PKG_BIN_FILENAME=$(basename "$PKG_BIN_PATH")
 PKG_DIR=tmp
 PKG_LD=""
 
 list=$(ldd "$PKG_BIN_PATH" | awk '{print $(NF-1)}')
 libc_libs=()
-libc_libs+=$(package_libc_via_dpkg)
-libc_libs+=$(package_libc_via_rpm)
-libc_libs+=$(package_libc_via_pacman)
+libc_libs+=($(package_libc_via_dpkg))
+libc_libs+=($(package_libc_via_rpm))
+libc_libs+=($(package_libc_via_pacman))
 
 mkdir -p "$PKG_DIR/bin" "$PKG_DIR/lib"
 
@@ -98,27 +111,26 @@ do
     fi
 
     # Do not copy libc files which are directly linked unless it's the dynamic loader
-    matched=$(echo $libc_libs | grep --fixed-strings --count $i) || true # prevent the non-zero exit status from terminating the script
-    if [ $matched -gt 0 ]; then
-        filename=`basename $i`
+    if hasElement "$i" "${libc_libs[@]}"; then
+        filename=$(basename "$i")
         if [[ -z "${filename##ld-*}" ]]; then
             PKG_LD=$filename # Use this file as the loader
-            cp $i $PKG_DIR/lib
+            cp "$i" $PKG_DIR/lib
         fi
         continue
     fi
 
-    cp $i $PKG_DIR/lib
+    cp "$i" $PKG_DIR/lib
 done
 
 if [[ $INCLUDE_LIBC == true ]]; then
-    for i in $libc_libs
+    for i in "${libc_libs[@]}"
     do
-        filename=`basename $i`
+        filename=$(basename "$i")
         if [[ -z "${filename##ld-*}" ]]; then
             continue # We don't want the dynamic loader's symlink because its target is an absolute path (/lib/ld-*).
         fi
-        cp --no-dereference $i $PKG_DIR/lib
+        cp --no-dereference "$i" "$PKG_DIR/lib"
     done
 fi
 
@@ -148,9 +160,9 @@ fi
 chmod +x "$PKG_DIR/bootstrap"
 # some shenanigans to create the right layout in the zip file without extraneous directories
 pushd "$PKG_DIR" > /dev/null
-zip --symlinks --recurse-paths $PKG_BIN_FILENAME.zip *
+zip --symlinks --recurse-paths "$PKG_BIN_FILENAME".zip -- *
 ORIGIN_DIR=$(dirs -l +1)
-mv $PKG_BIN_FILENAME.zip $ORIGIN_DIR
+mv "$PKG_BIN_FILENAME".zip "$ORIGIN_DIR"
 popd > /dev/null
 rm -r "$PKG_DIR"
 echo Created "$ORIGIN_DIR/$PKG_BIN_FILENAME".zip
