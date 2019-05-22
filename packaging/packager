@@ -73,7 +73,7 @@ function package_libc_via_dpkg() {
 
 function package_libc_via_rpm() {
     if type rpm > /dev/null 2>&1; then
-       if [ $(rpm --query --list glibc | wc -l) -gt 0 ]; then
+       if [ $(rpm --query --list glibc | wc -l) -gt 1 ]; then
            rpm --query --list glibc | sed -E '/\.so$|\.so\.[0-9]+$/!d'
        fi
     fi
