@@ -24,7 +24,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     $<INSTALL_INTERFACE:include>)
 
 find_package(CURL REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE ${CURL_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CURL_INCLUDE_DIRS})
 
 target_compile_options(${PROJECT_NAME} PRIVATE
