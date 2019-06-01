@@ -85,7 +85,7 @@ function package_libc_via_rpm() {
 function hasElement() {
     local el key=$1
     shift
-    for el in "$@":
+    for el in "$@"
     do
         [[ "$el" == "$key" ]] && return 0
     done
