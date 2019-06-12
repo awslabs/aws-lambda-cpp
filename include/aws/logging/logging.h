@@ -27,6 +27,7 @@ enum class verbosity {
 
 void log(verbosity v, char const* tag, char const* msg, va_list args);
 
+[[gnu::format(printf, 2, 3)]]
 static inline void log_error(char const* tag, char const* msg, ...)
 {
     va_list args;
@@ -37,6 +38,7 @@ static inline void log_error(char const* tag, char const* msg, ...)
     (void)msg;
 }
 
+[[gnu::format(printf, 2, 3)]]
 static inline void log_info(char const* tag, char const* msg, ...)
 {
 #if AWS_LAMBDA_LOG >= 1
@@ -50,6 +52,7 @@ static inline void log_info(char const* tag, char const* msg, ...)
 #endif
 }
 
+[[gnu::format(printf, 2, 3)]]
 static inline void log_debug(char const* tag, char const* msg, ...)
 {
 #if AWS_LAMBDA_LOG >= 2
