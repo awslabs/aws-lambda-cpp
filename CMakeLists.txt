@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 set(CMAKE_CXX_STANDARD 11)
 project(aws-lambda-runtime
-    VERSION 0.2.0
+    VERSION 0.2.3
     LANGUAGES CXX)
 
 option(ENABLE_TESTS "Enables building the test project, requires AWS C++ SDK." OFF)
@@ -24,7 +24,12 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     $<INSTALL_INTERFACE:include>)
 
 find_package(CURL REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
+if (CMAKE_VERSION VERSION_LESS 3.12)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${CURL_LIBRARIES})
+else()
+    target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
+endif()
+
 target_include_directories(${PROJECT_NAME} PRIVATE ${CURL_INCLUDE_DIRS})
 
 target_compile_options(${PROJECT_NAME} PRIVATE
