@@ -15,12 +15,12 @@ invocation_response echo_success(invocation_request const& request)
     return invocation_response::success(request.payload, "application/json");
 }
 
-invocation_response echo_failure(invocation_request const&)
+invocation_response echo_failure(invocation_request const& /*request*/)
 {
     return invocation_response::failure("Test error message", "TestErrorType");
 }
 
-invocation_response binary_response(invocation_request const&)
+invocation_response binary_response(invocation_request const& /*request*/)
 {
     const std::string png((char*)awslogo_png, awslogo_png_len);
     return invocation_response::success(png, "image/png");
