@@ -24,7 +24,12 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     $<INSTALL_INTERFACE:include>)
 
 find_package(CURL REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
+if (CMAKE_VERSION VERSION_LESS 3.12)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${CURL_LIBRARIES})
+else()
+    target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
+endif()
+
 target_include_directories(${PROJECT_NAME} PRIVATE ${CURL_INCLUDE_DIRS})
 
 target_compile_options(${PROJECT_NAME} PRIVATE
