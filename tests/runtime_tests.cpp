@@ -1,4 +1,3 @@
-#include <gtest/gtest.h>
 #include <aws/core/client/ClientConfiguration.h>
 #include <aws/core/utils/Outcome.h>
 #include <aws/core/utils/memory/stl/AWSString.h>
@@ -12,11 +11,16 @@
 #include <aws/lambda/model/CreateFunctionRequest.h>
 #include <aws/lambda/model/DeleteFunctionRequest.h>
 #include <aws/lambda/model/InvokeRequest.h>
+#include "gtest/gtest.h"
+
+extern std::string aws_prefix;
+
+namespace {
 
 using namespace Aws::Lambda;
 
-static const char S3BUCKET[] = "aws-lambda-cpp-tests";
-static const char S3KEY[] = "lambda-test-fun.zip";
+const char S3BUCKET[] = "aws-lambda-cpp-tests";
+const char S3KEY[] = "lambda-test-fun.zip";
 
 struct LambdaRuntimeTest : public ::testing::Test {
     LambdaClient m_lambda_client;
@@ -37,14 +41,19 @@ struct LambdaRuntimeTest : public ::testing::Test {
         return config;
     }
 
+    static Aws::String build_resource_name(Aws::String const& name)
+    {
+        return aws_prefix.c_str() + name; // NOLINT
+    }
+
     LambdaRuntimeTest() : m_lambda_client(create_lambda_config()), m_iam_client(create_iam_config()) {}
 
     ~LambdaRuntimeTest() override
     {
         // clean up in case we exited one test abnormally
-        delete_function("echo_success", false /*assert*/);
-        delete_function("echo_failure", false /*assert*/);
-        delete_function("binary_response", false /*assert*/);
+        delete_function(build_resource_name("echo_success"), false /*assert*/);
+        delete_function(build_resource_name("echo_failure"), false /*assert*/);
+        delete_function(build_resource_name("binary_response"), false /*assert*/);
     }
 
     Aws::String get_role_arn(Aws::String const& role_name)
@@ -61,38 +70,38 @@ struct LambdaRuntimeTest : public ::testing::Test {
         return {};
     }
 
-    void create_function(Aws::String const& name)
+    void create_function(Aws::String const& function_name, Aws::String const& handler_name)
     {
         Model::CreateFunctionRequest createFunctionRequest;
-        createFunctionRequest.SetHandler(name);
-        createFunctionRequest.SetFunctionName(name);
+        createFunctionRequest.SetHandler(handler_name);
+        createFunctionRequest.SetFunctionName(function_name);
         // I ran into eventual-consistency issues when creating the role dynamically as part of the test.
         createFunctionRequest.SetRole(get_role_arn("integration-tests"));
         Model::FunctionCode funcode;
-        funcode.WithS3Bucket(S3BUCKET).WithS3Key(S3KEY);
+        funcode.WithS3Bucket(S3BUCKET).WithS3Key(build_resource_name(S3KEY));
         createFunctionRequest.SetCode(funcode);
         createFunctionRequest.SetRuntime(Aws::Lambda::Model::Runtime::provided);
 
         auto outcome = m_lambda_client.CreateFunction(createFunctionRequest);
-        ASSERT_TRUE(outcome.IsSuccess()) << "Failed to create function " << name;
+        ASSERT_TRUE(outcome.IsSuccess()) << "Failed to create function " << function_name;
     }
 
-    void delete_function(Aws::String const& name, bool assert = true)
+    void delete_function(Aws::String const& function_name, bool assert = true)
     {
         Model::DeleteFunctionRequest deleteFunctionRequest;
-        deleteFunctionRequest.SetFunctionName(name);
+        deleteFunctionRequest.SetFunctionName(function_name);
         auto outcome = m_lambda_client.DeleteFunction(deleteFunctionRequest);
         if (assert) {
-            ASSERT_TRUE(outcome.IsSuccess()) << "Failed to delete function " << name;
+            ASSERT_TRUE(outcome.IsSuccess()) << "Failed to delete function " << function_name;
         }
     }
 };
 
 TEST_F(LambdaRuntimeTest, echo_success)
 {
-    Aws::String const funcname = "echo_success";
+    Aws::String const funcname = build_resource_name("echo_success");
     char const payloadContent[] = "Hello, Lambda!";
-    create_function(funcname);
+    create_function(funcname, "echo_success" /*handler_name*/);
     Model::InvokeRequest invokeRequest;
     invokeRequest.SetFunctionName(funcname);
     invokeRequest.SetInvocationType(Model::InvocationType::RequestResponse);
@@ -121,9 +130,9 @@ TEST_F(LambdaRuntimeTest, echo_success)
 
 TEST_F(LambdaRuntimeTest, echo_unicode)
 {
-    Aws::String const funcname = "echo_success"; // re-use the echo method but with Unicode input
+    Aws::String const funcname = build_resource_name("echo_success"); // re-use the echo method but with Unicode input
     char const payloadContent[] = "画像は1000語の価値がある";
-    create_function(funcname);
+    create_function(funcname, "echo_success" /*handler_name*/);
     Model::InvokeRequest invokeRequest;
     invokeRequest.SetFunctionName(funcname);
     invokeRequest.SetInvocationType(Model::InvocationType::RequestResponse);
@@ -152,8 +161,8 @@ TEST_F(LambdaRuntimeTest, echo_unicode)
 
 TEST_F(LambdaRuntimeTest, echo_failure)
 {
-    Aws::String const funcname = "echo_failure";
-    create_function(funcname);
+    Aws::String const funcname = build_resource_name("echo_failure");
+    create_function(funcname, "echo_failure" /*handler_name*/);
     Model::InvokeRequest invokeRequest;
     invokeRequest.SetFunctionName(funcname);
     invokeRequest.SetInvocationType(Model::InvocationType::RequestResponse);
@@ -167,9 +176,9 @@ TEST_F(LambdaRuntimeTest, echo_failure)
 
 TEST_F(LambdaRuntimeTest, binary_response)
 {
-    Aws::String const funcname = "binary_response";
+    Aws::String const funcname = build_resource_name("binary_response");
     unsigned long constexpr expected_length = 1451;
-    create_function(funcname);
+    create_function(funcname, "binary_response" /*handler_name*/);
     Model::InvokeRequest invokeRequest;
     invokeRequest.SetFunctionName(funcname);
     invokeRequest.SetInvocationType(Model::InvocationType::RequestResponse);
@@ -181,3 +190,4 @@ TEST_F(LambdaRuntimeTest, binary_response)
     EXPECT_EQ(expected_length, invokeOutcome.GetResult().GetPayload().tellp());
     delete_function(funcname);
 }
+} // namespace
