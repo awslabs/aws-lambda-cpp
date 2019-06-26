@@ -115,7 +115,7 @@ do
         filename=$(basename "$i")
         if [[ -z "${filename##ld-*}" ]]; then
             PKG_LD=$filename # Use this file as the loader
-            cp "$i" $PKG_DIR/lib
+            cp "$i" "$PKG_DIR/lib"
         fi
         continue
     fi
@@ -128,10 +128,21 @@ if [[ $INCLUDE_LIBC == true ]]; then
     do
         filename=$(basename "$i")
         if [[ -z "${filename##ld-*}" ]]; then
+            # if the loader is empty, then the binary is probably linked to a symlink of the loader. The symlink will
+            # not show up when quering the package manager for libc files. So, in this case, we want to copy the loader
+            if [[ -z "$PKG_LD" ]]; then 
+                PKG_LD=$filename
+                cp "$i" "$PKG_DIR/lib" # we want to follow the symlink (default behavior)
+            fi
             continue # We don't want the dynamic loader's symlink because its target is an absolute path (/lib/ld-*).
         fi
         cp --no-dereference "$i" "$PKG_DIR/lib"
     done
+fi
+
+if [[ -z "$PKG_LD" ]]; then
+    echo "Failed to identify, locate or package the loader. Please file an issue on Github!" 1>&2
+    exit 1
 fi
 
 bootstrap_script=$(cat <<EOF
