@@ -56,7 +56,7 @@ if ! type zip > /dev/null 2>&1; then
     exit 1
 fi
 function package_libc_via_pacman {
-    if [[ $(sed '/ID_LIKE/!d;s/ID_LIKE=//' < /etc/os-release) == "archlinux" ]]; then
+    if grep "Arch Linux" < /etc/os-release > /dev/null 2>&1; then
         if type pacman > /dev/null 2>&1; then
             pacman --files --list --quiet glibc | sed -E '/\.so$|\.so\.[0-9]+$/!d'
         fi
