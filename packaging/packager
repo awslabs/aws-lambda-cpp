@@ -58,7 +58,7 @@ fi
 function package_libc_via_pacman {
     if grep "Arch Linux" < /etc/os-release > /dev/null 2>&1; then
         if type pacman > /dev/null 2>&1; then
-            pacman --files --list --quiet glibc | sed -E '/\.so$|\.so\.[0-9]+$/!d'
+            pacman --query --list --quiet glibc | sed -E '/\.so$|\.so\.[0-9]+$/!d'
         fi
     fi
 }
