@@ -14,9 +14,13 @@
  * permissions and limitations under the License.
  */
 
+#include <array>
 #include <chrono>
 #include <string>
 #include <functional>
+#include <curl/curl.h>
+#include "aws/lambda-runtime/outcome.h"
+#include "aws/http/response.h"
 
 namespace aws {
 namespace lambda_runtime {
@@ -113,6 +117,45 @@ public:
      * Returns true if the payload and content-type are set. Returns false if the error message and error types are set.
      */
     bool is_success() const { return m_success; }
+};
+
+struct no_result {
+};
+
+class runtime {
+public:
+    using next_outcome = aws::lambda_runtime::outcome<invocation_request, aws::http::response_code>;
+    using post_outcome = aws::lambda_runtime::outcome<no_result, aws::http::response_code>;
+
+    runtime(std::string const& endpoint);
+    ~runtime();
+
+    /**
+     * Ask lambda for an invocation.
+     */
+    next_outcome get_next();
+
+    /**
+     * Tells lambda that the function has succeeded.
+     */
+    post_outcome post_success(std::string const& request_id, invocation_response const& handler_response);
+
+    /**
+     * Tells lambda that the function has failed.
+     */
+    post_outcome post_failure(std::string const& request_id, invocation_response const& handler_response);
+
+private:
+    void set_curl_next_options();
+    void set_curl_post_result_options();
+    post_outcome do_post(
+        std::string const& url,
+        std::string const& request_id,
+        invocation_response const& handler_response);
+
+private:
+    std::array<std::string const, 3> const m_endpoints;
+    CURL* const m_curl_handle;
 };
 
 inline std::chrono::milliseconds invocation_request::get_time_remaining() const
