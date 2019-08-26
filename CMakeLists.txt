@@ -85,7 +85,10 @@ configure_file(
 install(FILES "include/aws/http/response.h"
     DESTINATION "include/aws/http")
 
-install(FILES "include/aws/lambda-runtime/runtime.h" "include/aws/lambda-runtime/version.h" "include/aws/lambda-runtime/outcome.h"
+install(FILES 
+    "include/aws/lambda-runtime/runtime.h"
+    "include/aws/lambda-runtime/version.h"
+    "include/aws/lambda-runtime/outcome.h"
     DESTINATION "include/aws/lambda-runtime")
 
 install(FILES "include/aws/logging/logging.h"
