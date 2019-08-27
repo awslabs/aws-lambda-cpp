@@ -375,7 +375,7 @@ static bool handle_post_outcome(runtime::post_outcome const& o, std::string cons
 AWS_LAMBDA_RUNTIME_API
 void run_handler(std::function<invocation_response(invocation_request const&)> const& handler)
 {
-    logging::log_info(LOG_TAG, "Initializing the C++ Lambda Runtime.");
+    logging::log_info(LOG_TAG, "Initializing the C++ Lambda Runtime version %s", aws::lambda_runtime::get_version());
     std::string endpoint("http://");
     if (auto ep = std::getenv("AWS_LAMBDA_RUNTIME_API")) {
         assert(ep);
