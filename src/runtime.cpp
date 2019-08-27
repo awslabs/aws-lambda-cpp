@@ -145,45 +145,6 @@ static int rt_curl_debug_callback(CURL* handle, curl_infotype type, char* data, 
 }
 #endif
 
-struct no_result {
-};
-
-class runtime {
-public:
-    using next_outcome = aws::lambda_runtime::outcome<invocation_request, aws::http::response_code>;
-    using post_outcome = aws::lambda_runtime::outcome<no_result, aws::http::response_code>;
-
-    runtime(std::string const& endpoint);
-    ~runtime();
-
-    /**
-     * Ask lambda for an invocation.
-     */
-    next_outcome get_next();
-
-    /**
-     * Tells lambda that the function has succeeded.
-     */
-    post_outcome post_success(std::string const& request_id, invocation_response const& handler_response);
-
-    /**
-     * Tells lambda that the function has failed.
-     */
-    post_outcome post_failure(std::string const& request_id, invocation_response const& handler_response);
-
-private:
-    void set_curl_next_options();
-    void set_curl_post_result_options();
-    post_outcome do_post(
-        std::string const& url,
-        std::string const& request_id,
-        invocation_response const& handler_response);
-
-private:
-    std::array<std::string const, 3> const m_endpoints;
-    CURL* const m_curl_handle;
-};
-
 runtime::runtime(std::string const& endpoint)
     : m_endpoints{{endpoint + "/2018-06-01/runtime/init/error",
                    endpoint + "/2018-06-01/runtime/invocation/next",
