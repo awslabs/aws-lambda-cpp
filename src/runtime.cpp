@@ -26,6 +26,7 @@
 #include <chrono>
 #include <array>
 #include <cstdlib> // for strtoul
+#include <cinttypes>
 
 #define AWS_LAMBDA_RUNTIME_API __attribute__((visibility("default")))
 
@@ -277,9 +278,9 @@ runtime::next_outcome runtime::get_next()
         req.deadline += std::chrono::milliseconds(ms);
         logging::log_info(
             LOG_TAG,
-            "Received payload: %s\nTime remaining: %ld",
+            "Received payload: %s\nTime remaining: %" PRId64,
             req.payload.c_str(),
-            req.get_time_remaining().count());
+            static_cast<int64_t>(req.get_time_remaining().count()));
     }
     return next_outcome(req);
 }
