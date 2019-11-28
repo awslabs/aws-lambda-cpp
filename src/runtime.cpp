@@ -179,6 +179,8 @@ void runtime::set_curl_next_options()
     curl_easy_setopt(m_curl_handle, CURLOPT_WRITEFUNCTION, write_data);
     curl_easy_setopt(m_curl_handle, CURLOPT_HEADERFUNCTION, write_header);
 
+    curl_easy_setopt(m_curl_handle, CURLOPT_PROXY, "");
+
 #ifndef NDEBUG
     curl_easy_setopt(m_curl_handle, CURLOPT_VERBOSE, 1);
     curl_easy_setopt(m_curl_handle, CURLOPT_DEBUGFUNCTION, rt_curl_debug_callback);
@@ -198,6 +200,8 @@ void runtime::set_curl_post_result_options()
     curl_easy_setopt(m_curl_handle, CURLOPT_READFUNCTION, read_data);
     curl_easy_setopt(m_curl_handle, CURLOPT_WRITEFUNCTION, write_data);
     curl_easy_setopt(m_curl_handle, CURLOPT_HEADERFUNCTION, write_header);
+
+    curl_easy_setopt(m_curl_handle, CURLOPT_PROXY, "");
 
 #ifndef NDEBUG
     curl_easy_setopt(m_curl_handle, CURLOPT_VERBOSE, 1);
