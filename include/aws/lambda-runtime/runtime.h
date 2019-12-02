@@ -92,6 +92,11 @@ private:
     invocation_response() = default;
 
 public:
+    invocation_response(std::string const& payload, std::string const& content_type, bool success)
+        : m_payload(payload), m_content_type(content_type), m_success(success)
+    {
+    }
+
     /**
      * Create a successful invocation response with the given payload and content-type.
      */
