@@ -92,6 +92,11 @@ private:
     invocation_response() = default;
 
 public:
+    // Create a success or failure response. Typically, you should use the static functions invocation_response::success
+    // and invocation_response::failure, however, invocation_response::failure doesn't allow for arbitrary payloads.
+    // To support clients that need to control the entire error response body (e.g. adding a stack trace), this
+    // constructor should be used instead.
+    // Note: adding an overload to invocation_response::failure is not feasible since the parameter types are the same.
     invocation_response(std::string const& payload, std::string const& content_type, bool success)
         : m_payload(payload), m_content_type(content_type), m_success(success)
     {
