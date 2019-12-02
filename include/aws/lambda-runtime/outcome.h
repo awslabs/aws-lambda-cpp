@@ -15,6 +15,7 @@
  */
 
 #include <cassert>
+#include <utility>
 
 namespace aws {
 namespace lambda_runtime {
@@ -26,7 +27,7 @@ public:
 
     outcome(TFailure const& f) : f(f), success(false) {}
 
-    outcome(outcome&& other) : success(other.success)
+    outcome(outcome&& other) noexcept : success(other.success)
     {
         if (success) {
             s = std::move(other.s);
