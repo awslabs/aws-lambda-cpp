@@ -47,10 +47,10 @@ void log(verbosity v, char const* tag, char const* msg, va_list args)
         va_end(copy);
         return;
     }
-    constexpr auto max_stack_buffer_size = 512;
+    constexpr int max_stack_buffer_size = 512;
     std::array<char, max_stack_buffer_size> buf;
     char* out = buf.data();
-    if (sz >= static_cast<int>(buf.size())) {
+    if (sz >= max_stack_buffer_size) {
         out = new char[sz];
     }
 

@@ -69,6 +69,9 @@ static size_t write_data(char* ptr, size_t size, size_t nmemb, void* userdata)
     return nmemb;
 }
 
+// std::isspace has a few edge cases that would trigger UB. In particular, the documentation says:
+// "The behavior is undefined if the value of the input is not representable as unsigned char and is not equal to EOF."
+// So, this function does the simple obvious thing instead.
 static inline bool IsSpace(int ch)
 {
     constexpr int space = 0x20;           // space (0x20, ' ')
@@ -290,8 +293,8 @@ runtime::next_outcome runtime::get_next()
 
     if (resp.has_header(DEADLINE_MS_HEADER)) {
         auto const& deadline_string = resp.get_header(DEADLINE_MS_HEADER);
-        constexpr int decimal_radix = 10;
-        unsigned long ms = strtoul(deadline_string.c_str(), nullptr, decimal_radix);
+        constexpr int base = 10;
+        unsigned long ms = strtoul(deadline_string.c_str(), nullptr, base);
         assert(ms > 0);
         assert(ms < ULONG_MAX);
         req.deadline += std::chrono::milliseconds(ms);
