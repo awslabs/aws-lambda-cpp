@@ -11,6 +11,7 @@ CheckOptions:
     value:           '1'
   - key:             readability-implicit-bool-conversion.AllowIntegerConditions
     value:           '1'
-
+  - key:             misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
+    value:           '1'
 
 ...
