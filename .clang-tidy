@@ -1,5 +1,6 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,performance-*,readability-*,modernize-*,bugprone-*,misc-*'
+Checks:
+'clang-diagnostic-*,clang-analyzer-*,performance-*,readability-*,modernize-*,bugprone-*,misc-*,-modernize-use-trailing-return-type'
 WarningsAsErrors: '*'
 HeaderFilterRegex: ''
 FormatStyle: 'none'
