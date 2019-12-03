@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.9)
 set(CMAKE_CXX_STANDARD 11)
 project(aws-lambda-runtime
-    VERSION 0.2.4
+    VERSION 0.2.5
     LANGUAGES CXX)
 
 option(ENABLE_TESTS "Enables building the test project, requires AWS C++ SDK." OFF)

@@ -22,19 +22,19 @@ namespace lambda_runtime {
 AWS_LAMBDA_RUNTIME_API
 unsigned get_version_major()
 {
-    return @PROJECT_VERSION_MAJOR@;
+    return @PROJECT_VERSION_MAJOR@; // NOLINT
 }
 
 AWS_LAMBDA_RUNTIME_API
 unsigned get_version_minor()
 {
-    return @PROJECT_VERSION_MINOR@;
+    return @PROJECT_VERSION_MINOR@; // NOLINT
 }
 
 AWS_LAMBDA_RUNTIME_API
 unsigned get_version_patch()
 {
-    return @PROJECT_VERSION_PATCH@;
+    return @PROJECT_VERSION_PATCH@; // NOLINT
 }
 /* clang-format on */
 
