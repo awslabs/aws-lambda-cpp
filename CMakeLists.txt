@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.9)
 set(CMAKE_CXX_STANDARD 11)
 project(aws-lambda-runtime
     VERSION 0.2.4
@@ -6,9 +6,7 @@ project(aws-lambda-runtime
 
 option(ENABLE_TESTS "Enables building the test project, requires AWS C++ SDK." OFF)
 
-include(CheckCXXCompilerFlag)
-
-check_cxx_compiler_flag("-Wl,-flto" LTO_CAPABLE)
+include(CheckIPOSupported)
 
 add_library(${PROJECT_NAME}
     "src/logging.cpp"
@@ -17,11 +15,20 @@ add_library(${PROJECT_NAME}
     "${CMAKE_CURRENT_BINARY_DIR}/version.cpp"
     )
 
-set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    SOVERSION 0
+    VERSION ${PROJECT_VERSION})
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
+
+check_ipo_supported(RESULT has_lto OUTPUT lto_check_output)
+if(has_lto)
+    set_property(TARGET ${PROJECT_NAME} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+else()
+    message(WARNING "Link-time optimization (LTO) is not supported: ${lto_check_output}")
+endif()
 
 find_package(CURL REQUIRED)
 if (CMAKE_VERSION VERSION_LESS 3.12)
@@ -36,6 +43,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     "-fno-exceptions"
     "-fno-rtti"
     "-fvisibility=hidden"
+    "-fvisibility-inlines-hidden"
     "-Wall"
     "-Wextra"
     "-Werror"
@@ -64,11 +72,6 @@ else ()
     target_compile_definitions(${PROJECT_NAME} PRIVATE "AWS_LAMBDA_LOG=0")
 endif()
 
-if ((BUILD_SHARED_LIBS) AND (LTO_CAPABLE))
-    target_compile_options(${PROJECT_NAME} PRIVATE "-flto")
-    target_link_libraries(${PROJECT_NAME} PRIVATE "-flto")
-endif()
-
 #tests
 if (ENABLE_TESTS)
     enable_testing()
@@ -80,6 +83,12 @@ configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/version.cpp.in"
     "${CMAKE_CURRENT_BINARY_DIR}/version.cpp"
     NEWLINE_STYLE LF)
+
+include (CMakePackageConfigHelpers)
+
+write_basic_package_version_file("${PROJECT_NAME}-config-version.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion)
 
 # installation
 install(FILES "include/aws/http/response.h"
@@ -94,11 +103,13 @@ install(FILES
 install(FILES "include/aws/logging/logging.h"
     DESTINATION "include/aws/logging")
 
+include(GNUInstallDirs)
 install(TARGETS ${PROJECT_NAME}
     EXPORT ${PROJECT_NAME}-targets
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION bin)
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
 
 configure_file("${CMAKE_SOURCE_DIR}/cmake/${PROJECT_NAME}-config.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
@@ -111,6 +122,7 @@ install(EXPORT "${PROJECT_NAME}-targets"
     NAMESPACE AWS::)
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
     DESTINATION "lib/${PROJECT_NAME}/cmake/")
 
 install(PROGRAMS "${CMAKE_SOURCE_DIR}/packaging/packager"
