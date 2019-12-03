@@ -33,13 +33,13 @@
 namespace aws {
 namespace lambda_runtime {
 
-static char const LOG_TAG[] = "LAMBDA_RUNTIME";
-static char const REQUEST_ID_HEADER[] = "lambda-runtime-aws-request-id";
-static char const TRACE_ID_HEADER[] = "lambda-runtime-trace-id";
-static char const CLIENT_CONTEXT_HEADER[] = "lambda-runtime-client-context";
-static char const COGNITO_IDENTITY_HEADER[] = "lambda-runtime-cognito-identity";
-static char const DEADLINE_MS_HEADER[] = "lambda-runtime-deadline-ms";
-static char const FUNCTION_ARN_HEADER[] = "lambda-runtime-invoked-function-arn";
+static constexpr auto LOG_TAG = "LAMBDA_RUNTIME";
+static constexpr auto REQUEST_ID_HEADER = "lambda-runtime-aws-request-id";
+static constexpr auto TRACE_ID_HEADER = "lambda-runtime-trace-id";
+static constexpr auto CLIENT_CONTEXT_HEADER = "lambda-runtime-client-context";
+static constexpr auto COGNITO_IDENTITY_HEADER = "lambda-runtime-cognito-identity";
+static constexpr auto DEADLINE_MS_HEADER = "lambda-runtime-deadline-ms";
+static constexpr auto FUNCTION_ARN_HEADER = "lambda-runtime-invoked-function-arn";
 
 enum Endpoints {
     INIT,
@@ -49,8 +49,10 @@ enum Endpoints {
 
 static bool is_success(aws::http::response_code httpcode)
 {
+    constexpr auto http_first_success_error_code = 200;
+    constexpr auto http_last_success_error_code = 299;
     auto const code = static_cast<int>(httpcode);
-    return code >= 200 && code <= 299;
+    return code >= http_first_success_error_code && code <= http_last_success_error_code;
 }
 
 static size_t write_data(char* ptr, size_t size, size_t nmemb, void* userdata)
@@ -67,13 +69,28 @@ static size_t write_data(char* ptr, size_t size, size_t nmemb, void* userdata)
     return nmemb;
 }
 
+// std::isspace has a few edge cases that would trigger UB. In particular, the documentation says:
+// "The behavior is undefined if the value of the input is not representable as unsigned char and is not equal to EOF."
+// So, this function does the simple obvious thing instead.
 static inline bool IsSpace(int ch)
 {
-    if (ch < -1 || ch > 255) {
-        return false;
+    constexpr int space = 0x20;           // space (0x20, ' ')
+    constexpr int form_feed = 0x0c;       // form feed (0x0c, '\f')
+    constexpr int line_feed = 0x0a;       // line feed (0x0a, '\n')
+    constexpr int carriage_return = 0x0d; // carriage return (0x0d, '\r')
+    constexpr int horizontal_tab = 0x09;  // horizontal tab (0x09, '\t')
+    constexpr int vertical_tab = 0x0b;    // vertical tab (0x0b, '\v')
+    switch (ch) {
+        case space:
+        case form_feed:
+        case line_feed:
+        case carriage_return:
+        case horizontal_tab:
+        case vertical_tab:
+            return true;
+        default:
+            return false;
     }
-
-    return ::isspace(ch) != 0;
 }
 
 static inline std::string trim(std::string s)
@@ -276,7 +293,8 @@ runtime::next_outcome runtime::get_next()
 
     if (resp.has_header(DEADLINE_MS_HEADER)) {
         auto const& deadline_string = resp.get_header(DEADLINE_MS_HEADER);
-        unsigned long ms = strtoul(deadline_string.c_str(), nullptr, 10);
+        constexpr int base = 10;
+        unsigned long ms = strtoul(deadline_string.c_str(), nullptr, base);
         assert(ms > 0);
         assert(ms < ULONG_MAX);
         req.deadline += std::chrono::milliseconds(ms);
@@ -437,10 +455,11 @@ void run_handler(std::function<invocation_response(invocation_request const&)> c
 
 static std::string json_escape(std::string const& in)
 {
+    constexpr char last_non_printable_character = 31;
     std::string out;
     out.reserve(in.length()); // most strings will end up identical
     for (char ch : in) {
-        if (ch > 31 && ch != '\"' && ch != '\\') {
+        if (ch > last_non_printable_character && ch != '\"' && ch != '\\') {
             out.append(1, ch);
         }
         else {
@@ -469,9 +488,10 @@ static std::string json_escape(std::string const& in)
                     break;
                 default:
                     // escape and print as unicode codepoint
-                    char buf[6]; // 4 hex + letter 'u' + \0
-                    sprintf(buf, "u%04x", ch);
-                    out.append(buf, 5); // add only five, discarding the null terminator.
+                    constexpr int printed_unicode_length = 6; // 4 hex + letter 'u' + \0
+                    std::array<char, printed_unicode_length> buf;
+                    sprintf(buf.data(), "u%04x", ch);
+                    out.append(buf.data(), buf.size() - 1); // add only five, discarding the null terminator.
                     break;
             }
         }

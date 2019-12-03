@@ -13,6 +13,7 @@
  * permissions and limitations under the License.
  */
 #include "aws/logging/logging.h"
+#include <array>
 #include <cstdio>
 #include <chrono>
 
@@ -46,9 +47,10 @@ void log(verbosity v, char const* tag, char const* msg, va_list args)
         va_end(copy);
         return;
     }
-    char buf[512];
-    char* out = buf;
-    if (sz >= static_cast<int>(sizeof(buf))) {
+    constexpr int max_stack_buffer_size = 512;
+    std::array<char, max_stack_buffer_size> buf;
+    char* out = buf.data();
+    if (sz >= max_stack_buffer_size) {
         out = new char[sz];
     }
 
@@ -60,7 +62,7 @@ void log(verbosity v, char const* tag, char const* msg, va_list args)
     // stdout is not line-buffered when redirected (for example to a file or to another process) so we must flush it
     // manually.
     fflush(stdout);
-    if (out != buf) {
+    if (out != buf.data()) {
         delete[] out;
     }
 }

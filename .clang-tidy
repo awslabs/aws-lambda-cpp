@@ -1,5 +1,6 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,performance-*,readability-*,modernize-*,bugprone-*,misc-*'
+Checks:
+'clang-diagnostic-*,clang-analyzer-*,performance-*,readability-*,modernize-*,bugprone-*,misc-*,-modernize-use-trailing-return-type'
 WarningsAsErrors: '*'
 HeaderFilterRegex: ''
 FormatStyle: 'none'
@@ -10,6 +11,7 @@ CheckOptions:
     value:           '1'
   - key:             readability-implicit-bool-conversion.AllowIntegerConditions
     value:           '1'
-
+  - key:             misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
+    value:           '1'
 
 ...
