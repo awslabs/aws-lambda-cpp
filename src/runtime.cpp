@@ -235,6 +235,7 @@ runtime::next_outcome runtime::get_next()
 
     curl_slist* headers = nullptr;
     headers = curl_slist_append(headers, get_user_agent_header().c_str());
+    curl_easy_setopt(m_curl_handle, CURLOPT_HTTPHEADER, headers);
 
     logging::log_debug(LOG_TAG, "Making request to %s", m_endpoints[Endpoints::NEXT].c_str());
     CURLcode curl_code = curl_easy_perform(m_curl_handle);
