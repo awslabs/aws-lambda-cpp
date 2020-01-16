@@ -20,7 +20,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     VERSION ${PROJECT_VERSION})
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 
 check_ipo_supported(RESULT has_lto OUTPUT lto_check_output)
@@ -111,7 +111,7 @@ install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
 
-configure_file("${CMAKE_SOURCE_DIR}/cmake/${PROJECT_NAME}-config.cmake"
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}-config.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
     @ONLY)
 
@@ -125,6 +125,6 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
     DESTINATION "lib/${PROJECT_NAME}/cmake/")
 
-install(PROGRAMS "${CMAKE_SOURCE_DIR}/packaging/packager"
+install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/packaging/packager"
     DESTINATION "lib/${PROJECT_NAME}/cmake/")
 
