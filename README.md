@@ -33,7 +33,7 @@ $ make && make install
 To consume this library in a project that is also using CMake, you would do:
 
 ```cmake
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.9)
 set(CMAKE_CXX_STANDARD 11)
 project(demo LANGUAGES CXX)
 find_package(aws-lambda-runtime)
