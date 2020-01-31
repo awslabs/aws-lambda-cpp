@@ -4,9 +4,8 @@ project(aws-lambda-runtime
     VERSION 0.2.6
     LANGUAGES CXX)
 
+option(ENABLE_LTO "Enables link-time optimization, requires compiler support." ON)
 option(ENABLE_TESTS "Enables building the test project, requires AWS C++ SDK." OFF)
-
-include(CheckIPOSupported)
 
 add_library(${PROJECT_NAME}
     "src/logging.cpp"
@@ -23,11 +22,14 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 
-check_ipo_supported(RESULT has_lto OUTPUT lto_check_output)
-if(has_lto)
-    set_property(TARGET ${PROJECT_NAME} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-else()
-    message(WARNING "Link-time optimization (LTO) is not supported: ${lto_check_output}")
+if (ENABLE_LTO)
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT has_lto OUTPUT lto_check_output)
+    if(has_lto)
+        set_property(TARGET ${PROJECT_NAME} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+    else()
+        message(WARNING "Link-time optimization (LTO) is not supported: ${lto_check_output}")
+    endif()
 endif()
 
 find_package(CURL REQUIRED)
