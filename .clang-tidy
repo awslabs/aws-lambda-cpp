@@ -2,7 +2,7 @@
 Checks:
 'clang-diagnostic-*,clang-analyzer-*,performance-*,readability-*,modernize-*,bugprone-*,misc-*,-modernize-use-trailing-return-type'
 WarningsAsErrors: '*'
-HeaderFilterRegex: ''
+HeaderFilterRegex: 'include/aws/.*\.h$'
 FormatStyle: 'none'
 CheckOptions:
   - key:             modernize-pass-by-value.ValuesOnly
