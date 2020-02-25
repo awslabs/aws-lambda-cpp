@@ -14,7 +14,7 @@ Since AWS Lambda runs on GNU/Linux, you should build this runtime library and yo
 
 ### Prerequisites
 Make sure you have the following packages installed first:
-1. CMake (version 3.5 or later)
+1. CMake (version 3.9 or later)
 1. git
 1. Make or Ninja
 1. zip
