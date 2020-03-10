@@ -120,13 +120,13 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}-config.cmake"
 export(EXPORT "${PROJECT_NAME}-targets" NAMESPACE AWS::)
 
 install(EXPORT "${PROJECT_NAME}-targets"
-    DESTINATION "lib/${PROJECT_NAME}/cmake/"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/cmake/"
     NAMESPACE AWS::)
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
-    DESTINATION "lib/${PROJECT_NAME}/cmake/")
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/cmake/")
 
 install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/packaging/packager"
-    DESTINATION "lib/${PROJECT_NAME}/cmake/")
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/cmake/")
 
