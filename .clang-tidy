@@ -13,5 +13,29 @@ CheckOptions:
     value:           '1'
   - key:             misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
     value:           '1'
+  - key:             readability-identifier-naming.ClassCase
+    value:           'lower_case'
+  - key:             readability-identifier-naming.StructCase
+    value:           'lower_case'
+  - key:             readability-identifier-naming.StructCase
+    value:           'lower_case'
+  - key:             readability-identifier-naming.ParameterCase
+    value:           'lower_case'
+  - key:             readability-identifier-naming.PrivateMemberCase
+    value:           'lower_case'
+  - key:             readability-identifier-naming.LocalVariableCase
+    value:           'lower_case'
+  - key:             readability-identifier-naming.TypeAliasCase
+    value:           'lower_case'
+  - key:             readability-identifier-naming.UnionCase
+    value:           'lower_case'
+  - key:             readability-identifier-naming.FunctionCase
+    value:           'lower_case'
+  - key:             readability-identifier-naming.NamespaceCase
+    value:           'lower_case'
+  - key:             readability-identifier-naming.GlobalConstantCase
+    value:           'UPPER_CASE'
+  - key:             readability-identifier-naming.PrivateMemberPrefix
+    value:           'm_'
 
 ...
