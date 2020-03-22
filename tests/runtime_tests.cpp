@@ -19,8 +19,9 @@ namespace {
 
 using namespace Aws::Lambda;
 
-const char S3BUCKET[] = "aws-lambda-cpp-tests";
-const char S3KEY[] = "lambda-test-fun.zip";
+constexpr auto S3BUCKET = "aws-lambda-cpp-tests";
+constexpr auto S3KEY = "lambda-test-fun.zip";
+constexpr auto REQUEST_TIMEOUT = 15 * 1000;
 
 struct LambdaRuntimeTest : public ::testing::Test {
     LambdaClient m_lambda_client;
@@ -28,7 +29,7 @@ struct LambdaRuntimeTest : public ::testing::Test {
     static Aws::Client::ClientConfiguration create_iam_config()
     {
         Aws::Client::ClientConfiguration config;
-        config.requestTimeoutMs = 15 * 1000;
+        config.requestTimeoutMs = REQUEST_TIMEOUT;
         config.region = Aws::Region::US_EAST_1;
         return config;
     }
@@ -36,7 +37,7 @@ struct LambdaRuntimeTest : public ::testing::Test {
     static Aws::Client::ClientConfiguration create_lambda_config()
     {
         Aws::Client::ClientConfiguration config;
-        config.requestTimeoutMs = 15 * 1000;
+        config.requestTimeoutMs = REQUEST_TIMEOUT;
         config.region = Aws::Environment::GetEnv("AWS_REGION");
         return config;
     }
@@ -72,25 +73,25 @@ struct LambdaRuntimeTest : public ::testing::Test {
 
     void create_function(Aws::String const& function_name, Aws::String const& handler_name)
     {
-        Model::CreateFunctionRequest createFunctionRequest;
-        createFunctionRequest.SetHandler(handler_name);
-        createFunctionRequest.SetFunctionName(function_name);
+        Model::CreateFunctionRequest create_function_request;
+        create_function_request.SetHandler(handler_name);
+        create_function_request.SetFunctionName(function_name);
         // I ran into eventual-consistency issues when creating the role dynamically as part of the test.
-        createFunctionRequest.SetRole(get_role_arn("integration-tests"));
+        create_function_request.SetRole(get_role_arn("integration-tests"));
         Model::FunctionCode funcode;
         funcode.WithS3Bucket(S3BUCKET).WithS3Key(build_resource_name(S3KEY));
-        createFunctionRequest.SetCode(funcode);
-        createFunctionRequest.SetRuntime(Aws::Lambda::Model::Runtime::provided);
+        create_function_request.SetCode(funcode);
+        create_function_request.SetRuntime(Aws::Lambda::Model::Runtime::provided);
 
-        auto outcome = m_lambda_client.CreateFunction(createFunctionRequest);
+        auto outcome = m_lambda_client.CreateFunction(create_function_request);
         ASSERT_TRUE(outcome.IsSuccess()) << "Failed to create function " << function_name;
     }
 
     void delete_function(Aws::String const& function_name, bool assert = true)
     {
-        Model::DeleteFunctionRequest deleteFunctionRequest;
-        deleteFunctionRequest.SetFunctionName(function_name);
-        auto outcome = m_lambda_client.DeleteFunction(deleteFunctionRequest);
+        Model::DeleteFunctionRequest delete_function_request;
+        delete_function_request.SetFunctionName(function_name);
+        auto outcome = m_lambda_client.DeleteFunction(delete_function_request);
         if (assert) {
             ASSERT_TRUE(outcome.IsSuccess()) << "Failed to delete function " << function_name;
         }
@@ -100,62 +101,62 @@ struct LambdaRuntimeTest : public ::testing::Test {
 TEST_F(LambdaRuntimeTest, echo_success)
 {
     Aws::String const funcname = build_resource_name("echo_success");
-    char const payloadContent[] = "Hello, Lambda!";
+    constexpr auto payload_content = "Hello, Lambda!";
     create_function(funcname, "echo_success" /*handler_name*/);
-    Model::InvokeRequest invokeRequest;
-    invokeRequest.SetFunctionName(funcname);
-    invokeRequest.SetInvocationType(Model::InvocationType::RequestResponse);
-    invokeRequest.SetContentType("application/json");
+    Model::InvokeRequest invoke_request;
+    invoke_request.SetFunctionName(funcname);
+    invoke_request.SetInvocationType(Model::InvocationType::RequestResponse);
+    invoke_request.SetContentType("application/json");
 
     std::shared_ptr<Aws::IOStream> payload = Aws::MakeShared<Aws::StringStream>("FunctionTest");
-    Aws::Utils::Json::JsonValue jsonPayload;
-    jsonPayload.WithString("barbaz", payloadContent);
-    *payload << jsonPayload.View().WriteCompact();
-    invokeRequest.SetBody(payload);
+    Aws::Utils::Json::JsonValue json_payload;
+    json_payload.WithString("barbaz", payload_content);
+    *payload << json_payload.View().WriteCompact();
+    invoke_request.SetBody(payload);
 
-    Model::InvokeOutcome invokeOutcome = m_lambda_client.Invoke(invokeRequest);
-    EXPECT_TRUE(invokeOutcome.IsSuccess());
+    Model::InvokeOutcome invoke_outcome = m_lambda_client.Invoke(invoke_request);
+    EXPECT_TRUE(invoke_outcome.IsSuccess());
     Aws::StringStream output;
-    if (!invokeOutcome.IsSuccess()) {
+    if (!invoke_outcome.IsSuccess()) {
         delete_function(funcname);
         return;
     }
-    EXPECT_EQ(200, invokeOutcome.GetResult().GetStatusCode());
-    EXPECT_TRUE(invokeOutcome.GetResult().GetFunctionError().empty());
-    auto const jsonResponse = Aws::Utils::Json::JsonValue(invokeOutcome.GetResult().GetPayload());
-    EXPECT_TRUE(jsonResponse.WasParseSuccessful());
-    EXPECT_STREQ(payloadContent, jsonResponse.View().GetString("barbaz").c_str());
+    EXPECT_EQ(200, invoke_outcome.GetResult().GetStatusCode());
+    EXPECT_TRUE(invoke_outcome.GetResult().GetFunctionError().empty());
+    auto const json_response = Aws::Utils::Json::JsonValue(invoke_outcome.GetResult().GetPayload());
+    EXPECT_TRUE(json_response.WasParseSuccessful());
+    EXPECT_STREQ(payload_content, json_response.View().GetString("barbaz").c_str());
     delete_function(funcname);
 }
 
 TEST_F(LambdaRuntimeTest, echo_unicode)
 {
     Aws::String const funcname = build_resource_name("echo_success"); // re-use the echo method but with Unicode input
-    char const payloadContent[] = "画像は1000語の価値がある";
+    constexpr auto payload_content = "画像は1000語の価値がある";
     create_function(funcname, "echo_success" /*handler_name*/);
-    Model::InvokeRequest invokeRequest;
-    invokeRequest.SetFunctionName(funcname);
-    invokeRequest.SetInvocationType(Model::InvocationType::RequestResponse);
-    invokeRequest.SetContentType("application/json");
+    Model::InvokeRequest invoke_request;
+    invoke_request.SetFunctionName(funcname);
+    invoke_request.SetInvocationType(Model::InvocationType::RequestResponse);
+    invoke_request.SetContentType("application/json");
 
     std::shared_ptr<Aws::IOStream> payload = Aws::MakeShared<Aws::StringStream>("FunctionTest");
-    Aws::Utils::Json::JsonValue jsonPayload;
-    jsonPayload.WithString("UnicodeText", payloadContent);
-    *payload << jsonPayload.View().WriteCompact();
-    invokeRequest.SetBody(payload);
+    Aws::Utils::Json::JsonValue json_payload;
+    json_payload.WithString("UnicodeText", payload_content);
+    *payload << json_payload.View().WriteCompact();
+    invoke_request.SetBody(payload);
 
-    Model::InvokeOutcome invokeOutcome = m_lambda_client.Invoke(invokeRequest);
-    EXPECT_TRUE(invokeOutcome.IsSuccess());
+    Model::InvokeOutcome invoke_outcome = m_lambda_client.Invoke(invoke_request);
+    EXPECT_TRUE(invoke_outcome.IsSuccess());
     Aws::StringStream output;
-    if (!invokeOutcome.IsSuccess()) {
+    if (!invoke_outcome.IsSuccess()) {
         delete_function(funcname);
         return;
     }
-    EXPECT_EQ(200, invokeOutcome.GetResult().GetStatusCode());
-    EXPECT_TRUE(invokeOutcome.GetResult().GetFunctionError().empty());
-    auto const jsonResponse = Aws::Utils::Json::JsonValue(invokeOutcome.GetResult().GetPayload());
-    EXPECT_TRUE(jsonResponse.WasParseSuccessful());
-    EXPECT_STREQ(payloadContent, jsonResponse.View().GetString("UnicodeText").c_str());
+    EXPECT_EQ(200, invoke_outcome.GetResult().GetStatusCode());
+    EXPECT_TRUE(invoke_outcome.GetResult().GetFunctionError().empty());
+    auto const json_response = Aws::Utils::Json::JsonValue(invoke_outcome.GetResult().GetPayload());
+    EXPECT_TRUE(json_response.WasParseSuccessful());
+    EXPECT_STREQ(payload_content, json_response.View().GetString("UnicodeText").c_str());
     delete_function(funcname);
 }
 
@@ -163,14 +164,14 @@ TEST_F(LambdaRuntimeTest, echo_failure)
 {
     Aws::String const funcname = build_resource_name("echo_failure");
     create_function(funcname, "echo_failure" /*handler_name*/);
-    Model::InvokeRequest invokeRequest;
-    invokeRequest.SetFunctionName(funcname);
-    invokeRequest.SetInvocationType(Model::InvocationType::RequestResponse);
+    Model::InvokeRequest invoke_request;
+    invoke_request.SetFunctionName(funcname);
+    invoke_request.SetInvocationType(Model::InvocationType::RequestResponse);
 
-    Model::InvokeOutcome invokeOutcome = m_lambda_client.Invoke(invokeRequest);
-    EXPECT_TRUE(invokeOutcome.IsSuccess());
-    EXPECT_EQ(200, invokeOutcome.GetResult().GetStatusCode());
-    EXPECT_STREQ("Unhandled", invokeOutcome.GetResult().GetFunctionError().c_str());
+    Model::InvokeOutcome invoke_outcome = m_lambda_client.Invoke(invoke_request);
+    EXPECT_TRUE(invoke_outcome.IsSuccess());
+    EXPECT_EQ(200, invoke_outcome.GetResult().GetStatusCode());
+    EXPECT_STREQ("Unhandled", invoke_outcome.GetResult().GetFunctionError().c_str());
     delete_function(funcname);
 }
 
@@ -179,15 +180,15 @@ TEST_F(LambdaRuntimeTest, binary_response)
     Aws::String const funcname = build_resource_name("binary_response");
     unsigned long constexpr expected_length = 1451;
     create_function(funcname, "binary_response" /*handler_name*/);
-    Model::InvokeRequest invokeRequest;
-    invokeRequest.SetFunctionName(funcname);
-    invokeRequest.SetInvocationType(Model::InvocationType::RequestResponse);
+    Model::InvokeRequest invoke_request;
+    invoke_request.SetFunctionName(funcname);
+    invoke_request.SetInvocationType(Model::InvocationType::RequestResponse);
 
-    Model::InvokeOutcome invokeOutcome = m_lambda_client.Invoke(invokeRequest);
-    EXPECT_TRUE(invokeOutcome.IsSuccess());
-    EXPECT_EQ(200, invokeOutcome.GetResult().GetStatusCode());
-    EXPECT_TRUE(invokeOutcome.GetResult().GetFunctionError().empty());
-    EXPECT_EQ(expected_length, invokeOutcome.GetResult().GetPayload().tellp());
+    Model::InvokeOutcome invoke_outcome = m_lambda_client.Invoke(invoke_request);
+    EXPECT_TRUE(invoke_outcome.IsSuccess());
+    EXPECT_EQ(200, invoke_outcome.GetResult().GetStatusCode());
+    EXPECT_TRUE(invoke_outcome.GetResult().GetFunctionError().empty());
+    EXPECT_EQ(expected_length, invoke_outcome.GetResult().GetPayload().tellp());
     delete_function(funcname);
 }
 } // namespace
