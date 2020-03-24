@@ -72,7 +72,7 @@ static size_t write_data(char* ptr, size_t size, size_t nmemb, void* userdata)
 // std::isspace has a few edge cases that would trigger UB. In particular, the documentation says:
 // "The behavior is undefined if the value of the input is not representable as unsigned char and is not equal to EOF."
 // So, this function does the simple obvious thing instead.
-static inline bool IsSpace(int ch)
+static inline bool is_whitespace(int ch)
 {
     constexpr int space = 0x20;           // space (0x20, ' ')
     constexpr int form_feed = 0x0c;       // form feed (0x0c, '\f')
@@ -96,9 +96,9 @@ static inline bool IsSpace(int ch)
 static inline std::string trim(std::string s)
 {
     // trim right
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return !IsSpace(ch); }).base(), s.end());
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return !is_whitespace(ch); }).base(), s.end());
     // trim left
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !IsSpace(ch); }));
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !is_whitespace(ch); }));
     return s;
 }
 

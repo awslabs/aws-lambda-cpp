@@ -23,13 +23,13 @@ namespace lambda_runtime {
 template <typename TResult, typename TFailure>
 class outcome {
 public:
-    outcome(TResult const& s) : s(s), success(true) {}
+    outcome(TResult const& s) : s(s), m_success(true) {}
 
-    outcome(TFailure const& f) : f(f), success(false) {}
+    outcome(TFailure const& f) : f(f), m_success(false) {}
 
-    outcome(outcome&& other) noexcept : success(other.success)
+    outcome(outcome&& other) noexcept : m_success(other.m_success)
     {
-        if (success) {
+        if (m_success) {
             s = std::move(other.s);
         }
         else {
@@ -39,7 +39,7 @@ public:
 
     ~outcome()
     {
-        if (success) {
+        if (m_success) {
             s.~TResult();
         }
         else {
@@ -49,24 +49,24 @@ public:
 
     TResult const& get_result() const
     {
-        assert(success);
+        assert(m_success);
         return s;
     }
 
     TFailure const& get_failure() const
     {
-        assert(!success);
+        assert(!m_success);
         return f;
     }
 
-    bool is_success() const { return success; }
+    bool is_success() const { return m_success; }
 
 private:
     union {
         TResult s;
         TFailure f;
     };
-    bool success;
+    bool m_success;
 };
 } // namespace lambda_runtime
 } // namespace aws
