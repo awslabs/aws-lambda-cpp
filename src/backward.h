@@ -43,7 +43,7 @@
 
 // You can define one of the following (or leave it to the auto-detection):
 //
-#    define BACKWARD_SYSTEM_LINUX
+//  #define BACKWARD_SYSTEM_LINUX
 //	- specialization for linux
 //
 // #define BACKWARD_SYSTEM_DARWIN
