@@ -1,3 +1,4 @@
+// clang-format off
 /*
  * backward.hpp
  * Copyright 2013 Google Inc. All Rights Reserved.
@@ -4287,3 +4288,4 @@ public:
 } // namespace backward
 
 #endif /* H_GUARD */
+// clang-format on
