@@ -55,15 +55,15 @@ For the rest of this example, we will use the AWS Management Console to create t
 
 (i) Navigate to AWS Lambda within the console [here](https://console.aws.amazon.com/lambda/home)   
 (ii) Select the newly created function. Within the specific function, the "Designer" window should appear.   
-(iii) Simply click "Add trigger" -> "API Gateway" -> "Create an API". [Here](https://www.amazon.com/photos/shared/izUpPmCbRHKnpeaqVI-9Fw.CnypCJwUl-vsp5YbSGxF9R) are the settings you can use. 
-(iv) Once you have added the API gateway, locate the newly created endpoint. View the `main.cpp` file on what request is expected.   
+(iii) Simply click "Add trigger" -> "API Gateway" -> "Create an API". [Here](https://www.amazon.com/photos/shared/izUpPmCbRHKnpeaqVI-9Fw.CnypCJwUl-vsp5YbSGxF9R) are the settings you can use (CORS does not need to be enabled).   
+(iv) Once you have added the API gateway, locate the newly created endpoint. View how to test the endpoint below.
 
 ## Test the endpoint
 Feel free to test the endpoint any way you desire. Below is a way to test using cURL: 
 
 ```
 curl -v -X POST \
-  'https://73tzci8ktl.execute-api.us-east-1.amazonaws.com/default/api?name=Bradley&city=Chicago' \
+  '<YOUR-API-ENDPOINT>?name=Bradley&city=Chicago' \
   -H 'content-type: application/json' \
   -H 'day: Sunday' \
   -d '{ "time": "evening" }'
