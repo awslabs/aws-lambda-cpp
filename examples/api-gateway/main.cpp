@@ -1,6 +1,5 @@
 #include <aws/lambda-runtime/runtime.h>
 #include <aws/core/utils/json/JsonSerializer.h>
-#include <aws/core/utils/logging/LogLevel.h>
 #include <aws/core/utils/memory/stl/SimpleStringStream.h>
  
 using namespace aws::lambda_runtime; 
@@ -12,8 +11,8 @@ invocation_response my_handler(invocation_request const& request)
 	
 	JsonValue json(request.payload);
 	if (!json.WasParseSuccessful()) {
-        return invocation_response::failure("Failed to parse input JSON", "InvalidJSON");
-    }
+        	return invocation_response::failure("Failed to parse input JSON", "InvalidJSON");
+    	}
 
 	auto v = json.View();
 	Aws::SimpleStringStream ss; 
