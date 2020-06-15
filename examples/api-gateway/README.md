@@ -53,10 +53,14 @@ You should now have a zip file called `api.zip`. Follow the instructions in the 
 ## Using Amazon API Gateway 
 For the rest of this example, we will use the AWS Management Console to create the API endpoint using Amazon API Gateway.
 
-(i) Navigate to AWS Lambda within the console [here](https://console.aws.amazon.com/lambda/home)   
-(ii) Select the newly created function. Within the specific function, the "Designer" window should appear.   
-(iii) Simply click "Add trigger" -> "API Gateway" -> "Create an API". [Here](https://www.amazon.com/photos/shared/izUpPmCbRHKnpeaqVI-9Fw.CnypCJwUl-vsp5YbSGxF9R) are the settings you can use (CORS does not need to be enabled).   
-(iv) Once you have added the API gateway, locate the newly created endpoint. View how to test the endpoint below.
+1. Navigate to AWS Lambda within the console [here](https://console.aws.amazon.com/lambda/home)   
+1. Select the newly created function. Within the specific function, the "Designer" window should appear.   
+1. Simply click "Add trigger" -> "API Gateway" -> "Create an API". Please view the settings below.
+   * API Type: HTTP API
+   * Security: Open
+   * API name: Hello-World-API (or desired name)
+   * Deployment stage: default
+1. Once you have added the API gateway, locate the newly created endpoint. View how to test the endpoint below.
 
 ## Test the endpoint
 Feel free to test the endpoint any way you desire. Below is a way to test using cURL: 
