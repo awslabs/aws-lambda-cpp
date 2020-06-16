@@ -79,5 +79,3 @@ With the expected response being:
   "message": "Good evening, Bradley of Chicago. Happy Sunday!"
 }
 ```
-
-Remark: Certain preconditions exist (e.g., if the key exists, the value is expected to be a string) but some input validation takes place. 
