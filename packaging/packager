@@ -56,7 +56,7 @@ if ! type zip > /dev/null 2>&1; then
     exit 1
 fi
 function package_libc_via_pacman {
-    if grep "Arch Linux" < /etc/os-release > /dev/null 2>&1; then
+    if grep --extended-regexp "Arch Linux|Manjaro Linux" < /etc/os-release > /dev/null 2>&1; then
         if type pacman > /dev/null 2>&1; then
             pacman --query --list --quiet glibc | sed -E '/\.so$|\.so\.[0-9]+$/!d'
         fi
