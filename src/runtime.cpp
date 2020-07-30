@@ -412,7 +412,7 @@ void run_handler(std::function<invocation_response(invocation_request const&)> c
     size_t const max_retries = 3;
 
     while (retries < max_retries) {
-        const auto next_outcome = rt.get_next();
+        auto next_outcome = rt.get_next();
         if (!next_outcome.is_success()) {
             if (next_outcome.get_failure() == aws::http::response_code::REQUEST_NOT_MADE) {
                 ++retries;
@@ -429,7 +429,7 @@ void run_handler(std::function<invocation_response(invocation_request const&)> c
 
         retries = 0;
 
-        auto const& req = next_outcome.get_result();
+        auto const req = std::move(next_outcome).get_result();
         logging::log_info(LOG_TAG, "Invoking user handler");
         invocation_response res = handler(req);
         logging::log_info(LOG_TAG, "Invoking user handler completed.");
