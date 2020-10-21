@@ -124,12 +124,6 @@ static size_t write_header(char* ptr, size_t size, size_t nmemb, void* userdata)
     return size * nmemb;
 }
 
-static std::string const& get_user_agent_header()
-{
-    static std::string user_agent = std::string("User-Agent: AWS_Lambda_Cpp/") + get_version();
-    return user_agent;
-}
-
 static size_t read_data(char* buffer, size_t size, size_t nitems, void* userdata)
 {
     auto const limit = size * nitems;
@@ -163,8 +157,12 @@ static int rt_curl_debug_callback(CURL* handle, curl_infotype type, char* data, 
 }
 #endif
 
-runtime::runtime(std::string const& endpoint)
-    : m_endpoints{{endpoint + "/2018-06-01/runtime/init/error",
+runtime::runtime(std::string const& endpoint) : runtime(endpoint, "AWS_Lambda_Cpp/" + std::string(get_version()))
+{}
+
+runtime::runtime(std::string const& endpoint, std::string const& user_agent)
+    : m_user_agent_header("User-Agent: " + user_agent + ""),
+      m_endpoints{{endpoint + "/2018-06-01/runtime/init/error",
                    endpoint + "/2018-06-01/runtime/invocation/next",
                    endpoint + "/2018-06-01/runtime/invocation/"}},
       m_curl_handle(curl_easy_init())
@@ -234,7 +232,7 @@ runtime::next_outcome runtime::get_next()
     curl_easy_setopt(m_curl_handle, CURLOPT_HEADERDATA, &resp);
 
     curl_slist* headers = nullptr;
-    headers = curl_slist_append(headers, get_user_agent_header().c_str());
+    headers = curl_slist_append(headers, m_user_agent_header.c_str());
     curl_easy_setopt(m_curl_handle, CURLOPT_HTTPHEADER, headers);
 
     logging::log_debug(LOG_TAG, "Making request to %s", m_endpoints[Endpoints::NEXT].c_str());
@@ -339,7 +337,7 @@ runtime::post_outcome runtime::do_post(
 
     headers = curl_slist_append(headers, "Expect:");
     headers = curl_slist_append(headers, "transfer-encoding:");
-    headers = curl_slist_append(headers, get_user_agent_header().c_str());
+    headers = curl_slist_append(headers, m_user_agent_header.c_str());
     auto const& payload = handler_response.get_payload();
     logging::log_debug(
         LOG_TAG, "calculating content length... %s", ("content-length: " + std::to_string(payload.length())).c_str());

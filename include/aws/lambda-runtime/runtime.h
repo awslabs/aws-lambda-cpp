@@ -137,6 +137,7 @@ public:
     using next_outcome = aws::lambda_runtime::outcome<invocation_request, aws::http::response_code>;
     using post_outcome = aws::lambda_runtime::outcome<no_result, aws::http::response_code>;
 
+    runtime(std::string const& endpoint, std::string const& user_agent);
     runtime(std::string const& endpoint);
     ~runtime();
 
@@ -164,6 +165,7 @@ private:
         invocation_response const& handler_response);
 
 private:
+    std::string const m_user_agent_header;
     std::array<std::string const, 3> const m_endpoints;
     CURL* const m_curl_handle;
 };
