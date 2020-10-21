@@ -161,7 +161,7 @@ runtime::runtime(std::string const& endpoint) : runtime(endpoint, "AWS_Lambda_Cp
 {}
 
 runtime::runtime(std::string const& endpoint, std::string const& user_agent)
-    : m_user_agent_header("User-Agent: " + user_agent + ""),
+    : m_user_agent_header("User-Agent: " + user_agent),
       m_endpoints{{endpoint + "/2018-06-01/runtime/init/error",
                    endpoint + "/2018-06-01/runtime/invocation/next",
                    endpoint + "/2018-06-01/runtime/invocation/"}},
