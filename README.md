@@ -1,4 +1,4 @@
-[![GitHub](https://img.shields.io/github/license/awslabs/aws-c-common.svg)](https://github.com/awslabs/aws-c-common/blob/master/LICENSE)
+[![GitHub](https://img.shields.io/github/license/awslabs/aws-lambda-cpp.svg)](https://github.com/awslabs/aws-lambda-cpp/blob/master/LICENSE)
 ![CodeBuild](https://codebuild.us-west-2.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiQkN1b0srbWtnUjNibFVyL2psNmdaM0l4RnVQNzVBeG84QnQvUjRmOEJVdXdHUXMxZ25iWnFZQUtGTkUxVGJhcGZaVEhXY2JOSTFHTlkvaGF2RDRIZlpVPSIsIml2UGFyYW1ldGVyU3BlYyI6IjRiS3hlRjFxVFZHSWViQmQiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)
 [![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/awslabs/aws-lambda-cpp.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/awslabs/aws-lambda-cpp/context:cpp)
 ## AWS Lambda C++ Runtime
