@@ -45,6 +45,7 @@ done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
 PKG_BIN_PATH=$1
+architecture=$(arch)
 
 if [ ! -f "$PKG_BIN_PATH" ]; then
     echo "$PKG_BIN_PATH" - No such file.;
@@ -73,8 +74,8 @@ function package_libc_via_dpkg() {
 
 function package_libc_via_rpm() {
     if type rpm > /dev/null 2>&1; then
-       if [[ $(rpm --query --list glibc.x86_64 | wc -l) -gt 1 ]]; then
-           rpm --query --list glibc.x86_64 | sed -E '/\.so$|\.so\.[0-9]+$/!d'
+       if [[ $(rpm --query --list glibc.$architecture | wc -l) -gt 1 ]]; then
+           rpm --query --list glibc.$architecture | sed -E '/\.so$|\.so\.[0-9]+$/!d'
        fi
     fi
 }
