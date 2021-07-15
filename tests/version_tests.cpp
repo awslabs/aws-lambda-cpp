@@ -12,7 +12,7 @@ TEST(VersionTests, get_version_major)
 TEST(VersionTests, get_version_minor)
 {
     auto version = get_version_minor();
-    ASSERT_GE(version, 1);
+    ASSERT_GE(version, 0);
 }
 
 TEST(VersionTests, get_version_patch)

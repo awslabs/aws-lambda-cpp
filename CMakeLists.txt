@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.9)
 set(CMAKE_CXX_STANDARD 11)
 project(aws-lambda-runtime
-    VERSION 0.2.6
+    VERSION 0.0.0
     LANGUAGES CXX)
 
 option(ENABLE_LTO "Enables link-time optimization, requires compiler support." ON)
@@ -16,7 +16,7 @@ add_library(${PROJECT_NAME}
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     SOVERSION 0
-    VERSION ${PROJECT_VERSION})
+    VERSION ${PROJECT_VERSION}-dev)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
