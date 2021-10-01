@@ -45,7 +45,6 @@ done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
 PKG_BIN_PATH=$1
-architecture=$(arch)
 
 if [ ! -f "$PKG_BIN_PATH" ]; then
     echo "$PKG_BIN_PATH" - No such file.;
@@ -66,14 +65,16 @@ function package_libc_via_pacman {
 
 function package_libc_via_dpkg() {
     if type dpkg-query > /dev/null 2>&1; then
-        if [[ $(dpkg-query --listfiles libc6 | wc -l) -gt 0 ]]; then
-            dpkg-query --listfiles libc6 | sed -E '/\.so$|\.so\.[0-9]+$/!d'
+       architecture=$(dpkg --print-architecture)
+        if [[ $(dpkg-query --listfiles libc6:$architecture | wc -l) -gt 0 ]]; then
+            dpkg-query --listfiles libc6:$architecture | sed -E '/\.so$|\.so\.[0-9]+$/!d'
         fi
     fi
 }
 
 function package_libc_via_rpm() {
     if type rpm > /dev/null 2>&1; then
+       architecture=$(arch)
        if [[ $(rpm --query --list glibc.$architecture | wc -l) -gt 1 ]]; then
            rpm --query --list glibc.$architecture | sed -E '/\.so$|\.so\.[0-9]+$/!d'
        fi
