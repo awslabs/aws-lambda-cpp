@@ -78,7 +78,7 @@ function package_libc_pacman() {
 
 function package_libc_dpkg() {
     if type dpkg-query > /dev/null 2>&1; then
-        dpkg-query --listfiles libc6 | find_so_files
+        dpkg-query --listfiles libc6:$(dpkg --print-architecture) | find_so_files
     fi
 }
 
