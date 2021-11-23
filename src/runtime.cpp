@@ -160,9 +160,11 @@ static int rt_curl_debug_callback(CURL* handle, curl_infotype type, char* data, 
 runtime::runtime(std::string const& endpoint) : runtime(endpoint, "AWS_Lambda_Cpp/" + std::string(get_version())) {}
 
 runtime::runtime(std::string const& endpoint, std::string const& user_agent)
-    : m_user_agent_header("User-Agent: " + user_agent), m_endpoints{{endpoint + "/2018-06-01/runtime/init/error",
-                                                                     endpoint + "/2018-06-01/runtime/invocation/next",
-                                                                     endpoint + "/2018-06-01/runtime/invocation/"}},
+    : m_user_agent_header("User-Agent: " + user_agent),
+      m_endpoints{
+          {endpoint + "/2018-06-01/runtime/init/error",
+           endpoint + "/2018-06-01/runtime/invocation/next",
+           endpoint + "/2018-06-01/runtime/invocation/"}},
       m_curl_handle(curl_easy_init())
 {
     if (!m_curl_handle) {
