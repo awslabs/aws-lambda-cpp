@@ -45,7 +45,6 @@ done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
 PKG_BIN_PATH=$1
-architecture=$(arch)
 
 if [ ! -f "$PKG_BIN_PATH" ]; then
     echo "$PKG_BIN_PATH" - No such file.;
@@ -56,26 +55,41 @@ if ! type zip > /dev/null 2>&1; then
     echo "zip utility is not found. Please install it and re-run this script"
     exit 1
 fi
-function package_libc_via_pacman {
+
+function pluck_so_files() {
+    sed -E '/\.so$|\.so\.[0-9]+$/!d'
+}
+
+function package_libc_alpine() {
+    if grep --fixed-strings "Alpine Linux" < /etc/os-release > /dev/null; then
+        if type apk > /dev/null 2>&1; then
+            apk info --contents musl 2>/dev/null | pluck_so_files | sed 's/^/\//'
+        fi
+    fi
+}
+
+function package_libc_pacman() {
     if grep --extended-regexp "Arch Linux|Manjaro Linux" < /etc/os-release > /dev/null 2>&1; then
         if type pacman > /dev/null 2>&1; then
-            pacman --query --list --quiet glibc | sed -E '/\.so$|\.so\.[0-9]+$/!d'
+            pacman --query --list --quiet glibc | pluck_so_files
         fi
     fi
 }
 
-function package_libc_via_dpkg() {
+function package_libc_dpkg() {
     if type dpkg-query > /dev/null 2>&1; then
         if [[ $(dpkg-query --listfiles libc6 | wc -l) -gt 0 ]]; then
-            dpkg-query --listfiles libc6 | sed -E '/\.so$|\.so\.[0-9]+$/!d'
+            dpkg-query --listfiles libc6 | pluck_so_files
         fi
     fi
 }
 
-function package_libc_via_rpm() {
+function package_libc_rpm() {
+    arch=$(uname -m)
+
     if type rpm > /dev/null 2>&1; then
-       if [[ $(rpm --query --list glibc.$architecture | wc -l) -gt 1 ]]; then
-           rpm --query --list glibc.$architecture | sed -E '/\.so$|\.so\.[0-9]+$/!d'
+       if [[ $(rpm --query --list glibc.$arch | wc -l) -gt 1 ]]; then
+           rpm --query --list glibc.$arch | pluck_so_files
        fi
     fi
 }
@@ -99,9 +113,10 @@ PKG_LD=""
 
 list=$(ldd "$PKG_BIN_PATH" | awk '{print $(NF-1)}')
 libc_libs=()
-libc_libs+=($(package_libc_via_dpkg))
-libc_libs+=($(package_libc_via_rpm))
-libc_libs+=($(package_libc_via_pacman))
+libc_libs+=($(package_libc_dpkg))
+libc_libs+=($(package_libc_rpm))
+libc_libs+=($(package_libc_pacman))
+libc_libs+=($(package_libc_alpine))
 
 mkdir -p "$PKG_DIR/bin" "$PKG_DIR/lib"
 
