@@ -1,0 +1,17 @@
+name: CMake
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Check Formatting
+      run: ./ci/codebuild/format-check.sh
