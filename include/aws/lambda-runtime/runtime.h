@@ -163,8 +163,6 @@ private:
         std::string const& url,
         std::string const& request_id,
         invocation_response const& handler_response);
-
-private:
     std::string const m_user_agent_header;
     std::array<std::string const, 3> const m_endpoints;
     CURL* const m_curl_handle;
