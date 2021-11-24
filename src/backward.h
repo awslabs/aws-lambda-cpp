@@ -240,6 +240,10 @@
 #        endif
 #    endif
 
+#    if BACKWARD_HAS_BACKTRACE_SYMBOL == 1
+#        include <dlfcn.h>
+#    endif
+
 #    if (BACKWARD_HAS_BACKTRACE == 1) || (BACKWARD_HAS_BACKTRACE_SYMBOL == 1)
 // then we shall rely on backtrace
 #        include <execinfo.h>
@@ -254,7 +258,7 @@
 // #define BACKWARD_HAS_UNWIND 1
 //  - unwind comes from libgcc, but I saw an equivalent inside clang itself.
 //  - with unwind, the stacktrace is as accurate as it can possibly be, since
-//  this is used by the C++ runtine in gcc/clang for stack unwinding on
+//  this is used by the C++ runtime in gcc/clang for stack unwinding on
 //  exception.
 //  - normally libgcc is already linked to your program by default.
 //
