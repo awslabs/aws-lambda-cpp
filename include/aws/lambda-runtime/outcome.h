@@ -49,14 +49,19 @@ public:
         }
     }
 
-    ~outcome()
+    ~outcome() { destroy(); }
+
+    outcome& operator=(outcome&& other) noexcept
     {
-        if (m_success) {
-            m_s.~TResult();
+        assert(this != &other);
+        destroy();
+        if (other.m_success) {
+            new (&m_s) TResult(std::move(other.m_s));
         }
         else {
-            m_f.~TFailure();
+            new (&m_f) TFailure(std::move(other.m_f));
         }
+        return *this;
     }
 
     TResult const& get_result() const&
@@ -86,6 +91,16 @@ public:
     bool is_success() const { return m_success; }
 
 private:
+    void destroy()
+    {
+        if (m_success) {
+            m_s.~TResult();
+        }
+        else {
+            m_f.~TFailure();
+        }
+    }
+
     union {
         TResult m_s;
         TFailure m_f;
