@@ -61,7 +61,7 @@ function pluck_so_files() {
 }
 
 function package_libc_alpine() {
-    if grep --fixed-strings "Alpine Linux" < /etc/os-release > /dev/null; then
+    if grep -F "Alpine Linux" < /etc/os-release > /dev/null; then
         if type apk > /dev/null 2>&1; then
             apk info --contents musl 2>/dev/null | pluck_so_files | sed 's/^/\//'
         fi
