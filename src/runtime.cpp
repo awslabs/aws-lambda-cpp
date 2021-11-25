@@ -61,7 +61,7 @@ static size_t write_data(char* ptr, size_t size, size_t nmemb, void* userdata)
         return 0;
     }
 
-    auto const resp = static_cast<http::response*>(userdata);
+    auto* const resp = static_cast<http::response*>(userdata);
     assert(size == 1);
     (void)size; // avoid warning in release builds
     assert(resp);
@@ -110,7 +110,7 @@ static size_t write_header(char* ptr, size_t size, size_t nmemb, void* userdata)
 
     logging::log_debug(LOG_TAG, "received header: %s", std::string(ptr, nmemb).c_str());
 
-    auto const resp = static_cast<http::response*>(userdata);
+    auto* const resp = static_cast<http::response*>(userdata);
     assert(resp);
     for (size_t i = 0; i < nmemb; i++) {
         if (ptr[i] != ':') {
@@ -127,7 +127,7 @@ static size_t write_header(char* ptr, size_t size, size_t nmemb, void* userdata)
 static size_t read_data(char* buffer, size_t size, size_t nitems, void* userdata)
 {
     auto const limit = size * nitems;
-    auto ctx = static_cast<std::pair<std::string const&, size_t>*>(userdata);
+    auto* ctx = static_cast<std::pair<std::string const&, size_t>*>(userdata);
     assert(ctx);
     auto const unread = ctx->first.length() - ctx->second;
     if (0 == unread) {
@@ -160,9 +160,11 @@ static int rt_curl_debug_callback(CURL* handle, curl_infotype type, char* data, 
 runtime::runtime(std::string const& endpoint) : runtime(endpoint, "AWS_Lambda_Cpp/" + std::string(get_version())) {}
 
 runtime::runtime(std::string const& endpoint, std::string const& user_agent)
-    : m_user_agent_header("User-Agent: " + user_agent), m_endpoints{{endpoint + "/2018-06-01/runtime/init/error",
-                                                                     endpoint + "/2018-06-01/runtime/invocation/next",
-                                                                     endpoint + "/2018-06-01/runtime/invocation/"}},
+    : m_user_agent_header("User-Agent: " + user_agent),
+      m_endpoints{
+          {endpoint + "/2018-06-01/runtime/init/error",
+           endpoint + "/2018-06-01/runtime/invocation/next",
+           endpoint + "/2018-06-01/runtime/invocation/"}},
       m_curl_handle(curl_easy_init())
 {
     if (!m_curl_handle) {
@@ -396,7 +398,7 @@ void run_handler(std::function<invocation_response(invocation_request const&)> c
 {
     logging::log_info(LOG_TAG, "Initializing the C++ Lambda Runtime version %s", aws::lambda_runtime::get_version());
     std::string endpoint("http://");
-    if (auto ep = std::getenv("AWS_LAMBDA_RUNTIME_API")) {
+    if (auto* ep = std::getenv("AWS_LAMBDA_RUNTIME_API")) {
         assert(ep);
         logging::log_debug(LOG_TAG, "LAMBDA_SERVER_ADDRESS defined in environment as: %s", ep);
         endpoint += ep;

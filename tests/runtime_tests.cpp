@@ -12,6 +12,7 @@
 #include <aws/lambda/model/DeleteFunctionRequest.h>
 #include <aws/lambda/model/InvokeRequest.h>
 #include "gtest/gtest.h"
+#include <unistd.h>
 
 extern std::string aws_prefix;
 
@@ -85,6 +86,9 @@ struct LambdaRuntimeTest : public ::testing::Test {
 
         auto outcome = m_lambda_client.CreateFunction(create_function_request);
         ASSERT_TRUE(outcome.IsSuccess()) << "Failed to create function " << function_name;
+
+        // work around Lambda function pending creation state
+        sleep(5);
     }
 
     void delete_function(Aws::String const& function_name, bool assert = true)
