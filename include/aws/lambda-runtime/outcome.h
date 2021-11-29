@@ -61,6 +61,7 @@ public:
         else {
             new (&m_f) TFailure(std::move(other.m_f));
         }
+        m_success = other.m_success;
         return *this;
     }
 
