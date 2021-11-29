@@ -14,6 +14,8 @@
  * permissions and limitations under the License.
  */
 
+#include "aws/lambda-runtime/outcome.h"
+
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -31,7 +33,7 @@ public:
     inline void add_header(std::string name, std::string const& value);
     inline void append_body(const char* p, size_t sz);
     inline bool has_header(char const* header) const;
-    inline std::string const& get_header(char const* header) const;
+    inline lambda_runtime::outcome<std::string, bool> get_header(char const* header) const;
     inline response_code get_response_code() const { return m_response_code; }
     inline void set_response_code(aws::http::response_code c);
     inline void set_content_type(char const* ct);
@@ -140,7 +142,7 @@ inline std::string const& response::get_body() const
 inline void response::add_header(std::string name, std::string const& value)
 {
     std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-    m_headers.emplace_back(name, value);
+    m_headers.emplace_back(std::move(name), value);
 }
 
 inline void response::append_body(const char* p, size_t sz)
@@ -161,12 +163,15 @@ inline bool response::has_header(char const* header) const
     });
 }
 
-inline std::string const& response::get_header(char const* header) const
+inline lambda_runtime::outcome<std::string, bool> response::get_header(char const* header) const
 {
     auto it = std::find_if(m_headers.begin(), m_headers.end(), [header](std::pair<std::string, std::string> const& p) {
         return p.first == header;
     });
-    assert(it != m_headers.end());
+
+    if (it == m_headers.end()) {
+        return false;
+    }
     return it->second;
 }
 
