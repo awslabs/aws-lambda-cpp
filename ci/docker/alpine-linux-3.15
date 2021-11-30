@@ -1,0 +1,5 @@
+FROM alpine:3.15
+
+RUN apk update; apk add g++ cmake git bash py3-pip libexecinfo-dev ninja curl-dev zlib-dev zip
+
+RUN git clone --recurse-submodules https://github.com/aws/aws-sdk-cpp.git
