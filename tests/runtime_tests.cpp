@@ -86,10 +86,10 @@ struct LambdaRuntimeTest : public ::testing::Test {
         auto rc = stat(ZIP_FILE_PATH, &s);
         ASSERT_EQ(rc, 0) << std::string("file does not exist: ") + ZIP_FILE_PATH;
         Aws::Utils::CryptoBuffer zip_file_bytes(s.st_size);
-        auto *zip_file = fopen(ZIP_FILE_PATH, "r");
+        auto* zip_file = fopen(ZIP_FILE_PATH, "r");
         fread(zip_file_bytes.GetUnderlyingData(), sizeof(unsigned char), s.st_size, zip_file);
         fclose(zip_file);
-    
+
         Model::FunctionCode funcode;
         funcode.SetZipFile(zip_file_bytes);
         create_function_request.SetCode(funcode);
