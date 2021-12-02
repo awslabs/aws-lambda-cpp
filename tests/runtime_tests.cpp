@@ -91,8 +91,8 @@ struct LambdaRuntimeTest : public ::testing::Test {
         fclose(zip_file);
 
         Model::FunctionCode funcode;
-        funcode.SetZipFile(zip_file_bytes);
-        create_function_request.SetCode(funcode);
+        funcode.SetZipFile(std::move(zip_file_bytes));
+        create_function_request.SetCode(std::move(funcode));
         create_function_request.SetRuntime(Aws::Lambda::Model::Runtime::provided);
 
         auto outcome = m_lambda_client.CreateFunction(create_function_request);
