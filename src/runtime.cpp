@@ -116,9 +116,7 @@ static size_t write_header(char* ptr, size_t size, size_t nmemb, void* userdata)
         if (ptr[i] != ':') {
             continue;
         }
-        std::string key{ptr, i};
-        std::string value{ptr + i + 1, nmemb - i - 1};
-        resp->add_header(trim(key), trim(value));
+        resp->add_header(trim({ptr, i}), trim({ptr + i + 1, nmemb - i - 1}));
         break;
     }
     return size * nmemb;
@@ -266,32 +264,38 @@ runtime::next_outcome runtime::get_next()
         return resp.get_response_code();
     }
 
-    if (!resp.has_header(REQUEST_ID_HEADER)) {
+    auto out = resp.get_header(REQUEST_ID_HEADER);
+    if (!out.is_success()) {
         logging::log_error(LOG_TAG, "Failed to find header %s in response", REQUEST_ID_HEADER);
         return aws::http::response_code::REQUEST_NOT_MADE;
     }
     invocation_request req;
     req.payload = resp.get_body();
-    req.request_id = resp.get_header(REQUEST_ID_HEADER);
+    req.request_id = std::move(out).get_result();
 
-    if (resp.has_header(TRACE_ID_HEADER)) {
-        req.xray_trace_id = resp.get_header(TRACE_ID_HEADER);
+    out = resp.get_header(TRACE_ID_HEADER);
+    if (out.is_success()) {
+        req.xray_trace_id = std::move(out).get_result();
     }
 
-    if (resp.has_header(CLIENT_CONTEXT_HEADER)) {
-        req.client_context = resp.get_header(CLIENT_CONTEXT_HEADER);
+    out = resp.get_header(CLIENT_CONTEXT_HEADER);
+    if (out.is_success()) {
+        req.client_context = std::move(out).get_result();
     }
 
-    if (resp.has_header(COGNITO_IDENTITY_HEADER)) {
-        req.cognito_identity = resp.get_header(COGNITO_IDENTITY_HEADER);
+    out = resp.get_header(COGNITO_IDENTITY_HEADER);
+    if (out.is_success()) {
+        req.cognito_identity = std::move(out).get_result();
     }
 
-    if (resp.has_header(FUNCTION_ARN_HEADER)) {
-        req.function_arn = resp.get_header(FUNCTION_ARN_HEADER);
+    out = resp.get_header(FUNCTION_ARN_HEADER);
+    if (out.is_success()) {
+        req.function_arn = std::move(out).get_result();
     }
 
-    if (resp.has_header(DEADLINE_MS_HEADER)) {
-        auto const& deadline_string = resp.get_header(DEADLINE_MS_HEADER);
+    out = resp.get_header(DEADLINE_MS_HEADER);
+    if (out.is_success()) {
+        auto const& deadline_string = std::move(out).get_result();
         constexpr int base = 10;
         unsigned long ms = strtoul(deadline_string.c_str(), nullptr, base);
         assert(ms > 0);
@@ -303,7 +307,7 @@ runtime::next_outcome runtime::get_next()
             req.payload.c_str(),
             static_cast<int64_t>(req.get_time_remaining().count()));
     }
-    return next_outcome(req);
+    return {req};
 }
 
 runtime::post_outcome runtime::post_success(std::string const& request_id, invocation_response const& handler_response)
