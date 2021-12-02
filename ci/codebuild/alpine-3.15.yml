@@ -1,0 +1,16 @@
+version: 0.2
+# This uses the docker image specified in ci/docker/alpine-linux-3.15
+phases:
+  pre_build:
+    commands:
+      - pip install awscli
+      - ci/codebuild/build-cpp-sdk.sh
+  build:
+    commands:
+      - echo Build started on `date`
+      - ci/codebuild/build.sh -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DENABLE_TESTS=ON -DTEST_RESOURCE_PREFIX=alpine315
+      - ci/codebuild/run-tests.sh  aws-lambda-package-lambda-test-fun alpine315
+  post_build:
+    commands:
+      - echo Build completed on `date`
+
