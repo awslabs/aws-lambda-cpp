@@ -4,7 +4,6 @@ phases:
   pre_build:
     commands:
       - alias cmake=cmake3
-      - pip install awscli
       - ci/codebuild/build-cpp-sdk.sh
   build:
     commands:
