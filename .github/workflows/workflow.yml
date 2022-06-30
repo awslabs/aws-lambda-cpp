@@ -22,7 +22,7 @@ jobs:
     - uses: actions/checkout@v2
     
     - name: Install Dependencies
-      run: sudo apt-get install -y clang-tidy libcurl4-openssl-dev
+      run: sudo apt-get update && sudo apt-get install -y clang-tidy libcurl4-openssl-dev
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
