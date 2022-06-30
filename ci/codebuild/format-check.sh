@@ -4,7 +4,7 @@ set -euo pipefail
 
 CLANG_FORMAT=clang-format
 
-if NOT type $CLANG_FORMAT > /dev/null 2>&1; then
+if ! type $CLANG_FORMAT > /dev/null 2>&1; then
     echo "No appropriate clang-format found."
     exit 1
 fi

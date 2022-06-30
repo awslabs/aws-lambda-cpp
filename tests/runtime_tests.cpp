@@ -1,4 +1,5 @@
 #include <aws/core/client/ClientConfiguration.h>
+#include <aws/core/utils/Array.h>
 #include <aws/core/utils/Outcome.h>
 #include <aws/core/utils/memory/stl/AWSString.h>
 #include <aws/core/utils/memory/stl/AWSStringStream.h>
@@ -12,6 +13,8 @@
 #include <aws/lambda/model/DeleteFunctionRequest.h>
 #include <aws/lambda/model/InvokeRequest.h>
 #include "gtest/gtest.h"
+#include <cstdio>
+#include <sys/stat.h>
 #include <unistd.h>
 
 extern std::string aws_prefix;
@@ -20,8 +23,7 @@ namespace {
 
 using namespace Aws::Lambda;
 
-constexpr auto S3BUCKET = "aws-lambda-cpp-tests";
-constexpr auto S3KEY = "lambda-test-fun.zip";
+constexpr auto ZIP_FILE_PATH = "resources/lambda-test-fun.zip";
 constexpr auto REQUEST_TIMEOUT = 15 * 1000;
 
 struct LambdaRuntimeTest : public ::testing::Test {
@@ -79,9 +81,18 @@ struct LambdaRuntimeTest : public ::testing::Test {
         create_function_request.SetFunctionName(function_name);
         // I ran into eventual-consistency issues when creating the role dynamically as part of the test.
         create_function_request.SetRole(get_role_arn("integration-tests"));
+
+        struct stat s;
+        auto rc = stat(ZIP_FILE_PATH, &s);
+        ASSERT_EQ(rc, 0) << std::string("file does not exist: ") + ZIP_FILE_PATH;
+        Aws::Utils::CryptoBuffer zip_file_bytes(s.st_size);
+        auto* zip_file = fopen(ZIP_FILE_PATH, "r");
+        fread(zip_file_bytes.GetUnderlyingData(), sizeof(unsigned char), s.st_size, zip_file);
+        fclose(zip_file);
+
         Model::FunctionCode funcode;
-        funcode.WithS3Bucket(S3BUCKET).WithS3Key(build_resource_name(S3KEY));
-        create_function_request.SetCode(funcode);
+        funcode.SetZipFile(std::move(zip_file_bytes));
+        create_function_request.SetCode(std::move(funcode));
         create_function_request.SetRuntime(Aws::Lambda::Model::Runtime::provided);
 
         auto outcome = m_lambda_client.CreateFunction(create_function_request);
