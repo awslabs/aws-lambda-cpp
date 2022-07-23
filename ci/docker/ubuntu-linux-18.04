@@ -9,7 +9,7 @@ sh cmake-install --skip-license --prefix=/usr --exclude-subdirectory;
 
 RUN pip3 install --upgrade pip
 
-RUN git clone https://github.com/aws/aws-sdk-cpp.git
+RUN git clone https://github.com/aws/aws-sdk-cpp.git --recurse-submodules
 
 RUN update-alternatives --set cc /usr/bin/clang
 RUN update-alternatives --set c++ /usr/bin/clang++
