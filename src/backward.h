@@ -569,10 +569,7 @@ public:
     }
 
 #ifdef BACKWARD_ATLEAST_CXX11
-    handle(handle&& from) : _empty(true)
-    {
-        swap(from);
-    }
+    handle(handle&& from) : _empty(true) { swap(from); }
     handle& operator=(handle&& from)
     {
         swap(from);
@@ -611,10 +608,7 @@ public:
         }
         return reinterpret_cast<const dummy*>(_val);
     }
-    T get()
-    {
-        return _val;
-    }
+    T get() { return _val; }
     T release()
     {
         _empty = true;
@@ -628,29 +622,14 @@ public:
                                 // bools without throwing... It's a lost cause anyway!
     }
 
-    T& operator->()
-    {
-        return _val;
-    }
-    const T& operator->() const
-    {
-        return _val;
-    }
+    T& operator->() { return _val; }
+    const T& operator->() const { return _val; }
 
     typedef typename rm_ptr<T>::type& ref_t;
     typedef const typename rm_ptr<T>::type& const_ref_t;
-    ref_t operator*()
-    {
-        return *_val;
-    }
-    const_ref_t operator*() const
-    {
-        return *_val;
-    }
-    ref_t operator[](size_t idx)
-    {
-        return _val[idx];
-    }
+    ref_t operator*() { return *_val; }
+    const_ref_t operator*() const { return *_val; }
+    ref_t operator[](size_t idx) { return _val[idx]; }
 
     // Watch out, we've got a badass over here
     T* operator&()
@@ -690,7 +669,8 @@ private:
 
 #endif // BACKWARD_SYSTEM_LINUX || BACKWARD_SYSTEM_DARWIN
 
-struct demangler : public demangler_impl<system_tag::current_tag> {};
+struct demangler : public demangler_impl<system_tag::current_tag> {
+};
 
 // Split a string on the platform's PATH delimiter.  Example: if delimiter
 // is ":" then:
@@ -815,28 +795,13 @@ protected:
 #endif
     }
 
-    void set_context(void* context)
-    {
-        _context = context;
-    }
-    void* context() const
-    {
-        return _context;
-    }
+    void set_context(void* context) { _context = context; }
+    void* context() const { return _context; }
 
-    void set_error_addr(void* error_addr)
-    {
-        _error_addr = error_addr;
-    }
-    void* error_addr() const
-    {
-        return _error_addr;
-    }
+    void set_error_addr(void* error_addr) { _error_addr = error_addr; }
+    void* error_addr() const { return _error_addr; }
 
-    size_t skip_n_firsts() const
-    {
-        return _skip;
-    }
+    size_t skip_n_firsts() const { return _skip; }
 
 private:
     size_t _thread_id;
@@ -1277,7 +1242,8 @@ private:
 
 #endif
 
-class StackTrace : public StackTraceImpl<system_tag::current_tag> {};
+class StackTrace : public StackTraceImpl<system_tag::current_tag> {
+};
 
 /*************** TRACE RESOLVER ***************/
 
@@ -3746,7 +3712,8 @@ private:
 
 #endif
 
-class TraceResolver : public TraceResolverImpl<system_tag::current_tag> {};
+class TraceResolver : public TraceResolverImpl<system_tag::current_tag> {
+};
 
 /*************** CODE SNIPPET ***************/
 
@@ -3847,10 +3814,7 @@ public:
     void swap(SourceFile& b) { _file.swap(b._file); }
 
 #ifdef BACKWARD_ATLEAST_CXX11
-    SourceFile(SourceFile&& from) : _file(nullptr)
-    {
-        swap(from);
-    }
+    SourceFile(SourceFile&& from) : _file(nullptr) { swap(from); }
     SourceFile& operator=(SourceFile&& from)
     {
         swap(from);
