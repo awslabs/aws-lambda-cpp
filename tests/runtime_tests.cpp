@@ -1,3 +1,4 @@
+#include <aws/lambda/model/Architecture.h>
 #include <aws/core/client/ClientConfiguration.h>
 #include <aws/core/utils/Array.h>
 #include <aws/core/utils/Outcome.h>
@@ -16,6 +17,7 @@
 #include <cstdio>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vector>
 
 extern std::string aws_prefix;
 
@@ -93,7 +95,13 @@ struct LambdaRuntimeTest : public ::testing::Test {
         Model::FunctionCode funcode;
         funcode.SetZipFile(std::move(zip_file_bytes));
         create_function_request.SetCode(std::move(funcode));
-        create_function_request.SetRuntime(Aws::Lambda::Model::Runtime::provided);
+        create_function_request.SetRuntime(Aws::Lambda::Model::Runtime::provided_al2);
+
+        std::vector<Aws::Lambda::Model::Architecture> lambda_architectures = {Aws::Lambda::Model::Architecture::x86_64};
+#ifdef __aarch64__
+        lambda_architectures[0] = Aws::Lambda::Model::Architecture::arm64;
+#endif
+        create_function_request.SetArchitectures(lambda_architectures);
 
         auto outcome = m_lambda_client.CreateFunction(create_function_request);
         ASSERT_TRUE(outcome.IsSuccess()) << "Failed to create function " << function_name;

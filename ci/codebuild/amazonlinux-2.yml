@@ -1,0 +1,12 @@
+version: 0.2
+phases:
+  pre_build:
+    commands:
+      - yum install -y zip
+  build:
+    commands:
+      - cmake3 -S . -B build -DENABLE_TESTS=ON -DTEST_RESOURCE_PREFIX=al2arm -GNinja
+      - cd build
+      - ninja-build
+      - ninja-build aws-lambda-package-lambda-test-fun
+      - ctest3 --output-on-failure
