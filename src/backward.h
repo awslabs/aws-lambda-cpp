@@ -260,6 +260,7 @@
 #    if (BACKWARD_HAS_BACKTRACE == 1) || (BACKWARD_HAS_BACKTRACE_SYMBOL == 1)
 // then we shall rely on backtrace
 #        include <execinfo.h>
+#        include <dlfcn.h>
 #    endif
 
 #endif // defined(BACKWARD_SYSTEM_LINUX)
@@ -318,13 +319,13 @@
 #        undef BACKWARD_HAS_BACKTRACE_SYMBOL
 #        define BACKWARD_HAS_BACKTRACE_SYMBOL 1
 #    endif
-
 #    include <cxxabi.h>
 #    include <fcntl.h>
 #    include <pthread.h>
 #    include <signal.h>
 #    include <sys/stat.h>
 #    include <unistd.h>
+
 
 #    if (BACKWARD_HAS_BACKTRACE == 1) || (BACKWARD_HAS_BACKTRACE_SYMBOL == 1)
 #        include <execinfo.h>
