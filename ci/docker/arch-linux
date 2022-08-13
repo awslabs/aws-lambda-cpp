@@ -1,0 +1,17 @@
+FROM public.ecr.aws/docker/library/archlinux:latest 
+
+RUN pacman -Sy --noconfirm git 
+RUN git clone --recurse-submodules https://github.com/aws/aws-sdk-cpp.git
+RUN pacman -Sy --noconfirm \
+    cmake \
+    ninja \
+    clang \
+    curl \
+    zip
+
+RUN CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake -Saws-sdk-cpp -Baws-sdk-cpp/build -GNinja \
+    -DBUILD_ONLY=lambda \
+    -DUSE_OPENSSL=OFF \ 
+    -DENABLE_TESTING=OFF
+RUN cmake --build aws-sdk-cpp/build -t install
+
