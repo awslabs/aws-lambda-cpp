@@ -1,0 +1,412 @@
+
+Parameters:
+  GitHub:
+    Type: String
+    Default: https://github.com/awslabs/aws-lambda-cpp.git
+
+Resources:
+
+  ECR:
+    Type: AWS::ECR::Repository
+
+  LambdaTestRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement: 
+        - Effect: Allow
+          Principal: 
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: can-log
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+          - Effect: Allow
+            Resource:
+            - !Join [':', [ arn:aws:logs, !Ref AWS::Region, !Ref AWS::AccountId, log-group:/aws/lambda/lambda-cpp-* ] ]
+            - !Join [':', [ arn:aws:logs, !Ref AWS::Region, !Ref AWS::AccountId, log-group:/aws/lambda/lambda-cpp-*:* ] ]
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+
+  LogsAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: codebuild.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Policies:
+      - PolicyName: readthelogs
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+          - Effect: Allow
+            Resource:
+            - !Join [':', [ arn:aws:logs, !Ref AWS::Region, !Ref AWS::AccountId, log-group:/aws/codebuild/aws-lambda-cpp-ci:* ] ]
+            Action:
+            - logs:GetLogEvents
+
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement: 
+        - Effect: Allow
+          Principal: 
+            Service: codebuild.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: thepolicy
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+          - Effect: Allow
+            Resource: 
+            - !Join [':', [ arn:aws:logs, !Ref AWS::Region, !Ref AWS::AccountId, log-group:/aws/codebuild/aws-lambda-cpp-ci ] ]
+            - !Join [':', [ arn:aws:logs, !Ref AWS::Region, !Ref AWS::AccountId, log-group:/aws/codebuild/aws-lambda-cpp-ci:* ] ]
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          - Effect: Allow
+            Resource:
+            - !Join [ '', [ arn:aws:s3:::codepipeline-, !Ref AWS::Region, -* ] ]
+            Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:GetObjectVersion
+            - s3:GetBucketAcl
+            - s3:GetBucketLocation
+          - Effect: Allow
+            Resource:
+            - !Join [ ':', [ arn:aws:codebuild, !Ref AWS::Region, !Ref AWS::AccountId, report-group/test-* ] ]
+            Action:
+            - codebuild:CreateReportGroup
+            - codebuild:CreateReport
+            - codebuild:UpdateReport
+            - codebuild:BatchPutTestCases
+            - codebuild:BatchPutCodeCoverages
+          - Effect: Allow
+            Resource:
+            - '*'
+            Action:
+            - ecr:GetAuthorizationToken
+          - Effect: Allow
+            Resource:
+            - !GetAtt ECR.Arn
+            Action:
+            # pulling
+            - ecr:BatchCheckLayerAvailability
+            - ecr:GetDownloadUrlForLayer
+            - ecr:BatchGetImage
+            # pushing
+            - ecr:CompleteLayerUpload
+            - ecr:GetAuthorizationToken
+            - ecr:UploadLayerPart
+            - ecr:InitiateLayerUpload
+            - ecr:BatchCheckLayerAvailability
+            - ecr:PutImage
+          - Effect: Allow
+            Resource:
+            - !GetAtt LambdaTestRole.Arn
+            Action:
+            - iam:GetRole
+            - iam:PassRole
+          - Effect: Allow
+            Resource:
+              - !Join [':', [ arn:aws:lambda, !Ref AWS::Region, !Ref AWS::AccountId, function:lambda-cpp-* ] ]
+            Action:
+            - lambda:CreateFunction
+            - lambda:DeleteFunction
+            - lambda:InvokeFunction
+
+  UpdateArmBuildEnvironments:
+    Type: AWS::CodeBuild::Project
+    Properties: 
+      Artifacts: 
+        Type: NO_ARTIFACTS
+      BadgeEnabled: True
+      Visibility: PUBLIC_READ
+      ConcurrentBuildLimit: 1
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      ResourceAccessRole: !GetAtt LogsAccessRole.Arn
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: /aws/codebuild/aws-lambda-cpp-ci
+      Environment: 
+        ImagePullCredentialsType: CODEBUILD
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        Type: ARM_CONTAINER
+        PrivilegedMode: True
+        EnvironmentVariables:
+        - Name: ECR_NAME
+          Type: PLAINTEXT
+          Value: !Ref ECR
+      Source: 
+        Type: GITHUB
+        Location: !Ref GitHub 
+        BuildSpec: |
+          version: 0.2
+          phases:
+            build:
+              commands:
+              - ./ci/update-images.sh
+
+  UpdateX86BuildEnvironments:
+    Type: AWS::CodeBuild::Project
+    Properties: 
+      Artifacts: 
+        Type: NO_ARTIFACTS
+      BadgeEnabled: True
+      Visibility: PUBLIC_READ
+      ConcurrentBuildLimit: 1
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      ResourceAccessRole: !GetAtt LogsAccessRole.Arn
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: /aws/codebuild/aws-lambda-cpp-ci
+      Environment: 
+        ImagePullCredentialsType: CODEBUILD
+        ComputeType: BUILD_GENERAL1_MEDIUM
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:4.0
+        Type: LINUX_CONTAINER
+        PrivilegedMode: True
+        EnvironmentVariables:
+        - Name: ECR_NAME
+          Type: PLAINTEXT
+          Value: !Ref ECR
+      Source: 
+        Type: GITHUB
+        Location: !Ref GitHub 
+        BuildSpec: |
+          version: 0.2
+          phases:
+            build:
+              commands:
+              - ./ci/update-images.sh
+
+
+  Amazon2Arm:
+    Type: AWS::CodeBuild::Project
+    Properties: 
+      Artifacts: 
+        Type: NO_ARTIFACTS
+      BadgeEnabled: True
+      Visibility: PUBLIC_READ
+      ConcurrentBuildLimit: 1
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      ResourceAccessRole: !GetAtt LogsAccessRole.Arn
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: /aws/codebuild/aws-lambda-cpp-ci
+      Triggers:
+        BuildType: BUILD
+        Webhook: True
+        FilterGroups:
+        - - Type: EVENT
+            Pattern: PUSH,PULL_REQUEST_CREATED,PULL_REQUEST_UPDATED
+      Environment: 
+        ImagePullCredentialsType: SERVICE_ROLE
+        ComputeType: BUILD_GENERAL1_SMALL
+        Type: ARM_CONTAINER
+        Image: !Join [ ':', [ !GetAtt ECR.RepositoryUri, amazon-linux-2-linux-arm64 ]]
+        EnvironmentVariables:
+        - Name: LAMBDA_TEST_ROLE
+          Type: PLAINTEXT
+          Value: !Ref LambdaTestRole 
+      Source: 
+        Type: GITHUB
+        Location: !Ref GitHub 
+        BuildSpec: ci/codebuild/amazonlinux-2.yml
+
+  Amazon2:
+    Type: AWS::CodeBuild::Project
+    Properties: 
+      Artifacts: 
+        Type: NO_ARTIFACTS
+      BadgeEnabled: True
+      Visibility: PUBLIC_READ
+      ConcurrentBuildLimit: 1
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      ResourceAccessRole: !GetAtt LogsAccessRole.Arn
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: /aws/codebuild/aws-lambda-cpp-ci
+      Triggers:
+        BuildType: BUILD
+        Webhook: True
+        FilterGroups:
+        - - Type: EVENT
+            Pattern: PUSH,PULL_REQUEST_CREATED,PULL_REQUEST_UPDATED
+      Environment: 
+        ImagePullCredentialsType: SERVICE_ROLE
+        ComputeType: BUILD_GENERAL1_SMALL
+        Type: LINUX_CONTAINER
+        Image: !Join [ ':', [ !GetAtt ECR.RepositoryUri, amazon-linux-2-linux-amd64 ]]
+        EnvironmentVariables:
+        - Name: LAMBDA_TEST_ROLE
+          Type: PLAINTEXT
+          Value: !Ref LambdaTestRole 
+      Source: 
+        Type: GITHUB
+        Location: !Ref GitHub 
+        BuildSpec: ci/codebuild/amazonlinux-2.yml
+
+  Amazon201803:
+    Type: AWS::CodeBuild::Project
+    Properties: 
+      Artifacts: 
+        Type: NO_ARTIFACTS
+      BadgeEnabled: True
+      Visibility: PUBLIC_READ
+      ConcurrentBuildLimit: 1
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      ResourceAccessRole: !GetAtt LogsAccessRole.Arn
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: /aws/codebuild/aws-lambda-cpp-ci
+      Triggers:
+        BuildType: BUILD
+        Webhook: True
+        FilterGroups:
+        - - Type: EVENT
+            Pattern: PUSH,PULL_REQUEST_CREATED,PULL_REQUEST_UPDATED
+      Environment: 
+        ImagePullCredentialsType: SERVICE_ROLE
+        ComputeType: BUILD_GENERAL1_SMALL
+        Type: LINUX_CONTAINER
+        Image: !Join [ ':', [ !GetAtt ECR.RepositoryUri, amazon-linux-2018.03-linux-amd64 ]]
+        EnvironmentVariables:
+        - Name: LAMBDA_TEST_ROLE
+          Type: PLAINTEXT
+          Value: !Ref LambdaTestRole 
+      Source: 
+        Type: GITHUB
+        Location: !Ref GitHub 
+        BuildSpec: ci/codebuild/amazonlinux-2018.03.yml
+
+  Ubuntu1804:
+    Type: AWS::CodeBuild::Project
+    Properties: 
+      Artifacts: 
+        Type: NO_ARTIFACTS
+      BadgeEnabled: True
+      Visibility: PUBLIC_READ
+      ConcurrentBuildLimit: 1
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      ResourceAccessRole: !GetAtt LogsAccessRole.Arn
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: /aws/codebuild/aws-lambda-cpp-ci
+      Triggers:
+        BuildType: BUILD
+        Webhook: True
+        FilterGroups:
+        - - Type: EVENT
+            Pattern: PUSH,PULL_REQUEST_CREATED,PULL_REQUEST_UPDATED
+      Environment: 
+        ImagePullCredentialsType: SERVICE_ROLE
+        ComputeType: BUILD_GENERAL1_SMALL
+        Type: LINUX_CONTAINER
+        Image: !Join [ ':', [ !GetAtt ECR.RepositoryUri, ubuntu-linux-18.04-linux-amd64 ]]
+        EnvironmentVariables:
+        - Name: LAMBDA_TEST_ROLE
+          Type: PLAINTEXT
+          Value: !Ref LambdaTestRole 
+      Source: 
+        Type: GITHUB
+        Location: !Ref GitHub 
+        BuildSpec: ci/codebuild/ubuntu-18.04.yml
+
+  Alpine315:
+    Type: AWS::CodeBuild::Project
+    Properties: 
+      Artifacts: 
+        Type: NO_ARTIFACTS
+      BadgeEnabled: True
+      Visibility: PUBLIC_READ
+      ConcurrentBuildLimit: 1
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      ResourceAccessRole: !GetAtt LogsAccessRole.Arn
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: /aws/codebuild/aws-lambda-cpp-ci
+      Triggers:
+        BuildType: BUILD
+        Webhook: True
+        FilterGroups:
+        - - Type: EVENT
+            Pattern: PUSH,PULL_REQUEST_CREATED,PULL_REQUEST_UPDATED
+      Environment: 
+        ImagePullCredentialsType: SERVICE_ROLE
+        ComputeType: BUILD_GENERAL1_SMALL
+        Type: LINUX_CONTAINER
+        Image: !Join [ ':', [ !GetAtt ECR.RepositoryUri, alpine-linux-3.15-linux-amd64 ]]
+        EnvironmentVariables:
+        - Name: LAMBDA_TEST_ROLE
+          Type: PLAINTEXT
+          Value: !Ref LambdaTestRole 
+      Source: 
+        Type: GITHUB
+        Location: !Ref GitHub 
+        BuildSpec: ci/codebuild/alpine-3.15.yml
+
+  Arch:
+    Type: AWS::CodeBuild::Project
+    Properties: 
+      Artifacts: 
+        Type: NO_ARTIFACTS
+      BadgeEnabled: True
+      Visibility: PUBLIC_READ
+      ConcurrentBuildLimit: 1
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      ResourceAccessRole: !GetAtt LogsAccessRole.Arn
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: /aws/codebuild/aws-lambda-cpp-ci
+      Triggers:
+        BuildType: BUILD
+        Webhook: True
+        FilterGroups:
+        - - Type: EVENT
+            Pattern: PUSH,PULL_REQUEST_CREATED,PULL_REQUEST_UPDATED
+      Environment: 
+        ImagePullCredentialsType: SERVICE_ROLE
+        ComputeType: BUILD_GENERAL1_SMALL
+        Type: LINUX_CONTAINER
+        Image: !Join [ ':', [ !GetAtt ECR.RepositoryUri, arch-linux-linux-amd64 ]]
+        EnvironmentVariables:
+        - Name: LAMBDA_TEST_ROLE
+          Type: PLAINTEXT
+          Value: !Ref LambdaTestRole 
+      Source: 
+        Type: GITHUB
+        Location: !Ref GitHub 
+        BuildSpec: ci/codebuild/arch-linux.yml
+
+Outputs:
+  BootstrapArmImages:
+    Description: to bootstrap or update the arm images, run the command!
+    Value: !Join [' ', [ aws codebuild start-build --project-name, !Ref UpdateArmBuildEnvironments ] ] 
+  BootstrapX86Images:
+    Description: to bootstrap or update the arm images, run the command!
+    Value: !Join [' ', [ aws codebuild start-build --project-name, !Ref UpdateX86BuildEnvironments ] ] 
