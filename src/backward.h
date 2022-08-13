@@ -326,7 +326,6 @@
 #    include <sys/stat.h>
 #    include <unistd.h>
 
-
 #    if (BACKWARD_HAS_BACKTRACE == 1) || (BACKWARD_HAS_BACKTRACE_SYMBOL == 1)
 #        include <execinfo.h>
 #    endif
