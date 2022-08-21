@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <aws/crt/Types.h>
 #include <aws/lambda/model/Architecture.h>
 #include <aws/core/client/ClientConfiguration.h>
 #include <aws/core/utils/Array.h>
@@ -13,11 +15,15 @@
 #include <aws/lambda/model/CreateFunctionRequest.h>
 #include <aws/lambda/model/DeleteFunctionRequest.h>
 #include <aws/lambda/model/InvokeRequest.h>
+#include <aws/core/utils/base64/Base64.h>
 #include "gtest/gtest.h"
+#include <aws/lambda/model/LogType.h>
 #include <cstdio>
+#include <ostream>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <vector>
+#include <string>
 
 extern std::string aws_prefix;
 
@@ -212,6 +218,25 @@ TEST_F(LambdaRuntimeTest, binary_response)
     EXPECT_EQ(200, invoke_outcome.GetResult().GetStatusCode());
     EXPECT_TRUE(invoke_outcome.GetResult().GetFunctionError().empty());
     EXPECT_EQ(expected_length, invoke_outcome.GetResult().GetPayload().tellp());
+    delete_function(funcname);
+}
+
+TEST_F(LambdaRuntimeTest, crash)
+{
+    Aws::String const funcname = build_resource_name("crash");
+    create_function(funcname, "crash" /*handler_name*/);
+    Model::InvokeRequest invoke_request;
+    invoke_request.SetFunctionName(funcname);
+    invoke_request.SetInvocationType(Model::InvocationType::RequestResponse);
+    invoke_request.SetLogType(Model::LogType::Tail);
+
+    Model::InvokeOutcome invoke_outcome = m_lambda_client.Invoke(invoke_request);
+    EXPECT_TRUE(invoke_outcome.IsSuccess());
+    EXPECT_EQ(200, invoke_outcome.GetResult().GetStatusCode());
+    EXPECT_STREQ("Unhandled", invoke_outcome.GetResult().GetFunctionError().c_str());
+    Aws::Utils::Base64::Base64 base64;
+    auto tail_logs = base64.Decode(invoke_outcome.GetResult().GetLogResult());
+    std::cout << tail_logs.GetUnderlyingData() << std::endl;
     delete_function(funcname);
 }
 } // namespace

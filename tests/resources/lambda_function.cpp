@@ -1,6 +1,7 @@
 #include <aws/lambda-runtime/runtime.h>
 #include <aws/logging/logging.h>
 
+#include <stdexcept>
 #include <unordered_map>
 #include <string>
 #include <functional>
@@ -26,12 +27,19 @@ invocation_response binary_response(invocation_request const& /*request*/)
     return invocation_response::success(png, "image/png");
 }
 
+invocation_response crash(invocation_request const& /*request*/)
+{
+    throw std::runtime_error("barf");
+    return invocation_response::failure("unreachable", "unreachable");
+}
+
 int main(int argc, char* argv[])
 {
     std::unordered_map<std::string, std::function<invocation_response(invocation_request const&)>> handlers;
     handlers.emplace("echo_success", echo_success);
     handlers.emplace("echo_failure", echo_failure);
     handlers.emplace("binary_response", binary_response);
+    handlers.emplace("crash", crash);
 
     if (argc < 2) {
         aws::logging::log_error("lambda_fun", "Missing handler argument. Exiting.");
