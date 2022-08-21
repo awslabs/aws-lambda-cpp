@@ -1,4 +1,5 @@
 project(aws-lambda-runtime-tests LANGUAGES CXX)
+
 find_package(AWSSDK COMPONENTS lambda iam)
 
 add_executable(${PROJECT_NAME}

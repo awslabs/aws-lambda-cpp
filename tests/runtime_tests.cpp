@@ -1,5 +1,3 @@
-#include <algorithm>
-#include <aws/crt/Types.h>
 #include <aws/lambda/model/Architecture.h>
 #include <aws/core/client/ClientConfiguration.h>
 #include <aws/core/utils/Array.h>
@@ -13,13 +11,12 @@
 #include <aws/lambda/model/DeleteFunctionRequest.h>
 #include <aws/lambda/model/GetFunctionRequest.h>
 #include <aws/lambda/model/CreateFunctionRequest.h>
-#include <aws/lambda/model/DeleteFunctionRequest.h>
 #include <aws/lambda/model/InvokeRequest.h>
 #include <aws/core/utils/base64/Base64.h>
 #include "gtest/gtest.h"
 #include <aws/lambda/model/LogType.h>
 #include <cstdio>
-#include <ostream>
+#include <iostream>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <vector>
@@ -223,8 +220,8 @@ TEST_F(LambdaRuntimeTest, binary_response)
 
 TEST_F(LambdaRuntimeTest, crash)
 {
-    Aws::String const funcname = build_resource_name("crash");
-    create_function(funcname, "crash" /*handler_name*/);
+    Aws::String const funcname = build_resource_name("crash_backtrace");
+    create_function(funcname, "crash_backtrace" /*handler_name*/);
     Model::InvokeRequest invoke_request;
     invoke_request.SetFunctionName(funcname);
     invoke_request.SetInvocationType(Model::InvocationType::RequestResponse);
@@ -235,8 +232,11 @@ TEST_F(LambdaRuntimeTest, crash)
     EXPECT_EQ(200, invoke_outcome.GetResult().GetStatusCode());
     EXPECT_STREQ("Unhandled", invoke_outcome.GetResult().GetFunctionError().c_str());
     Aws::Utils::Base64::Base64 base64;
-    auto tail_logs = base64.Decode(invoke_outcome.GetResult().GetLogResult());
-    std::cout << tail_logs.GetUnderlyingData() << std::endl;
+    auto decoded = base64.Decode(invoke_outcome.GetResult().GetLogResult());
+    std::string tail_logs(reinterpret_cast<char const*>(decoded.GetUnderlyingData()), decoded.GetLength());
+    std::cerr << tail_logs << std::endl; 
+    EXPECT_TRUE(tail_logs.find("Stack trace (most recent call last):") != std::string::npos);
     delete_function(funcname);
 }
+
 } // namespace

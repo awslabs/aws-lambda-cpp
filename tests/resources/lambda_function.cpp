@@ -27,7 +27,7 @@ invocation_response binary_response(invocation_request const& /*request*/)
     return invocation_response::success(png, "image/png");
 }
 
-invocation_response crash(invocation_request const& /*request*/)
+invocation_response crash_backtrace(invocation_request const& /*request*/)
 {
     throw std::runtime_error("barf");
     return invocation_response::failure("unreachable", "unreachable");
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     handlers.emplace("echo_success", echo_success);
     handlers.emplace("echo_failure", echo_failure);
     handlers.emplace("binary_response", binary_response);
-    handlers.emplace("crash", crash);
+    handlers.emplace("crash_backtrace", crash_backtrace);
 
     if (argc < 2) {
         aws::logging::log_error("lambda_fun", "Missing handler argument. Exiting.");
