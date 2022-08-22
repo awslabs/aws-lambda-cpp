@@ -47,6 +47,9 @@ struct LambdaRuntimeTest : public ::testing::Test {
         Aws::Client::ClientConfiguration config;
         config.requestTimeoutMs = REQUEST_TIMEOUT;
         config.region = Aws::Environment::GetEnv("AWS_REGION");
+        if (config.region.empty()) {
+            throw std::invalid_argument("environment variable AWS_REGION not set");
+        }
         return config;
     }
 
