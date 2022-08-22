@@ -63,6 +63,7 @@ struct LambdaRuntimeTest : public ::testing::Test {
         delete_function(build_resource_name("echo_success"), false /*assert*/);
         delete_function(build_resource_name("echo_failure"), false /*assert*/);
         delete_function(build_resource_name("binary_response"), false /*assert*/);
+        delete_function(build_resource_name("crash_backtrace"), false /*assert*/);
     }
 
     Aws::String get_role_arn(Aws::String const& role_name)
