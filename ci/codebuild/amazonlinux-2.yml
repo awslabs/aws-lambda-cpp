@@ -5,7 +5,7 @@ phases:
       - yum install -y zip
   build:
     commands:
-      - cmake3 -S . -B build -DENABLE_TESTS=ON -DTEST_RESOURCE_PREFIX=al2arm -GNinja
+      - cmake3 -S . -B build -DBUILD_SHARED_LIBS=ON -DENABLE_TESTS=ON -DTEST_RESOURCE_PREFIX=al2arm -GNinja
       - cd build
       - ninja-build
       - ninja-build aws-lambda-package-lambda-test-fun
