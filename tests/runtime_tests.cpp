@@ -238,8 +238,7 @@ TEST_F(LambdaRuntimeTest, crash)
     Aws::Utils::Base64::Base64 base64;
     auto decoded = base64.Decode(invoke_outcome.GetResult().GetLogResult());
     std::string tail_logs(reinterpret_cast<char const*>(decoded.GetUnderlyingData()), decoded.GetLength());
-    std::cerr << tail_logs << std::endl;
-    EXPECT_TRUE(tail_logs.find("Stack trace (most recent call last):") != std::string::npos);
+    EXPECT_NE(tail_logs.find("Stack trace (most recent call last):"), std::string::npos);
     delete_function(funcname);
 }
 
