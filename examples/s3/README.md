@@ -17,8 +17,7 @@ $ cmake .. -DBUILD_ONLY="s3" \
   -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_SHARED_LIBS=OFF \
   -DCUSTOM_MEMORY_MANAGEMENT=OFF \
-  -DCMAKE_INSTALL_PREFIX=~/install \
-  -DENABLE_UNITY_BUILD=ON
+  -DCMAKE_INSTALL_PREFIX=~/install
 
 $ make
 $ make install
@@ -34,7 +33,7 @@ $ mkdir build
 $ cd build
 $ cmake .. -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_SHARED_LIBS=OFF \
-  -DCMAKE_INSTALL_PREFIX=~/install \
+  -DCMAKE_INSTALL_PREFIX=~/install
 $ make
 $ make install
 ```
