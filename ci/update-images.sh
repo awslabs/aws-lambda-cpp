@@ -23,7 +23,7 @@ if [[ $(arch) == "aarch64" ]]; then
 else
   build-and-push ubuntu-linux-18.04   linux/amd64
   build-and-push alpine-linux-3.15    linux/amd64
-  build-and-push amazon-linux-2018.03 linux/amd64
+  build-and-push amazon-linux-2017.03 linux/amd64
   build-and-push amazon-linux-2       linux/amd64
   build-and-push arch-linux           linux/amd64
 fi
