@@ -15,8 +15,7 @@ $ cmake .. -DBUILD_ONLY="core" \
   -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_SHARED_LIBS=OFF \
   -DCUSTOM_MEMORY_MANAGEMENT=OFF \
-  -DCMAKE_INSTALL_PREFIX=~/install \
-  -DENABLE_UNITY_BUILD=ON
+  -DCMAKE_INSTALL_PREFIX=~/install
 $ make
 $ make install
 ```

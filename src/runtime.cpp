@@ -240,7 +240,10 @@ runtime::next_outcome runtime::get_next()
 
     if (curl_code != CURLE_OK) {
         logging::log_debug(LOG_TAG, "CURL returned error code %d - %s", curl_code, curl_easy_strerror(curl_code));
-        logging::log_error(LOG_TAG, "Failed to get next invocation. No Response from endpoint");
+        logging::log_error(
+            LOG_TAG,
+            "Failed to get next invocation. No Response from endpoint \"%s\"",
+            m_endpoints[Endpoints::NEXT].c_str());
         return aws::http::response_code::REQUEST_NOT_MADE;
     }
 
