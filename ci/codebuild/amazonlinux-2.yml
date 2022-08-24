@@ -1,12 +1,9 @@
 version: 0.2
 phases:
-  pre_build:
-    commands:
-      - yum install -y zip
   build:
     commands:
-      - cmake3 -S . -B build -DBUILD_SHARED_LIBS=ON -DENABLE_TESTS=ON -DTEST_RESOURCE_PREFIX=al2arm -GNinja
-      - cd build
-      - ninja-build
-      - ninja-build aws-lambda-package-lambda-test-fun
-      - ctest3 --output-on-failure
+      - echo Build started on `date`
+      - ./ci/codebuild/build.sh -DTEST_RESOURCE_PREFIX=lambda-cpp-al2_$(arch)
+      - ./ci/codebuild/run-tests.sh aws-lambda-package-lambda-test-fun
+      - ./ci/codebuild/run-tests.sh aws-lambda-package-lambda-test-fun-no-glibc
+      - echo Build completed on `date`
