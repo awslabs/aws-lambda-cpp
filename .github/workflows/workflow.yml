@@ -32,7 +32,22 @@ jobs:
     - name: Build It
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-      
+
+  build-on-arm-too:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: uraimo/run-on-arch-action@v2
+      with:
+        arch: aarch64
+        distro: ubuntu20.04
+        run: |
+          apt-get update && apt-get install -y cmake g++ clang-tidy libcurl4-openssl-dev
+          cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_CLANG_TIDY=clang-tidy
+          cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+  
+  
   format:
     runs-on: ubuntu-latest
 
@@ -41,4 +56,5 @@ jobs:
 
     - name: Check Formatting
       run: ./ci/codebuild/format-check.sh
-  
+
+

@@ -1,0 +1,16 @@
+FROM public.ecr.aws/amazonlinux/amazonlinux:2
+RUN yum install -y \
+    cmake3 \
+    ninja-build \
+    git \
+    gcc-c++ \
+    openssl-devel \
+    curl-devel \
+    openssl-static \
+    zip
+RUN git clone https://github.com/aws/aws-sdk-cpp --recurse-submodules
+RUN cmake3 -Saws-sdk-cpp -Baws-sdk-cpp/build -DBUILD_ONLY=lambda -DENABLE_TESTING=OFF -GNinja
+RUN cd aws-sdk-cpp/build && ninja-build && ninja-build install
+RUN ln -s /usr/bin/cmake3 /usr/local/bin/cmake
+RUN ln -s /usr/bin/ctest3 /usr/local/bin/ctest
+RUN ln -s /usr/bin/ninja-build /usr/local/bin/ninja

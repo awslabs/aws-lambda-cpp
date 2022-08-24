@@ -1,3 +1,4 @@
+#include <aws/lambda/model/Architecture.h>
 #include <aws/core/client/ClientConfiguration.h>
 #include <aws/core/utils/Array.h>
 #include <aws/core/utils/Outcome.h>
@@ -10,12 +11,16 @@
 #include <aws/lambda/model/DeleteFunctionRequest.h>
 #include <aws/lambda/model/GetFunctionRequest.h>
 #include <aws/lambda/model/CreateFunctionRequest.h>
-#include <aws/lambda/model/DeleteFunctionRequest.h>
 #include <aws/lambda/model/InvokeRequest.h>
+#include <aws/core/utils/base64/Base64.h>
 #include "gtest/gtest.h"
+#include <aws/lambda/model/LogType.h>
 #include <cstdio>
+#include <iostream>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vector>
+#include <string>
 
 extern std::string aws_prefix;
 
@@ -42,6 +47,9 @@ struct LambdaRuntimeTest : public ::testing::Test {
         Aws::Client::ClientConfiguration config;
         config.requestTimeoutMs = REQUEST_TIMEOUT;
         config.region = Aws::Environment::GetEnv("AWS_REGION");
+        if (config.region.empty()) {
+            throw std::invalid_argument("environment variable AWS_REGION not set");
+        }
         return config;
     }
 
@@ -58,6 +66,7 @@ struct LambdaRuntimeTest : public ::testing::Test {
         delete_function(build_resource_name("echo_success"), false /*assert*/);
         delete_function(build_resource_name("echo_failure"), false /*assert*/);
         delete_function(build_resource_name("binary_response"), false /*assert*/);
+        delete_function(build_resource_name("crash_backtrace"), false /*assert*/);
     }
 
     Aws::String get_role_arn(Aws::String const& role_name)
@@ -93,7 +102,13 @@ struct LambdaRuntimeTest : public ::testing::Test {
         Model::FunctionCode funcode;
         funcode.SetZipFile(std::move(zip_file_bytes));
         create_function_request.SetCode(std::move(funcode));
-        create_function_request.SetRuntime(Aws::Lambda::Model::Runtime::provided);
+        create_function_request.SetRuntime(Aws::Lambda::Model::Runtime::provided_al2);
+
+        std::vector<Aws::Lambda::Model::Architecture> lambda_architectures = {Aws::Lambda::Model::Architecture::x86_64};
+#ifdef __aarch64__
+        lambda_architectures[0] = Aws::Lambda::Model::Architecture::arm64;
+#endif
+        create_function_request.SetArchitectures(lambda_architectures);
 
         auto outcome = m_lambda_client.CreateFunction(create_function_request);
         ASSERT_TRUE(outcome.IsSuccess()) << "Failed to create function " << function_name;
@@ -206,4 +221,25 @@ TEST_F(LambdaRuntimeTest, binary_response)
     EXPECT_EQ(expected_length, invoke_outcome.GetResult().GetPayload().tellp());
     delete_function(funcname);
 }
+
+TEST_F(LambdaRuntimeTest, crash)
+{
+    Aws::String const funcname = build_resource_name("crash_backtrace");
+    create_function(funcname, "crash_backtrace" /*handler_name*/);
+    Model::InvokeRequest invoke_request;
+    invoke_request.SetFunctionName(funcname);
+    invoke_request.SetInvocationType(Model::InvocationType::RequestResponse);
+    invoke_request.SetLogType(Model::LogType::Tail);
+
+    Model::InvokeOutcome invoke_outcome = m_lambda_client.Invoke(invoke_request);
+    EXPECT_TRUE(invoke_outcome.IsSuccess());
+    EXPECT_EQ(200, invoke_outcome.GetResult().GetStatusCode());
+    EXPECT_STREQ("Unhandled", invoke_outcome.GetResult().GetFunctionError().c_str());
+    Aws::Utils::Base64::Base64 base64;
+    auto decoded = base64.Decode(invoke_outcome.GetResult().GetLogResult());
+    std::string tail_logs(reinterpret_cast<char const*>(decoded.GetUnderlyingData()), decoded.GetLength());
+    EXPECT_NE(tail_logs.find("Stack trace (most recent call last):"), std::string::npos);
+    delete_function(funcname);
+}
+
 } // namespace
