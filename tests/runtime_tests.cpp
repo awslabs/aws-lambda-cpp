@@ -89,7 +89,11 @@ struct LambdaRuntimeTest : public ::testing::Test {
         create_function_request.SetHandler(handler_name);
         create_function_request.SetFunctionName(function_name);
         // I ran into eventual-consistency issues when creating the role dynamically as part of the test.
-        create_function_request.SetRole(get_role_arn("integration-tests"));
+        auto exec_role = Aws::Environment::GetEnv("LAMBDA_TEST_ROLE");
+        if (exec_role.empty()) {
+            exec_role = "integration-tests";
+        }
+        create_function_request.SetRole(get_role_arn(exec_role));
 
         struct stat s;
         auto rc = stat(ZIP_FILE_PATH, &s);
