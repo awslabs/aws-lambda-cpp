@@ -4,7 +4,7 @@ project(aws-lambda-runtime
     VERSION 0.0.0
     LANGUAGES CXX)
 
-option(ENABLE_LTO "Enables link-time optimization, requires compiler support." ON)
+option(ENABLE_LTO "Enables link-time optimization, requires compiler support." OFF)
 option(ENABLE_TESTS "Enables building the test project, requires AWS C++ SDK." OFF)
 
 add_library(${PROJECT_NAME}
