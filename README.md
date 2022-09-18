@@ -27,7 +27,7 @@ Make sure you have the following packages installed first:
 1. git
 1. Make or Ninja
 1. zip
-1. libcurl-devel (on Debian-basded distros it's libcurl4-openssl-dev)
+1. libcurl-devel (on Debian-based distros it's libcurl4-openssl-dev)
 
 In a terminal, run the following commands:
 ```bash
