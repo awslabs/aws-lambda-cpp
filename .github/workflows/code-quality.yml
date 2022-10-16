@@ -29,6 +29,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
+    # Install libcurl dependency
+    - name: Install dependencies
+      run: sudo apt install -y libcurl4-openssl-dev
+
+
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
@@ -44,7 +49,7 @@ jobs:
 
     - run: |
        echo "Run, CMake build script"
-       cmake -B ${{github.workspace}}/build  -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF
+       cmake -B ${{github.workspace}}/build -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
