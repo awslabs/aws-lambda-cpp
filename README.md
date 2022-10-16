@@ -1,5 +1,6 @@
 [![GitHub](https://img.shields.io/github/license/awslabs/aws-lambda-cpp.svg)](https://github.com/awslabs/aws-lambda-cpp/blob/master/LICENSE)
-[![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/awslabs/aws-lambda-cpp.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/awslabs/aws-lambda-cpp/context:cpp)
+
+![Code Quality badge](https://github.com/awslabs/aws-lambda-cpp/actions/workflows/code-quality.yml/badge.svg)
 
 | OS | Arch | Status |
 |----|------|--------|
