@@ -6,6 +6,7 @@ project(aws-lambda-runtime
 
 option(ENABLE_LTO "Enables link-time optimization, requires compiler support." OFF)
 option(ENABLE_TESTS "Enables building the test project, requires AWS C++ SDK." OFF)
+option(ENABLE_SANITIZERS "Enables ASan and UBSan." OFF)
 
 add_library(${PROJECT_NAME}
     "src/logging.cpp"
@@ -21,6 +22,11 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
+
+if (ENABLE_SANITIZERS)
+    target_compile_options(${PROJECT_NAME} PUBLIC "-fsanitize=address,undefined")
+    target_link_libraries(${PROJECT_NAME} PUBLIC "-fsanitize=address,undefined")
+endif()
 
 if (ENABLE_LTO)
     include(CheckIPOSupported)
