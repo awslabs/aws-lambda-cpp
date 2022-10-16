@@ -173,9 +173,9 @@ aws::lambda_runtime::invocation_response my_handler(
     if (cr.error_msg) {
         JsonValue response;
         response.WithString("body", cr.error_msg).WithInteger("statusCode", 400);
-        auto const apig_response = response.View().WriteCompact();
+        auto apig_response = response.View().WriteCompact();
         AWS_LOGSTREAM_ERROR(TAG, "Validation failed. " << apig_response);
-        return aws::lambda_runtime::invocation_response::success(apig_response, "application/json");
+        return aws::lambda_runtime::invocation_response::success(std::move(apig_response), "application/json");
     }
 
     auto result = query(cr, client);
@@ -190,10 +190,10 @@ aws::lambda_runtime::invocation_response my_handler(
         response.WithString("body", "No data found for this product.").WithInteger("statusCode", 400);
     }
 
-    auto const apig_response = response.View().WriteCompact();
+    auto apig_response = response.View().WriteCompact();
     AWS_LOGSTREAM_DEBUG(TAG, "api gateway response: " << apig_response);
 
-    return aws::lambda_runtime::invocation_response::success(apig_response, "application/json");
+    return aws::lambda_runtime::invocation_response::success(std::move(apig_response), "application/json");
 }
 
 std::function<std::shared_ptr<Aws::Utils::Logging::LogSystemInterface>()> GetConsoleLoggerFactory()

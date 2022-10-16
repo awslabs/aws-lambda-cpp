@@ -50,7 +50,7 @@ static invocation_response my_handler(invocation_request const& req, Aws::S3::S3
         return invocation_response::failure(err, "DownloadFailure");
     }
 
-    return invocation_response::success(base64_encoded_file, "application/base64");
+    return invocation_response::success(std::move(base64_encoded_file), "application/base64");
 }
 
 std::function<std::shared_ptr<Aws::Utils::Logging::LogSystemInterface>()> GetConsoleLoggerFactory()
