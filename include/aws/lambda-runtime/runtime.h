@@ -105,7 +105,7 @@ public:
     /**
      * Create a successful invocation response with the given payload and content-type.
      */
-    static invocation_response success(std::string const& payload, std::string const& content_type);
+    static invocation_response success(std::string payload, std::string content_type);
 
     /**
      * Create a failure response with the given error message and error type.
