@@ -1,5 +1,4 @@
 [![GitHub](https://img.shields.io/github/license/awslabs/aws-lambda-cpp.svg)](https://github.com/awslabs/aws-lambda-cpp/blob/master/LICENSE)
-
 ![Code Quality badge](https://github.com/awslabs/aws-lambda-cpp/actions/workflows/code-quality.yml/badge.svg)
 
 | OS | Arch | Status |
