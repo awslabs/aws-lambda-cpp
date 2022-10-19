@@ -23,8 +23,8 @@ invocation_response echo_failure(invocation_request const& /*request*/)
 
 invocation_response binary_response(invocation_request const& /*request*/)
 {
-    const std::string png((char*)awslogo_png, AWSLOGO_PNG_LEN);
-    return invocation_response::success(png, "image/png");
+    std::string png((char*)awslogo_png, AWSLOGO_PNG_LEN);
+    return invocation_response::success(std::move(png), "image/png");
 }
 
 invocation_response crash_backtrace(invocation_request const& /*request*/)

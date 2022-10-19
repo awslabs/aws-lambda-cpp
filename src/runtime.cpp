@@ -506,12 +506,12 @@ static std::string json_escape(std::string const& in)
 }
 
 AWS_LAMBDA_RUNTIME_API
-invocation_response invocation_response::success(std::string const& payload, std::string const& content_type)
+invocation_response invocation_response::success(std::string payload, std::string content_type)
 {
     invocation_response r;
     r.m_success = true;
-    r.m_content_type = content_type;
-    r.m_payload = payload;
+    r.m_content_type = std::move(content_type);
+    r.m_payload = std::move(payload);
     return r;
 }
 
