@@ -31,7 +31,7 @@ jobs:
 
     # Install libcurl dependency
     - name: Install dependencies
-      run: sudo apt install -y libcurl4-openssl-dev
+      run: sudo apt-get update && sudo apt install -y libcurl4-openssl-dev
 
 
     # Initializes the CodeQL tools for scanning.
