@@ -73,8 +73,7 @@ int main()
         config.region = Aws::Environment::GetEnv("AWS_REGION");
         config.caFile = "/etc/pki/tls/certs/ca-bundle.crt";
 
-        auto credentialsProvider = Aws::MakeShared<Aws::Auth::EnvironmentAWSCredentialsProvider>(TAG);
-        S3::S3Client client(credentialsProvider, config);
+        S3::S3Client client(config);
         auto handler_fn = [&client](aws::lambda_runtime::invocation_request const& req) {
             return my_handler(req, client);
         };
