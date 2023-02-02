@@ -496,7 +496,7 @@ static std::string json_escape(std::string const& in)
                     // escape and print as unicode codepoint
                     constexpr int printed_unicode_length = 6; // 4 hex + letter 'u' + \0
                     std::array<char, printed_unicode_length> buf;
-                    sprintf(buf.data(), "u%04x", ch);
+                    snprintf(buf.data(), buf.size(), "u%04x", ch);
                     out.append(buf.data(), buf.size() - 1); // add only five, discarding the null terminator.
                     break;
             }
