@@ -129,8 +129,7 @@ public:
     bool is_success() const { return m_success; }
 };
 
-struct no_result {
-};
+struct no_result {};
 
 class runtime {
 public:
