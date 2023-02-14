@@ -1,6 +1,7 @@
 ---
 Checks:
-'clang-diagnostic-*,clang-analyzer-*,performance-*,readability-*,modernize-*,bugprone-*,misc-*,-modernize-use-trailing-return-type'
+'clang-diagnostic-*,clang-analyzer-*,performance-*,readability-*,modernize-*,bugprone-*,misc-*,
+-modernize-use-trailing-return-type,-bugprone-easily-swappable-parameters,-readability-identifier-length'
 WarningsAsErrors: '*'
 HeaderFilterRegex: 'include/aws/.*\.h$'
 FormatStyle: 'none'
