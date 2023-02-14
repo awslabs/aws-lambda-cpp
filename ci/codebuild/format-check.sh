@@ -13,6 +13,11 @@ FAIL=0
 SOURCE_FILES=$(find src include tests -type f -name "*.h" -o -name "*.cpp")
 for i in $SOURCE_FILES
 do
+    if [[ "$i" == *"gtest.h" || "$i" == *"backward.h" ]]; then
+        continue
+    fi
+
+    echo "$i\n"
     if [ $($CLANG_FORMAT -output-replacements-xml $i | grep -c "<replacement ") -ne 0 ]
     then
         echo "$i failed clang-format check."
