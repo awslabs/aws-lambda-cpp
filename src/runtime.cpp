@@ -25,6 +25,7 @@
 #include <cassert>
 #include <chrono>
 #include <array>
+#include <iterator>
 #include <cstdlib> // for strtoul
 #include <cinttypes>
 
@@ -133,12 +134,16 @@ static size_t read_data(char* buffer, size_t size, size_t nitems, void* userdata
     }
 
     if (unread <= limit) {
-        std::copy_n(ctx->first.begin() + ctx->second, unread, buffer);
+        auto from = ctx->first.begin();
+        std::advance(from, ctx->second);
+        std::copy_n(from, unread, buffer);
         ctx->second += unread;
         return unread;
     }
 
-    std::copy_n(ctx->first.begin() + ctx->second, limit, buffer);
+    auto from = ctx->first.begin();
+    std::advance(from, ctx->second);
+    std::copy_n(from, limit, buffer);
     ctx->second += limit;
     return limit;
 }
@@ -496,7 +501,7 @@ static std::string json_escape(std::string const& in)
                     // escape and print as unicode codepoint
                     constexpr int printed_unicode_length = 6; // 4 hex + letter 'u' + \0
                     std::array<char, printed_unicode_length> buf;
-                    sprintf(buf.data(), "u%04x", ch);
+                    snprintf(buf.data(), buf.size(), "u%04x", ch);
                     out.append(buf.data(), buf.size() - 1); // add only five, discarding the null terminator.
                     break;
             }
