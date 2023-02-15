@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     
     - name: Install Dependencies
       run: sudo apt-get update && sudo apt-get install -y clang-tidy libcurl4-openssl-dev
@@ -36,7 +36,7 @@ jobs:
   build-on-arm-too:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: uraimo/run-on-arch-action@v2
       with:
         arch: aarch64
@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Check Formatting
       run: ./ci/codebuild/format-check.sh
