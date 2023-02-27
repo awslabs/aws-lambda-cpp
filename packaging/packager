@@ -56,7 +56,7 @@ if ! type zip > /dev/null 2>&1; then
     exit 1
 fi
 
-function find_so_files() {
+function pluck_so_files() {
     sed -E '/\.so$|\.so\.[0-9]+$/!d'
 }
 
@@ -64,7 +64,7 @@ function package_libc_alpine() {
     # -F matches a fixed string rather than a regex (grep that comes with busybox doesn't know --fixed-strings)
     if grep -F "Alpine Linux" < /etc/os-release > /dev/null; then
         if type apk > /dev/null 2>&1; then
-            apk info --contents musl 2>/dev/null | find_so_files | sed 's/^/\//'
+            apk info --contents musl 2>/dev/null | pluck_so_files | sed 's/^/\//'
         fi
     fi
 }
@@ -72,20 +72,27 @@ function package_libc_alpine() {
 function package_libc_pacman() {
     if grep --extended-regexp "Arch Linux|Manjaro Linux" < /etc/os-release > /dev/null 2>&1; then
         if type pacman > /dev/null 2>&1; then
-            pacman --query --list --quiet glibc | find_so_files
+            pacman --query --list --quiet glibc | pluck_so_files
         fi
     fi
 }
 
 function package_libc_dpkg() {
     if type dpkg-query > /dev/null 2>&1; then
-        dpkg-query --listfiles libc6:$(dpkg --print-architecture) | find_so_files
+       architecture=$(dpkg --print-architecture)
+        if [[ $(dpkg-query --listfiles libc6:$architecture | wc -l) -gt 0 ]]; then
+            dpkg-query --listfiles libc6:$architecture | pluck_so_files
+        fi
     fi
 }
 
 function package_libc_rpm() {
+    arch=$(uname -m)
+
     if type rpm > /dev/null 2>&1; then
-        rpm --query --list glibc.$(uname -m) | find_so_files
+       if [[ $(rpm --query --list glibc.$arch | wc -l) -gt 1 ]]; then
+           rpm --query --list glibc.$arch | pluck_so_files
+       fi
     fi
 }
 
