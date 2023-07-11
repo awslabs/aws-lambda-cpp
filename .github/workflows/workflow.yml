@@ -46,6 +46,28 @@ jobs:
           cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_CLANG_TIDY=clang-tidy
           cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
+  build-demo:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install Dependencies
+      run: sudo apt-get update && sudo apt-get install -y clang-tidy libcurl4-openssl-dev
+
+    - name: Build and install lambda runtime
+      run: |
+        mkdir build && cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/lambda-install
+        make
+        make install
+
+    - name: Build and package demo project
+      run: |
+        cd examples/demo
+        mkdir build && cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=~/lambda-install
+        make
+        make aws-lambda-package-demo
   
   
   format:
