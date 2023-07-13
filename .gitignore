@@ -6,4 +6,5 @@ compile_commands.json
 
 #ide
 .idea
-
+test.cpp
+a.out
