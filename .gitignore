@@ -8,3 +8,5 @@ compile_commands.json
 .idea
 test.cpp
 a.out
+
+cmake-build-debug

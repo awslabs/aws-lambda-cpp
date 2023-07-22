@@ -1,11 +1,12 @@
 # A simple C++ Monte Carlo simulation calculator on AWS Lambda
 
-Calculate the value of a European vanilla call option in C++ using Monte Carlo simulation.
-Deploy the calculator to AWS Lambda.
-Invoke the calculator with a REST call.
-The number of simulations, `num_sims`, can be overriden with a query parameter.
-All other parameters are hard coded.
+Calculate the value of a European call option 
+in C++ 
+using Monte Carlo simulation.
+Deploy to AWS Lambda 
+behind a REST API. 
 
+Millions of simulations in microseconds.
 
 
 ### Prerequisites
