@@ -23,6 +23,8 @@
 // - g++/clang++ -lbfd ...
 // #define BACKWARD_HAS_BFD 1
 
+#ifndef no_backtrace
+
 #include "backward.h"
 
 namespace backward {
@@ -30,3 +32,6 @@ namespace backward {
 backward::SignalHandling sh;
 
 } // namespace backward
+
+
+#endif
