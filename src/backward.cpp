@@ -33,5 +33,4 @@ backward::SignalHandling sh;
 
 } // namespace backward
 
-
 #endif
