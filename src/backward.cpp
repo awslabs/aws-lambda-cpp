@@ -25,13 +25,12 @@
 
 #ifndef no_backtrace
 
-#include "backward.h"
+#    include "backward.h"
 
 namespace backward {
 
 backward::SignalHandling sh;
 
 } // namespace backward
-
 
 #endif
