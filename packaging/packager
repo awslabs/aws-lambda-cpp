@@ -171,20 +171,11 @@ exec \$LAMBDA_TASK_ROOT/lib/$PKG_LD --library-path \$LAMBDA_TASK_ROOT/lib \$LAMB
 EOF
 )
 
-bootstrap_script_no_libc=$(cat <<EOF
-#!/bin/bash
-set -euo pipefail
-export AWS_EXECUTION_ENV=lambda-cpp
-export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$LAMBDA_TASK_ROOT/lib
-exec \$LAMBDA_TASK_ROOT/bin/$PKG_BIN_FILENAME \${_HANDLER}
-EOF
-)
-
-cp "$PKG_BIN_PATH" "$PKG_DIR/bin"
 if [[ $INCLUDE_LIBC == true ]]; then
+    cp "$PKG_BIN_PATH" "$PKG_DIR/bin"
     echo -e "$bootstrap_script" > "$PKG_DIR/bootstrap"
 else
-    echo -e "$bootstrap_script_no_libc" > "$PKG_DIR/bootstrap"
+    cp "$PKG_BIN_PATH" "$PKG_DIR/bootstrap"
 fi
 chmod +x "$PKG_DIR/bootstrap"
 # some shenanigans to create the right layout in the zip file without extraneous directories
