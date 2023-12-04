@@ -47,8 +47,10 @@ endif()
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CURL_INCLUDE_DIRS})
 
-find_package(Backtrace REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE ${Backtrace_LIBRARIES})
+find_package(Backtrace QUIET)
+if (Backtrace_FOUND)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${Backtrace_LIBRARIES})
+endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE
     "-fno-exceptions"
