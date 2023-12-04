@@ -47,29 +47,8 @@ endif()
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CURL_INCLUDE_DIRS})
 
-find_package(Backtrace QUIET)
-if (${Backtrace_FOUND})
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${Backtrace_LIBRARIES})
-
-    find_library(DW_LIB NAMES dw)
-    if (NOT DW_LIB STREQUAL DW_LIB-NOTFOUND)
-        message("-- Enhanced stack-traces are enabled via libdw: ${DW_LIB}")
-        target_compile_definitions(${PROJECT_NAME} PRIVATE "BACKWARD_HAS_DW=1")
-        target_link_libraries(${PROJECT_NAME} PUBLIC "${DW_LIB}")
-    else()
-        find_library(BFD_LIB NAMES bfd)
-        if (NOT BFD_LIB STREQUAL BFD_LIB-NOTFOUND)
-            message("-- Enhanced stack-traces are enabled via libbfd: ${BFD_LIB}")
-            target_compile_definitions(${PROJECT_NAME} PRIVATE "BACKWARD_HAS_BFD=1")
-            target_link_libraries(${PROJECT_NAME} PRIVATE "${BFD_LIB}")
-        endif()
-    endif()
-
-else()
-    message("-- libbacktrace was not installed. Stacktracing will be disabled")
-    add_definitions(-Dno_backtrace)
-endif()
-
+find_package(Backtrace REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${Backtrace_LIBRARIES})
 
 target_compile_options(${PROJECT_NAME} PRIVATE
     "-fno-exceptions"
@@ -81,6 +60,20 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     "-Werror"
     "-Wconversion"
     "-Wno-sign-conversion")
+
+find_library(DW_LIB NAMES dw)
+if (NOT DW_LIB STREQUAL DW_LIB-NOTFOUND)
+    message("-- Enhanced stack-traces are enabled via libdw: ${DW_LIB}")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE "BACKWARD_HAS_DW=1")
+    target_link_libraries(${PROJECT_NAME} PUBLIC "${DW_LIB}")
+else()
+    find_library(BFD_LIB NAMES bfd)
+    if (NOT BFD_LIB STREQUAL BFD_LIB-NOTFOUND)
+        message("-- Enhanced stack-traces are enabled via libbfd: ${BFD_LIB}")
+        target_compile_definitions(${PROJECT_NAME} PRIVATE "BACKWARD_HAS_BFD=1")
+        target_link_libraries(${PROJECT_NAME} PRIVATE "${BFD_LIB}")
+    endif()
+endif()
 
 if (LOG_VERBOSITY)
     target_compile_definitions(${PROJECT_NAME} PRIVATE "AWS_LAMBDA_LOG=${LOG_VERBOSITY}")
