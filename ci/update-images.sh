@@ -21,10 +21,12 @@ build-and-push () {
 if [[ $(arch) == "aarch64" ]]; then
   build-and-push amazon-linux-2       linux/arm64
 else
-  # build-and-push ubuntu-linux-18.04   linux/amd64
+  build-and-push ubuntu-linux-18.04   linux/amd64 || echo "known broken build"
+  build-and-push ubuntu-linux-22.04   linux/amd64
   build-and-push alpine-linux-3.15    linux/amd64
   build-and-push alpine-linux-3.19    linux/amd64
   build-and-push amazon-linux-2018.03 linux/amd64
   build-and-push amazon-linux-2       linux/amd64
+  build-and-push amazon-linux-2023    linux/amd64
   build-and-push arch-linux           linux/amd64
 fi

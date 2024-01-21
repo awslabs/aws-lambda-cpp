@@ -1,0 +1,20 @@
+FROM public.ecr.aws/ubuntu/ubuntu:22.04 
+
+RUN apt-get update
+RUN apt-get install -y \
+    git \
+    clang \
+    cmake \
+    zlib1g-dev \
+    libssl-dev \
+    libcurl4-openssl-dev \
+    wget \
+    ninja-build \
+    zip
+
+RUN update-alternatives --set cc /usr/bin/clang
+RUN update-alternatives --set c++ /usr/bin/clang++
+
+RUN git clone https://github.com/aws/aws-sdk-cpp.git --recurse-submodules
+RUN cmake -Saws-sdk-cpp -Baws-sdk-cpp/build -DBUILD_ONLY=lambda -DENABLE_TESTING=OFF -GNinja
+RUN cd aws-sdk-cpp/build && ninja && ninja install
