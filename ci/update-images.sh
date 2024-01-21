@@ -21,7 +21,7 @@ build-and-push () {
 if [[ $(arch) == "aarch64" ]]; then
   build-and-push amazon-linux-2       linux/arm64
 else
-  build-and-push ubuntu-linux-18.04   linux/amd64
+  # build-and-push ubuntu-linux-18.04   linux/amd64
   build-and-push alpine-linux-3.15    linux/amd64
   build-and-push alpine-linux-3.19    linux/amd64
   build-and-push amazon-linux-2018.03 linux/amd64
