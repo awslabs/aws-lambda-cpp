@@ -369,6 +369,40 @@ Resources:
         Location: !Ref GitHub 
         BuildSpec: ci/codebuild/alpine-3.15.yml
 
+  Alpine319:
+    Type: AWS::CodeBuild::Project
+    Properties: 
+      Artifacts: 
+        Type: NO_ARTIFACTS
+      BadgeEnabled: True
+      Visibility: PUBLIC_READ
+      ConcurrentBuildLimit: 1
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      ResourceAccessRole: !GetAtt LogsAccessRole.Arn
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: /aws/codebuild/aws-lambda-cpp-ci
+      Triggers:
+        BuildType: BUILD
+        Webhook: True
+        FilterGroups:
+        - - Type: EVENT
+            Pattern: PUSH,PULL_REQUEST_CREATED,PULL_REQUEST_UPDATED
+      Environment: 
+        ImagePullCredentialsType: SERVICE_ROLE
+        ComputeType: BUILD_GENERAL1_SMALL
+        Type: LINUX_CONTAINER
+        Image: !Join [ ':', [ !GetAtt ECR.RepositoryUri, alpine-linux-3.19-linux-amd64 ]]
+        EnvironmentVariables:
+        - Name: LAMBDA_TEST_ROLE
+          Type: PLAINTEXT
+          Value: !Ref LambdaTestRole 
+      Source: 
+        Type: GITHUB
+        Location: !Ref GitHub 
+        BuildSpec: ci/codebuild/alpine-3.19.yml
+
   Arch:
     Type: AWS::CodeBuild::Project
     Properties: 
