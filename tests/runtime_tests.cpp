@@ -234,8 +234,8 @@ TEST_F(LambdaRuntimeTest, crash)
     std::ifstream os_release("/etc/os-release");
     if (os_release.is_open()) {
         std::string line;
-        while(getline(os_release, line)) {
-            if (line == "PRETTY_NAME=\"Alpine Linux v3.19\""); {
+        while (getline(os_release, line)) {
+            if (line == "PRETTY_NAME=\"Alpine Linux v3.19\"") {
                 GTEST_SKIP() << "Skipping crash test";
             }
         }
