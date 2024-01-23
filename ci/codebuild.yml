@@ -144,12 +144,6 @@ Resources:
         CloudWatchLogs:
           Status: ENABLED
           GroupName: /aws/codebuild/aws-lambda-cpp-ci
-      Triggers:
-        BuildType: BUILD
-        Webhook: True
-        FilterGroups:
-        - - Type: EVENT
-            Pattern: PUSH
       Environment: 
         ImagePullCredentialsType: CODEBUILD
         ComputeType: BUILD_GENERAL1_SMALL
@@ -184,15 +178,9 @@ Resources:
         CloudWatchLogs:
           Status: ENABLED
           GroupName: /aws/codebuild/aws-lambda-cpp-ci
-      Triggers:
-        BuildType: BUILD
-        Webhook: True
-        FilterGroups:
-        - - Type: EVENT
-            Pattern: PUSH
       Environment: 
         ImagePullCredentialsType: CODEBUILD
-        ComputeType: BUILD_GENERAL1_MEDIUM
+        ComputeType: BUILD_GENERAL1_XLARGE
         Image: aws/codebuild/amazonlinux2-x86_64-standard:4.0
         Type: LINUX_CONTAINER
         PrivilegedMode: True

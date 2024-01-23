@@ -105,13 +105,8 @@ RUN pacman -Sy --noconfirm \
     curl \
     zip
 COPY --from=sdkgit /aws-sdk-cpp /aws-sdk-cpp
-# Note: (2022-08-23)
-# Using -DUSE_OPENSSL=OFF as a workaround to an AWS SDK dependency issue with this distro.
-# The current SDK version has a dependency on a static build version of openssl, not available through pacman.
-# ref: https://github.com/aws/aws-sdk-cpp/issues/1910
 RUN CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake -Saws-sdk-cpp -Baws-sdk-cpp/build -GNinja \
     -DBUILD_ONLY=lambda \
-    -DUSE_OPENSSL=OFF \ 
     -DENABLE_TESTING=OFF
 RUN cmake --build aws-sdk-cpp/build -t install
 

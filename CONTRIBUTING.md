@@ -57,8 +57,8 @@ Prerequisites:
 
 Then, to iterate on a single workflow:
 ```
-docker build -t lambda-cpp-amazon-linux-2 -f ./ci/docker/amazon-linux-2 .
-./ci/codebuild_build.sh -c -a /tmp -i lambda-cpp-amazon-linux-2 -b ./ci/codebuild/amazon-linux-2.yml
+docker build -t lambda-cpp --target amazon-linux-2 -f ./ci/docker/uberbase.Dockerfile .
+./ci/codebuild_build.sh -c -a /tmp -i lambda-cpp -b ./ci/codebuild/amazonlinux-2.yml
 ```
 
 

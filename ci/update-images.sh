@@ -40,7 +40,7 @@ else
   build amazon-linux-2018.03 linux/amd64
   build amazon-linux-2023    linux/amd64
   build arch-linux           linux/amd64
-  build ubuntu-linux-18.04   linux/amd64 || echo "known to be broken"
+  build ubuntu-linux-18.04   linux/amd64
   build ubuntu-linux-22.04   linux/amd64
 
   push  alpine-linux-3.15    linux/amd64
