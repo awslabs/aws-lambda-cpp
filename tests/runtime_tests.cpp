@@ -106,7 +106,7 @@ struct LambdaRuntimeTest : public ::testing::Test {
         Model::FunctionCode funcode;
         funcode.SetZipFile(std::move(zip_file_bytes));
         create_function_request.SetCode(std::move(funcode));
-        create_function_request.SetRuntime(Aws::Lambda::Model::Runtime::provided_al2);
+        create_function_request.SetRuntime(Aws::Lambda::Model::Runtime::provided_al2023);
 
         std::vector<Aws::Lambda::Model::Architecture> lambda_architectures = {Aws::Lambda::Model::Architecture::x86_64};
 #ifdef __aarch64__
