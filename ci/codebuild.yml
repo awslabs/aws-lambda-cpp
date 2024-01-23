@@ -180,7 +180,7 @@ Resources:
           GroupName: /aws/codebuild/aws-lambda-cpp-ci
       Environment: 
         ImagePullCredentialsType: CODEBUILD
-        ComputeType: BUILD_GENERAL1_MEDIUM
+        ComputeType: BUILD_GENERAL1_XLARGE
         Image: aws/codebuild/amazonlinux2-x86_64-standard:4.0
         Type: LINUX_CONTAINER
         PrivilegedMode: True
@@ -232,6 +232,40 @@ Resources:
         Type: GITHUB
         Location: !Ref GitHub 
         BuildSpec: ci/codebuild/amazonlinux-2.yml
+
+  Amazon2023:
+    Type: AWS::CodeBuild::Project
+    Properties: 
+      Artifacts: 
+        Type: NO_ARTIFACTS
+      BadgeEnabled: True
+      Visibility: PUBLIC_READ
+      ConcurrentBuildLimit: 1
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      ResourceAccessRole: !GetAtt LogsAccessRole.Arn
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: /aws/codebuild/aws-lambda-cpp-ci
+      Triggers:
+        BuildType: BUILD
+        Webhook: True
+        FilterGroups:
+        - - Type: EVENT
+            Pattern: PUSH,PULL_REQUEST_CREATED,PULL_REQUEST_UPDATED
+      Environment: 
+        ImagePullCredentialsType: SERVICE_ROLE
+        ComputeType: BUILD_GENERAL1_SMALL
+        Type: LINUX_CONTAINER
+        Image: !Join [ ':', [ !GetAtt ECR.RepositoryUri, amazon-linux-2023-linux-amd64 ]]
+        EnvironmentVariables:
+        - Name: LAMBDA_TEST_ROLE
+          Type: PLAINTEXT
+          Value: !Ref LambdaTestRole 
+      Source: 
+        Type: GITHUB
+        Location: !Ref GitHub 
+        BuildSpec: ci/codebuild/amazonlinux-2023.yml
 
   Amazon2:
     Type: AWS::CodeBuild::Project
@@ -301,6 +335,40 @@ Resources:
         Location: !Ref GitHub 
         BuildSpec: ci/codebuild/amazonlinux-2018.03.yml
 
+  Ubuntu2204:
+    Type: AWS::CodeBuild::Project
+    Properties: 
+      Artifacts: 
+        Type: NO_ARTIFACTS
+      BadgeEnabled: True
+      Visibility: PUBLIC_READ
+      ConcurrentBuildLimit: 1
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      ResourceAccessRole: !GetAtt LogsAccessRole.Arn
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: /aws/codebuild/aws-lambda-cpp-ci
+      Triggers:
+        BuildType: BUILD
+        Webhook: True
+        FilterGroups:
+        - - Type: EVENT
+            Pattern: PUSH,PULL_REQUEST_CREATED,PULL_REQUEST_UPDATED
+      Environment: 
+        ImagePullCredentialsType: SERVICE_ROLE
+        ComputeType: BUILD_GENERAL1_SMALL
+        Type: LINUX_CONTAINER
+        Image: !Join [ ':', [ !GetAtt ECR.RepositoryUri, ubuntu-linux-22.04-linux-amd64 ]]
+        EnvironmentVariables:
+        - Name: LAMBDA_TEST_ROLE
+          Type: PLAINTEXT
+          Value: !Ref LambdaTestRole 
+      Source: 
+        Type: GITHUB
+        Location: !Ref GitHub 
+        BuildSpec: ci/codebuild/ubuntu-22.04.yml
+
   Ubuntu1804:
     Type: AWS::CodeBuild::Project
     Properties: 
@@ -368,6 +436,40 @@ Resources:
         Type: GITHUB
         Location: !Ref GitHub 
         BuildSpec: ci/codebuild/alpine-3.15.yml
+
+  Alpine319:
+    Type: AWS::CodeBuild::Project
+    Properties: 
+      Artifacts: 
+        Type: NO_ARTIFACTS
+      BadgeEnabled: True
+      Visibility: PUBLIC_READ
+      ConcurrentBuildLimit: 1
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      ResourceAccessRole: !GetAtt LogsAccessRole.Arn
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: /aws/codebuild/aws-lambda-cpp-ci
+      Triggers:
+        BuildType: BUILD
+        Webhook: True
+        FilterGroups:
+        - - Type: EVENT
+            Pattern: PUSH,PULL_REQUEST_CREATED,PULL_REQUEST_UPDATED
+      Environment: 
+        ImagePullCredentialsType: SERVICE_ROLE
+        ComputeType: BUILD_GENERAL1_SMALL
+        Type: LINUX_CONTAINER
+        Image: !Join [ ':', [ !GetAtt ECR.RepositoryUri, alpine-linux-3.19-linux-amd64 ]]
+        EnvironmentVariables:
+        - Name: LAMBDA_TEST_ROLE
+          Type: PLAINTEXT
+          Value: !Ref LambdaTestRole 
+      Source: 
+        Type: GITHUB
+        Location: !Ref GitHub 
+        BuildSpec: ci/codebuild/alpine-3.19.yml
 
   Arch:
     Type: AWS::CodeBuild::Project
