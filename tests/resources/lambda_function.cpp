@@ -41,12 +41,9 @@ int main(int argc, char* argv[])
     handlers.emplace("binary_response", binary_response);
     handlers.emplace("crash_backtrace", crash_backtrace);
 
-    if (argc < 2) {
-        aws::logging::log_error("lambda_fun", "Missing handler argument. Exiting.");
-        return -1;
-    }
-
-    auto it = handlers.find(argv[1]);
+    // Read the handler from the environment variable
+    const char* handler_name = std::getenv("_HANDLER");
+    auto it = handlers.find(handler_name == nullptr ? "" : handler_name);
     if (it == handlers.end()) {
         aws::logging::log_error("lambda_fun", "Handler %s not found. Exiting.", argv[1]);
         return -2;
