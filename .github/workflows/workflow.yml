@@ -33,6 +33,9 @@ jobs:
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
+    - name: Test It
+      run: cd build && make && ctest
+
   build-on-arm-too:
     runs-on: ubuntu-latest
     steps:
@@ -45,6 +48,7 @@ jobs:
           apt-get update && apt-get install -y cmake g++ clang-tidy libcurl4-openssl-dev
           cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_CLANG_TIDY=clang-tidy
           cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+          cd build && make && ctest
 
   build-demo:
     runs-on: ubuntu-latest

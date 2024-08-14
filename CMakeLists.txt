@@ -90,11 +90,10 @@ else ()
     target_compile_definitions(${PROJECT_NAME} PRIVATE "AWS_LAMBDA_LOG=0")
 endif()
 
-#tests
-if (ENABLE_TESTS)
-    enable_testing()
-    add_subdirectory(tests)
-endif()
+
+enable_testing()
+add_subdirectory(tests)
+
 
 #versioning
 configure_file(
