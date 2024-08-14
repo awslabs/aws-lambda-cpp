@@ -92,7 +92,11 @@ endif()
 
 
 enable_testing()
-add_subdirectory(tests)
+#tests
+if (ENABLE_TESTS)
+    add_subdirectory(tests)
+endif()
+add_subdirectory(unittests)
 
 
 #versioning

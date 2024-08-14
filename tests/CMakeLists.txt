@@ -1,31 +1,17 @@
 project(aws-lambda-runtime-tests LANGUAGES CXX)
 
-include(FetchContent)
-FetchContent_Declare(gtest
-  QUIET
-  URL https://github.com/google/googletest/archive/v1.15.2.tar.gz
-)
-# configure build of googletest
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
-set(INSTALL_GTEST OFF)
-FetchContent_MakeAvailable(gtest)
+find_package(AWSSDK COMPONENTS lambda iam)
 
-add_executable(
-    unit_tests
-    no_op_test.cpp
-    )
+add_executable(${PROJECT_NAME}
+    main.cpp
+    runtime_tests.cpp
+    version_tests.cpp
+    gtest/gtest-all.cc)
 
-target_link_libraries(unit_tests
-  PRIVATE
-    gtest_main
-  )
+target_link_libraries(${PROJECT_NAME} PRIVATE ${AWSSDK_LINK_LIBRARIES} aws-lambda-runtime)
 
-# automatic discovery of unit tests
 include(GoogleTest)
-gtest_discover_tests(unit_tests
-  PROPERTIES
-    LABELS "unit"
-  DISCOVERY_TIMEOUT  # how long to wait (in seconds) before crashing
-    240
-  )
+gtest_discover_tests(${PROJECT_NAME} EXTRA_ARGS "--aws_prefix=${TEST_RESOURCE_PREFIX}") # requires CMake 3.10 or later
+
+add_subdirectory(resources)
+
