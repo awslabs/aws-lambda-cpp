@@ -27,11 +27,11 @@ jobs:
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_CLANG_TIDY=clang-tidy
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_CLANG_TIDY=clang-tidy -DENABLE_UNIT_TESTS=ON
 
     - name: Build It
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -DENABLE_UNIT_TESTS=ON
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
     - name: Test It
       run: cd build && make && ctest
@@ -46,8 +46,8 @@ jobs:
         distro: ubuntu20.04
         run: |
           apt-get update && apt-get install -y cmake g++ clang-tidy libcurl4-openssl-dev
-          cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_CLANG_TIDY=clang-tidy
-          cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -DENABLE_UNIT_TESTS=ON
+          cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_CLANG_TIDY=clang-tidy -DENABLE_UNIT_TESTS=ON
+          cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
           cd build && make && ctest
 
   build-demo:
