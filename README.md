@@ -130,13 +130,15 @@ And finally, create the Lambda function:
 ```
 $ aws lambda create-function --function-name demo \
 --role <specify role arn from previous step here> \
---runtime provided --timeout 15 --memory-size 128 \
+--runtime provided.al2023 --timeout 15 --memory-size 128 \
 --handler demo --zip-file fileb://demo.zip
 ```
+> **N.B.** If you are building on `arm64`, you have to explicitly add the param `--architectures arm64`, so that you are setting up the proper architecture on AWS to run your supplied Lambda function.
 
 And to invoke the function:
 ```bash
-$ aws lambda invoke --function-name demo --payload '{"answer":42}' output.txt
+$ aws lambda invoke --function-name demo --cli-binary-format raw-in-base64-out --payload '{"answer":42}' output.txt
+```
 ```
 
 ## Using the C++ SDK for AWS with this runtime
@@ -150,7 +152,7 @@ Any *fully* compliant C++11 compiler targeting GNU/Linux x86-64 should work. Ple
 - Use Clang v3.3 or above
 
 ## Packaging, ABI, GNU C Library, Oh My!
-Lambda runs your code on some version of Amazon Linux. It would be a less than ideal customer  experience if you are forced to build your application on that platform and that platform only.
+Lambda runs your code on some version of Amazon Linux. It would be a less than ideal customer experience if you are forced to build your application on that platform and that platform only.
 
 However, the freedom to build on any linux distro brings a challenge. The GNU C Library ABI. There is no guarantee the platform used to build the Lambda function has the same GLIBC version as the one used by AWS Lambda. In fact, you might not even be using GNU's implementation. For example you could build a C++ Lambda function using musl libc.
 
@@ -196,10 +198,12 @@ curl_easy_setopt(curl_handle, CURLOPT_CAINFO, "/etc/pki/tls/certs/ca-bundle.crt"
     ```bash
     $ aws lambda create-function --function-name demo \
     --role <specify role arn here> \
-    --runtime provided --timeout 15 --memory-size 128 \
+    --runtime provided.al2023 --timeout 15 --memory-size 128 \
     --handler demo
     --code "S3Bucket=mys3bucket,S3Key=demo.zip"
     ```
+> **N.B.** See hint above if you are building on `arm64`.   
+
 1. **My code is crashing, how can I debug it?**
 
    - Starting with [v0.2.0](https://github.com/awslabs/aws-lambda-cpp/releases/tag/v0.2.0) you should see a stack-trace of the crash site in the logs (which are typically stored in CloudWatch).
