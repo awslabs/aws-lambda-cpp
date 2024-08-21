@@ -68,7 +68,7 @@ static invocation_response my_handler(invocation_request const& req)
                                             "error type here" /*error_type*/);
     }
 
-    return invocation_response::success("json payload here" /*payload*/,
+    return invocation_response::success("{\"message:\":\"I fail if body length is bigger than 42!\"}" /*payload*/,
                                         "application/json" /*MIME type*/);
 }
 
@@ -139,6 +139,10 @@ And to invoke the function:
 ```bash
 $ aws lambda invoke --function-name demo --cli-binary-format raw-in-base64-out --payload '{"answer":42}' output.txt
 ```
+
+You can update your supplied function:
+```bash
+$ aws lambda update-function-code --function-name demo --zip-file fileb://demo.zip
 ```
 
 ## Using the C++ SDK for AWS with this runtime

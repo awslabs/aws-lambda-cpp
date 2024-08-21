@@ -9,7 +9,7 @@ static invocation_response my_handler(invocation_request const& req)
                                             "error type here" /*error_type*/);
     }
 
-    return invocation_response::success("json payload here" /*payload*/,
+    return invocation_response::success("{\"message:\":\"I fail if body length is bigger than 42!\"}" /*payload*/,
                                         "application/json" /*MIME type*/);
 }
 
