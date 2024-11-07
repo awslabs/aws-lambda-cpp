@@ -128,13 +128,14 @@ do
         continue
     fi
 
-    # Do not copy libc files which are directly linked unless it's the dynamic loader
+    filename=$(basename "$i")
+    if [[ -z "${filename##ld-*}" ]]; then
+        PKG_LD=$filename # Use this file as the loader
+        cp "$i" "$PKG_DIR/lib"
+    fi
+
+    # Do not copy libc files which are directly linked
     if hasElement "$i" "${libc_libs[@]}"; then
-        filename=$(basename "$i")
-        if [[ -z "${filename##ld-*}" ]]; then
-            PKG_LD=$filename # Use this file as the loader
-            cp "$i" "$PKG_DIR/lib"
-        fi
         continue
     fi
 
