@@ -4,7 +4,7 @@ project(aws-lambda-runtime-tests LANGUAGES CXX)
 # Fetch Google Test
 include(FetchContent)
 FetchContent_Declare(gtest
-    URL https://github.com/google/googletest/archive/v1.16.0.tar.gz
+    URL https://github.com/google/googletest/archive/v1.15.2.tar.gz
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 # Configure build of googletest
