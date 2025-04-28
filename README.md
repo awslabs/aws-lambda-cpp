@@ -41,7 +41,7 @@ $ make && make install
 
 ### Running Unit Tests Locally
 
-To run the unit tests locally, follow these steps:
+To run the unit tests locally, follow these steps to build:
 
 ```bash
 $ cd aws-lambda-cpp
