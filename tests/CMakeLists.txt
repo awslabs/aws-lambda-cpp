@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.11)
 project(aws-lambda-runtime-tests LANGUAGES CXX)
 
 # Fetch Google Test
+# We're using the latest supported version which supports C++11 (https://github.com/google/googletest/releases/tag/release-1.12.1)
 include(FetchContent)
 FetchContent_Declare(gtest
     URL https://github.com/google/googletest/archive/v1.12.1.tar.gz
