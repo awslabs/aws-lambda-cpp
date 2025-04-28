@@ -1,10 +1,12 @@
 version: 0.2
-# This uses the docker image specified in ci/docker/amazon-linux-2017.03
+# This uses the docker image specified in ci/docker/amazon-linux-2018.03
 phases:
   build:
     commands:
       - echo Build started on `date`
       - yum install -y binutils
+      - curl -fLo cmake-install https://github.com/Kitware/CMake/releases/download/v4.0.1/cmake-4.0.1-Linux-x86_64.sh
+      - sh cmake-install --skip-license --prefix=/usr --exclude-subdirectory;
       - ./ci/codebuild/build.sh -DTEST_RESOURCE_PREFIX=lambda-cpp-amzn201703
       - ./ci/codebuild/run-tests.sh aws-lambda-package-lambda-test-fun
       - ./ci/codebuild/run-tests.sh aws-lambda-package-lambda-test-fun-no-glibc
