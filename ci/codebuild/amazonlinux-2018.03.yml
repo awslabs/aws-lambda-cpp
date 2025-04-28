@@ -7,6 +7,9 @@ phases:
       - yum install -y binutils
       - curl -fLo cmake-install https://github.com/Kitware/CMake/releases/download/v4.0.1/cmake-4.0.1-Linux-x86_64.sh
       - sh cmake-install --skip-license --prefix=/usr --exclude-subdirectory;
+      - yum install -y gcc72 gcc72-c++
+      - export CC=/usr/bin/gcc72
+      - export CXX=/usr/bin/g++72
       - ./ci/codebuild/build.sh -DTEST_RESOURCE_PREFIX=lambda-cpp-amzn201703
       - ./ci/codebuild/run-tests.sh aws-lambda-package-lambda-test-fun
       - ./ci/codebuild/run-tests.sh aws-lambda-package-lambda-test-fun-no-glibc
