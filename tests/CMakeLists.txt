@@ -5,6 +5,7 @@ include(FetchContent)
 FetchContent_Declare(gtest
     QUIET
     URL https://github.com/google/googletest/archive/v1.16.0.tar.gz
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 # Configure build of googletest
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
