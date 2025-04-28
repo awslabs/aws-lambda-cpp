@@ -41,7 +41,7 @@ include(GoogleTest)
 gtest_discover_tests(unit_tests
     PROPERTIES
     LABELS "unit"
-    DISCOVERY_TIMEOUT 240)
+    DISCOVERY_TIMEOUT 10)
 
 if (ENABLE_INTEGRATION_TESTS)
     gtest_discover_tests(integration_tests

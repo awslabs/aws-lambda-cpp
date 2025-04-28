@@ -54,6 +54,11 @@ $ make
 You can then run unit tests locally:
 
 ```bash
+$ ctest -L unit
+```
+
+This will run only the unit tests. If you want to run all tests (including integration tests), you can use:
+```bash
 $ ctest
 ```
 
