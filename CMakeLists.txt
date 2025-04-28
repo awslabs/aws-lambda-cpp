@@ -5,8 +5,8 @@ project(aws-lambda-runtime
     LANGUAGES CXX)
 
 option(ENABLE_LTO "Enables link-time optimization, requires compiler support." OFF)
-option(ENABLE_TESTS "Enables building the test project, requires AWS C++ SDK." OFF)
-option(ENABLE_UNIT_TESTS "Enables building the unit test project" OFF)
+option(ENABLE_TESTS "Enables building all tests." OFF)
+option(ENABLE_INTEGRATION_TESTS "Enables building integration tests, requires AWS C++ SDK." OFF)
 option(ENABLE_SANITIZERS "Enables ASan and UBSan." OFF)
 
 add_library(${PROJECT_NAME}
@@ -93,13 +93,9 @@ endif()
 
 
 #tests
-if (ENABLE_TESTS)
+if (ENABLE_TESTS OR ENABLE_INTEGRATION_TESTS)
     enable_testing()
     add_subdirectory(tests)
-endif()
-if (ENABLE_UNIT_TESTS)
-    enable_testing()
-    add_subdirectory(unittests)
 endif()
 
 
