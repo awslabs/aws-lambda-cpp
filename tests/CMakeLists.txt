@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 3.11)
 project(aws-lambda-runtime-tests LANGUAGES CXX)
 
 # Fetch Google Test
