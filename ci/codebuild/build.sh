@@ -6,6 +6,7 @@ set -euo pipefail
 cd $CODEBUILD_SRC_DIR
 mkdir build
 cd build
+cmake --version
 cmake .. -GNinja \
   -DBUILD_SHARED_LIBS=ON \
   -DCMAKE_BUILD_TYPE=Debug \
