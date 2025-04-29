@@ -11,5 +11,4 @@ phases:
   post_build:
     commands:
       - echo "Build finished. Dumping logs..."
-      - pwd
-      - cat build/CMakeFiles/CMakeError.log
+      - ls build/CMakeFiles/*.log
