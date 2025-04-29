@@ -8,3 +8,8 @@ phases:
       - ./ci/codebuild/run-tests.sh aws-lambda-package-lambda-test-fun
       - ./ci/codebuild/run-tests.sh aws-lambda-package-lambda-test-fun-no-glibc
       - echo Build completed on `date`
+  post_build:
+    commands:
+      - echo "Build finished. Dumping logs..."
+      - pwd
+      - cat ${$CODEBUILD_SRC_DIR}/github.com/awslabs/aws-lambda-cpp/build/CMakeFiles/CMakeOutput.log
