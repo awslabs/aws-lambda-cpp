@@ -12,3 +12,5 @@ phases:
     commands:
       - echo "Build finished. Dumping logs..."
       - ls build/CMakeFiles/*.log
+      - cat build/CMakeFiles/CMakeOutput.log
+      - cat build/_deps/gtest-subbuild/CMakeFiles/CMakeOutput.log
