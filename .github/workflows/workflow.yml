@@ -14,7 +14,7 @@ jobs:
   build:
     strategy:
       matrix:
-        arch: [ubuntu-24.04, ubuntu-24.04-arm]
+        arch: [ubuntu-latest, ubuntu-24.04-arm]
     runs-on: ${{ matrix.arch }}
 
     steps:
@@ -32,7 +32,7 @@ jobs:
       run: cd build && make && ctest
 
   build-demo:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
 
@@ -55,7 +55,7 @@ jobs:
         make aws-lambda-package-demo
 
   format:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
 
