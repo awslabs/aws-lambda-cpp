@@ -1,0 +1,18 @@
+FROM public.ecr.aws/amazonlinux/amazonlinux:2018.03
+
+RUN yum install -y \
+    gcc-c++ \
+    git \
+    ninja-build \
+    curl-devel \
+    openssl-devel \
+    openssl-static \
+    zlib-devel \
+    gtest-devel \
+    zip
+RUN curl -fLo cmake-install https://github.com/Kitware/CMake/releases/download/v3.13.0/cmake-3.13.0-Linux-x86_64.sh && \
+    sh cmake-install --skip-license --prefix=/usr --exclude-subdirectory;
+RUN git clone --recurse-submodules https://github.com/aws/aws-sdk-cpp
+RUN cmake -Saws-sdk-cpp -Baws-sdk-cpp/build -DBUILD_ONLY=lambda -DENABLE_TESTING=OFF -GNinja
+RUN cd aws-sdk-cpp/build && ninja-build && ninja-build install
+RUN ln -s /usr/bin/ninja-build /usr/local/bin/ninja

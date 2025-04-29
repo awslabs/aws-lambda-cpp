@@ -4,8 +4,6 @@ phases:
   build:
     commands:
       - echo Build started on `date`
-      - curl -fLo cmake-install https://github.com/Kitware/CMake/releases/download/v4.0.1/cmake-4.0.1-Linux-x86_64.sh
-      - sh cmake-install --skip-license --prefix=/usr --exclude-subdirectory;
       - ./ci/codebuild/build.sh -DTEST_RESOURCE_PREFIX=lambda-cpp-archbtw -DENABLE_SANITIZERS=ON
       - ./ci/codebuild/run-tests.sh aws-lambda-package-lambda-test-fun
       - echo Build completed on `date`

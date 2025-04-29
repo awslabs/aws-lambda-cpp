@@ -4,7 +4,6 @@ phases:
   build:
     commands:
       - echo Build started on `date`
-      - apk add --no-cache cmake
       - ./ci/codebuild/build.sh -DTEST_RESOURCE_PREFIX=lambda-cpp-alpine315
       - ./ci/codebuild/run-tests.sh aws-lambda-package-lambda-test-fun
       - echo Build completed on `date`
