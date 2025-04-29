@@ -29,9 +29,9 @@ gtest_discover_tests(unit_tests
 find_package(AWSSDK COMPONENTS lambda iam)
 
 add_executable(${PROJECT_NAME}
-    main.cpp
-    runtime_tests.cpp
-    version_tests.cpp
+    integration/main.cpp
+    integration/runtime_tests.cpp
+    integration/version_tests.cpp
     gtest/gtest-all.cc)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${AWSSDK_LINK_LIBRARIES} aws-lambda-runtime)

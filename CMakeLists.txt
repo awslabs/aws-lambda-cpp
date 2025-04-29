@@ -93,7 +93,7 @@ endif()
 
 
 #tests
-if (ENABLE_TESTS AND DEFINED ENV{GITHUB_ACTIONS})
+if (ENABLE_TESTS)
     enable_testing()
     add_subdirectory(tests)
 elseif (ENABLE_INTEGRATION_TESTS)
