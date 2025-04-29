@@ -13,7 +13,7 @@
 #include <aws/lambda/model/CreateFunctionRequest.h>
 #include <aws/lambda/model/InvokeRequest.h>
 #include <aws/core/utils/base64/Base64.h>
-#include "gtest/gtest.h"
+#include "../gtest/gtest.h"
 #include <aws/lambda/model/LogType.h>
 #include <cstdio>
 #include <iostream>

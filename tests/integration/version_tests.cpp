@@ -1,5 +1,5 @@
 #include <aws/lambda-runtime/version.h>
-#include "gtest/gtest.h"
+#include "../gtest/gtest.h"
 
 using namespace aws::lambda_runtime;
 
