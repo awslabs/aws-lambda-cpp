@@ -12,4 +12,4 @@ phases:
     commands:
       - echo "Build finished. Dumping logs..."
       - pwd
-      - cat ${$CODEBUILD_SRC_DIR}/github.com/awslabs/aws-lambda-cpp/build/CMakeFiles/CMakeOutput.log
+      - cat build/CMakeFiles/CMakeOutput.log
