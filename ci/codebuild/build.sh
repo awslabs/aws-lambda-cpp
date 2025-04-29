@@ -9,7 +9,7 @@ cd build
 cmake .. -GNinja \
   -DBUILD_SHARED_LIBS=ON \
   -DCMAKE_BUILD_TYPE=Debug \
-  -DENABLE_INTEGRATION_TESTS=ON \
+  -DENABLE_TESTS=ON \
   -DCMAKE_INSTALL_PREFIX=/install $@
 ninja
 ninja install

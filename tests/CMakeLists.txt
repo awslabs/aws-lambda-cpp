@@ -14,12 +14,11 @@ if(DEFINED ENV{GITHUB_ACTIONS})
     set(INSTALL_GTEST OFF)
     FetchContent_MakeAvailable(gtest)
 
-    # Unit tests executable
     add_executable(unit_tests
         unit/no_op_test.cpp)
     target_link_libraries(unit_tests PRIVATE gtest_main aws-lambda-runtime)
 
-    # Register unit tests with CTest
+    # Register unit tests
     include(GoogleTest)
     gtest_discover_tests(unit_tests
         PROPERTIES
@@ -42,7 +41,7 @@ if(AWSSDK_FOUND)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${AWSSDK_LINK_LIBRARIES} aws-lambda-runtime)
 
     include(GoogleTest)
-    gtest_discover_tests(${PROJECT_NAME} EXTRA_ARGS "--aws_prefix=${TEST_RESOURCE_PREFIX}") # requires CMake 3.10 or later
+    gtest_discover_tests(${PROJECT_NAME} EXTRA_ARGS "--aws_prefix=${TEST_RESOURCE_PREFIX}")
 
     add_subdirectory(resources)
 else()

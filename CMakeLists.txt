@@ -1,12 +1,11 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.9)
 set(CMAKE_CXX_STANDARD 11)
 project(aws-lambda-runtime
     VERSION 0.0.0
     LANGUAGES CXX)
 
 option(ENABLE_LTO "Enables link-time optimization, requires compiler support." OFF)
-option(ENABLE_TESTS "Enables building all tests." OFF)
-option(ENABLE_INTEGRATION_TESTS "Enables building integration tests, requires AWS C++ SDK." OFF)
+option(ENABLE_TESTS "Enables building integration tests, requires AWS C++ SDK." OFF)
 option(ENABLE_SANITIZERS "Enables ASan and UBSan." OFF)
 
 add_library(${PROJECT_NAME}
@@ -91,17 +90,11 @@ else ()
     target_compile_definitions(${PROJECT_NAME} PRIVATE "AWS_LAMBDA_LOG=0")
 endif()
 
-
 #tests
 if (ENABLE_TESTS)
     enable_testing()
     add_subdirectory(tests)
-elseif (ENABLE_INTEGRATION_TESTS)
-    enable_testing()
-    add_subdirectory(tests)
 endif()
-
-
 
 #versioning
 configure_file(
