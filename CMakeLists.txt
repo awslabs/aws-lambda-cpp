@@ -5,7 +5,7 @@ project(aws-lambda-runtime
     LANGUAGES CXX)
 
 option(ENABLE_LTO "Enables link-time optimization, requires compiler support." OFF)
-option(ENABLE_TESTS "Enables building integration tests, requires AWS C++ SDK." OFF)
+option(ENABLE_TESTS "Enables building the test project, requires AWS C++ SDK." OFF)
 option(ENABLE_SANITIZERS "Enables ASan and UBSan." OFF)
 
 add_library(${PROJECT_NAME}
