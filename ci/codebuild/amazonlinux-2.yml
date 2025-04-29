@@ -3,9 +3,7 @@ phases:
   build:
     commands:
       - echo Build started on `date`
-      - yum install -y tar
-      - curl -fLo cmake-install https://github.com/Kitware/CMake/releases/download/v4.0.1/cmake-4.0.1-Linux-x86_64.sh
-      - sh cmake-install --skip-license --prefix=/usr --exclude-subdirectory;
+      - yum install -y tar cmake3
       - ./ci/codebuild/build.sh -DTEST_RESOURCE_PREFIX=lambda-cpp-al2_$(arch)
       - ./ci/codebuild/run-tests.sh aws-lambda-package-lambda-test-fun
       - ./ci/codebuild/run-tests.sh aws-lambda-package-lambda-test-fun-no-glibc
