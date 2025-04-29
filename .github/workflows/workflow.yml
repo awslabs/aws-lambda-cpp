@@ -7,6 +7,7 @@ on:
     branches: [ master ]
 
 env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Debug
 
 jobs:
@@ -18,7 +19,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-
     - name: Install Dependencies
       run: sudo apt-get update && sudo apt-get install -y clang-tidy libcurl4-openssl-dev
 
