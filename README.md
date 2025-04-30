@@ -39,6 +39,23 @@ $ cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/lambda-install
 $ make && make install
 ```
 
+### Running Unit Tests Locally
+
+To run the unit tests locally, follow these steps to build:
+
+```bash
+$ cd aws-lambda-cpp
+$ mkdir build
+$ cd build
+$ cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_TESTS=ON
+$ make
+```
+
+Run unit tests:
+```bash
+$ ctest
+```
+
 To consume this library in a project that is also using CMake, you would do:
 
 ```cmake

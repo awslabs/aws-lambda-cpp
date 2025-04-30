@@ -4,6 +4,7 @@ Checks:
 -modernize-use-trailing-return-type,-bugprone-easily-swappable-parameters,-readability-identifier-length'
 WarningsAsErrors: '*'
 HeaderFilterRegex: 'include/aws/.*\.h$'
+ExcludeHeaderFilter: 'build/_deps/gtest-src.*'
 FormatStyle: 'none'
 CheckOptions:
   - key:             modernize-pass-by-value.ValuesOnly

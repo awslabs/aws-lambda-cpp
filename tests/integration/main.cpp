@@ -1,6 +1,6 @@
 #include <aws/core/Aws.h>
 #include <aws/core/utils/logging/ConsoleLogSystem.h>
-#include "gtest/gtest.h"
+#include "../gtest/gtest.h"
 
 std::function<std::shared_ptr<Aws::Utils::Logging::LogSystemInterface>()> get_console_logger_factory()
 {
