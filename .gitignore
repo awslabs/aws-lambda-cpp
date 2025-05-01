@@ -3,3 +3,10 @@ tags
 TODO
 compile_commands.json
 .clangd
+
+#ide
+.idea
+test.cpp
+a.out
+
+cmake-build-debug
