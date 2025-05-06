@@ -141,7 +141,7 @@ do
     cp "$i" $PKG_DIR/lib
 done
 
-if [[ $INCLUDE_LIBC == true ]]; then
+if [[ $INCLUDE_LIBC == true || -z "$PKG_LD" ]]; then
     for i in "${libc_libs[@]}"
     do
         filename=$(basename "$i")
@@ -151,10 +151,15 @@ if [[ $INCLUDE_LIBC == true ]]; then
             if [[ -z "$PKG_LD" ]]; then 
                 PKG_LD=$filename
                 cp "$i" "$PKG_DIR/lib" # we want to follow the symlink (default behavior)
+                if [[ $INCLUDE_LIBC != true ]]; then
+                    break
+                fi
             fi
             continue # We don't want the dynamic loader's symlink because its target is an absolute path (/lib/ld-*).
         fi
-        cp --no-dereference "$i" "$PKG_DIR/lib"
+        if [[ $INCLUDE_LIBC == true ]]; then
+            cp --no-dereference "$i" "$PKG_DIR/lib"
+        fi
     done
 fi
 
