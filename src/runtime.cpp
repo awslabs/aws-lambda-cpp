@@ -347,6 +347,9 @@ runtime::post_outcome runtime::do_post(
         headers = curl_slist_append(headers, ("content-type: " + handler_response.get_content_type()).c_str());
     }
 
+    if (!handler_response.get_xray_response().empty()) {
+        headers = curl_slist_append(headers, ("lambda-runtime-function-xray-error-cause: " + handler_response.get_xray_response()).c_str());
+    }
     headers = curl_slist_append(headers, "Expect:");
     headers = curl_slist_append(headers, "transfer-encoding:");
     headers = curl_slist_append(headers, m_user_agent_header.c_str());
@@ -521,13 +524,14 @@ invocation_response invocation_response::success(std::string payload, std::strin
 }
 
 AWS_LAMBDA_RUNTIME_API
-invocation_response invocation_response::failure(std::string const& error_message, std::string const& error_type)
+invocation_response invocation_response::failure(std::string const& error_message, std::string const& error_type, std::string const& xray_response)
 {
     invocation_response r;
     r.m_success = false;
     r.m_content_type = "application/json";
     r.m_payload = R"({"errorMessage":")" + json_escape(error_message) + R"(","errorType":")" + json_escape(error_type) +
                   R"(","stackTrace":[]})";
+    r.m_xray_response = xray_response;
     return r;
 }
 
