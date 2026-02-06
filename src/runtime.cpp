@@ -525,6 +525,12 @@ invocation_response invocation_response::success(std::string payload, std::strin
 }
 
 AWS_LAMBDA_RUNTIME_API
+invocation_response invocation_response::failure(std::string const& error_message, std::string const& error_type)
+{
+    return failure(error_message, error_type, "");
+}
+
+AWS_LAMBDA_RUNTIME_API
 invocation_response invocation_response::failure(
     std::string const& error_message,
     std::string const& error_type,

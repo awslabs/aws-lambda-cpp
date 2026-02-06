@@ -102,11 +102,16 @@ public:
     // To support clients that need to control the entire error response body (e.g. adding a stack trace), this
     // constructor should be used instead.
     // Note: adding an overload to invocation_response::failure is not feasible since the parameter types are the same.
+    invocation_response(std::string const& payload, std::string const& content_type, bool success)
+        : m_payload(payload), m_content_type(content_type), m_success(success)
+    {
+    }
+
     invocation_response(
         std::string const& payload,
         std::string const& content_type,
         bool success,
-        std::string const& xray_response = "")
+        std::string const& xray_response)
         : m_payload(payload), m_content_type(content_type), m_success(success), m_xray_response(xray_response)
     {
     }
@@ -120,10 +125,12 @@ public:
      * Create a failure response with the given error message and error type.
      * The content-type is always set to application/json in this case.
      */
+    static invocation_response failure(std::string const& error_message, std::string const& error_type);
+
     static invocation_response failure(
         std::string const& error_message,
         std::string const& error_type,
-        std::string const& xray_response = "");
+        std::string const& xray_response);
 
     /**
      * Get the MIME type of the payload.
