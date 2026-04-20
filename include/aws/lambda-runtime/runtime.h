@@ -96,6 +96,11 @@ private:
     bool m_success;
 
     /**
+     * The serialized XRay response header.
+     */
+    std::string m_xray_response;
+
+    /**
      * Instantiate an empty response. Used by the static functions 'success' and 'failure' to create a populated
      * invocation_response
      */
@@ -112,6 +117,15 @@ public:
     {
     }
 
+    invocation_response(
+        std::string const& payload,
+        std::string const& content_type,
+        bool success,
+        std::string const& xray_response)
+        : m_payload(payload), m_content_type(content_type), m_success(success), m_xray_response(xray_response)
+    {
+    }
+
     /**
      * Create a successful invocation response with the given payload and content-type.
      */
@@ -122,6 +136,11 @@ public:
      * The content-type is always set to application/json in this case.
      */
     static invocation_response failure(std::string const& error_message, std::string const& error_type);
+
+    static invocation_response failure(
+        std::string const& error_message,
+        std::string const& error_type,
+        std::string const& xray_response);
 
     /**
      * Get the MIME type of the payload.
@@ -137,6 +156,11 @@ public:
      * Returns true if the payload and content-type are set. Returns false if the error message and error types are set.
      */
     bool is_success() const { return m_success; }
+
+    /**
+     * Get the XRay response string. The string isassumed to be UTF-8 encoded.
+     */
+    std::string const& get_xray_response() const { return m_xray_response; }
 };
 
 struct no_result {};
