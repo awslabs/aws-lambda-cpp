@@ -38,6 +38,7 @@ public:
     inline void set_response_code(aws::http::response_code c);
     inline void set_content_type(char const* ct);
     inline std::string const& get_body() const;
+    inline std::string const& get_content_type() const;
 
 private:
     response_code m_response_code;
@@ -139,6 +140,12 @@ inline std::string const& response::get_body() const
 {
     return m_body;
 }
+
+inline std::string const& response::get_content_type() const
+{
+    return m_content_type;
+}
+
 inline void response::add_header(std::string name, std::string const& value)
 {
     std::transform(name.begin(), name.end(), name.begin(), ::tolower);

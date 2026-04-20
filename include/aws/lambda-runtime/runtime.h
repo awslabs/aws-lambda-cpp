@@ -57,6 +57,11 @@ struct invocation_request {
     std::string function_arn;
 
     /**
+     * The Content-type of the current invocation.
+     */
+    std::string content_type;
+
+    /**
      * Function execution deadline counted in milliseconds since the Unix epoch.
      */
     std::chrono::time_point<std::chrono::system_clock> deadline;
