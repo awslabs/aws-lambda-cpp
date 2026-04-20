@@ -281,6 +281,7 @@ runtime::next_outcome runtime::get_next()
     invocation_request req;
     req.payload = resp.get_body();
     req.request_id = std::move(out).get_result();
+    req.content_type = resp.get_content_type();
 
     out = resp.get_header(TRACE_ID_HEADER);
     if (out.is_success()) {
