@@ -113,7 +113,7 @@ PKG_BIN_FILENAME=$(basename "$PKG_BIN_PATH")
 PKG_DIR=tmp
 PKG_LD=""
 
-list=$(ldd "$PKG_BIN_PATH" | awk '{print $(NF-1)}')
+list=$(ldd "$PKG_BIN_PATH" | awk '{print $(NF-1)}' | xargs readlink -f)
 libc_libs=()
 libc_libs+=($(package_libc_dpkg))
 libc_libs+=($(package_libc_rpm))
