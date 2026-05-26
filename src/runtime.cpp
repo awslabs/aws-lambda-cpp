@@ -178,7 +178,8 @@ runtime::runtime(std::string const& endpoint, std::string const& user_agent)
 
 runtime::~runtime()
 {
-    curl_easy_cleanup(lambda_runtime::m_curl_handle);
+    // The curl handle is thread_local and outlives any single runtime instance.
+    // Cleanup happens automatically when the thread exits.
 }
 
 void runtime::set_curl_next_options()

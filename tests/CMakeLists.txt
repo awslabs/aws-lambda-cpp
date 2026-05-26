@@ -15,7 +15,8 @@ if(DEFINED ENV{GITHUB_ACTIONS})
     FetchContent_MakeAvailable(gtest)
 
     add_executable(unit_tests
-        unit/no_op_test.cpp)
+        unit/no_op_test.cpp
+        unit/thread_local_curl_test.cpp)
     target_link_libraries(unit_tests PRIVATE gtest_main aws-lambda-runtime)
 
     # Register unit tests
@@ -25,7 +26,22 @@ if(DEFINED ENV{GITHUB_ACTIONS})
         LABELS "unit"
         DISCOVERY_TIMEOUT 10)
 else()
-    message(STATUS "Unit tests skipped: Not in GitHub Actions environment")
+    # Build unit tests using the bundled gtest
+    add_executable(unit_tests
+        unit/no_op_test.cpp
+        unit/thread_local_curl_test.cpp
+        gtest/gtest-all.cc)
+    target_include_directories(unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(unit_tests PRIVATE aws-lambda-runtime pthread)
+
+    # Provide a main() for gtest
+    target_sources(unit_tests PRIVATE unit/main.cpp)
+
+    include(GoogleTest)
+    gtest_discover_tests(unit_tests
+        PROPERTIES
+        LABELS "unit"
+        DISCOVERY_TIMEOUT 10)
 endif()
 
 
