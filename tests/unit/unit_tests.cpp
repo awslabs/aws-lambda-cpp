@@ -264,7 +264,8 @@ TEST(VersionTest, version_format)
     std::string v = get_version();
     int dots = 0;
     for (char c : v) {
-        if (c == '.') dots++;
+        if (c == '.')
+            dots++;
     }
     EXPECT_EQ(2, dots);
 }
