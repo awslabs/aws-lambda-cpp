@@ -15,7 +15,6 @@ if(DEFINED ENV{GITHUB_ACTIONS})
     FetchContent_MakeAvailable(gtest)
 
     add_executable(unit_tests
-        unit/no_op_test.cpp
         unit/thread_local_curl_test.cpp
         unit/unit_tests.cpp)
     target_link_libraries(unit_tests PRIVATE gtest_main aws-lambda-runtime)
@@ -29,7 +28,6 @@ if(DEFINED ENV{GITHUB_ACTIONS})
 else()
     # Build unit tests using the bundled gtest
     add_executable(unit_tests
-        unit/no_op_test.cpp
         unit/thread_local_curl_test.cpp
         unit/unit_tests.cpp
         gtest/gtest-all.cc)
