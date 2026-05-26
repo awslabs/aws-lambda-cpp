@@ -15,11 +15,12 @@
  */
 
 #include <cstdarg>
+#include <cstdint>
 
 namespace aws {
 namespace logging {
 
-enum class verbosity {
+enum class verbosity : std::uint8_t {
     error,
     info,
     debug,

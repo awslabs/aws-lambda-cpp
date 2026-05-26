@@ -1,10 +1,10 @@
 ---
 Checks:
 'clang-diagnostic-*,clang-analyzer-*,performance-*,readability-*,modernize-*,bugprone-*,misc-*,
--modernize-use-trailing-return-type,-bugprone-easily-swappable-parameters,-readability-identifier-length,
--performance-enum-size,-misc-use-anonymous-namespace,-misc-include-cleaner'
+-modernize-use-trailing-return-type,-bugprone-easily-swappable-parameters,-readability-identifier-length'
 WarningsAsErrors: '*'
 HeaderFilterRegex: 'include/aws/.*\.h$'
+ExcludeHeaderFilter: 'build/_deps/gtest-src.*'
 FormatStyle: 'none'
 CheckOptions:
   - key:             modernize-pass-by-value.ValuesOnly
