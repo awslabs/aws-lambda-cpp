@@ -34,14 +34,14 @@ TEST(InvocationResponseTest, success_response_with_empty_payload)
 
 TEST(InvocationResponseTest, failure_response_is_not_success)
 {
-    auto resp = invocation_response::failure("something broke", "RuntimeError", "");
+    auto resp = invocation_response::failure("something broke", "RuntimeError");
     EXPECT_FALSE(resp.is_success());
     EXPECT_EQ("application/json", resp.get_content_type());
 }
 
 TEST(InvocationResponseTest, failure_response_contains_error_message)
 {
-    auto resp = invocation_response::failure("something broke", "RuntimeError", "");
+    auto resp = invocation_response::failure("something broke", "RuntimeError");
     auto const& payload = resp.get_payload();
     EXPECT_NE(std::string::npos, payload.find("something broke"));
     EXPECT_NE(std::string::npos, payload.find("RuntimeError"));
@@ -49,7 +49,7 @@ TEST(InvocationResponseTest, failure_response_contains_error_message)
 
 TEST(InvocationResponseTest, failure_response_json_escapes_quotes)
 {
-    auto resp = invocation_response::failure(R"(error with "quotes")", "TestError", "");
+    auto resp = invocation_response::failure(R"(error with "quotes")", "TestError");
     auto const& payload = resp.get_payload();
     EXPECT_NE(std::string::npos, payload.find(R"(error with \"quotes\")"));
     EXPECT_EQ(std::string::npos, payload.find(R"(error with "quotes")"));
@@ -57,21 +57,21 @@ TEST(InvocationResponseTest, failure_response_json_escapes_quotes)
 
 TEST(InvocationResponseTest, failure_response_json_escapes_backslash)
 {
-    auto resp = invocation_response::failure(R"(path\to\file)", "TestError", "");
+    auto resp = invocation_response::failure(R"(path\to\file)", "TestError");
     auto const& payload = resp.get_payload();
     EXPECT_NE(std::string::npos, payload.find(R"(path\\to\\file)"));
 }
 
 TEST(InvocationResponseTest, failure_response_json_escapes_newlines)
 {
-    auto resp = invocation_response::failure("line1\nline2\r\n", "TestError", "");
+    auto resp = invocation_response::failure("line1\nline2\r\n", "TestError");
     auto const& payload = resp.get_payload();
     EXPECT_NE(std::string::npos, payload.find(R"(line1\nline2\r\n)"));
 }
 
 TEST(InvocationResponseTest, failure_response_json_escapes_tabs)
 {
-    auto resp = invocation_response::failure("col1\tcol2", "TestError", "");
+    auto resp = invocation_response::failure("col1\tcol2", "TestError");
     auto const& payload = resp.get_payload();
     EXPECT_NE(std::string::npos, payload.find(R"(col1\tcol2)"));
 }
@@ -80,15 +80,9 @@ TEST(InvocationResponseTest, failure_response_json_escapes_control_characters)
 {
     std::string msg = "null\x00 byte";
     msg.push_back('\x01');
-    auto resp = invocation_response::failure(msg, "TestError", "");
+    auto resp = invocation_response::failure(msg, "TestError");
     auto const& payload = resp.get_payload();
     EXPECT_NE(std::string::npos, payload.find("\\u0001"));
-}
-
-TEST(InvocationResponseTest, failure_response_preserves_xray_response)
-{
-    auto resp = invocation_response::failure("err", "Type", "xray-data-here");
-    EXPECT_EQ("xray-data-here", resp.get_xray_response());
 }
 
 TEST(InvocationResponseTest, success_response_with_binary_content_type)
@@ -104,10 +98,9 @@ TEST(InvocationResponseTest, success_response_with_binary_content_type)
 
 TEST(InvocationResponseTest, constructor_based_failure)
 {
-    auto resp = invocation_response(R"({"custom":"error"})", "application/json", false, "xray");
+    auto resp = invocation_response(R"({"custom":"error"})", "application/json", false);
     EXPECT_FALSE(resp.is_success());
     EXPECT_EQ(R"({"custom":"error"})", resp.get_payload());
-    EXPECT_EQ("xray", resp.get_xray_response());
 }
 
 // --- http::response tests ---
@@ -117,7 +110,9 @@ TEST(HttpResponseTest, add_and_retrieve_header)
     response resp;
     resp.add_header("Content-Type", "application/json");
     EXPECT_TRUE(resp.has_header("content-type"));
-    EXPECT_EQ("application/json", resp.get_header("content-type"));
+    auto header = resp.get_header("content-type");
+    EXPECT_TRUE(header.is_success());
+    EXPECT_EQ("application/json", header.get_result());
 }
 
 TEST(HttpResponseTest, headers_are_lowercased)
@@ -162,9 +157,9 @@ TEST(HttpResponseTest, multiple_headers)
     resp.add_header("lambda-runtime-aws-request-id", "req-123");
     resp.add_header("lambda-runtime-trace-id", "trace-456");
     resp.add_header("lambda-runtime-deadline-ms", "1234567890");
-    EXPECT_EQ("req-123", resp.get_header("lambda-runtime-aws-request-id"));
-    EXPECT_EQ("trace-456", resp.get_header("lambda-runtime-trace-id"));
-    EXPECT_EQ("1234567890", resp.get_header("lambda-runtime-deadline-ms"));
+    EXPECT_EQ("req-123", resp.get_header("lambda-runtime-aws-request-id").get_result());
+    EXPECT_EQ("trace-456", resp.get_header("lambda-runtime-trace-id").get_result());
+    EXPECT_EQ("1234567890", resp.get_header("lambda-runtime-deadline-ms").get_result());
 }
 
 // --- outcome tests ---
@@ -239,16 +234,6 @@ TEST(InvocationRequestTest, default_fields_are_empty)
     EXPECT_TRUE(req.cognito_identity.empty());
     EXPECT_TRUE(req.function_arn.empty());
     EXPECT_TRUE(req.tenant_id.empty());
-}
-
-// --- runtime_response tests ---
-
-TEST(RuntimeResponseTest, constructor_sets_all_fields)
-{
-    runtime_response resp("payload", "application/json", "xray");
-    EXPECT_EQ("payload", resp.get_payload());
-    EXPECT_EQ("application/json", resp.get_content_type());
-    EXPECT_EQ("xray", resp.get_xray_response());
 }
 
 // --- version tests (no AWS SDK needed) ---
