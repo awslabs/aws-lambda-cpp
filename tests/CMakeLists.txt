@@ -16,7 +16,8 @@ if(DEFINED ENV{GITHUB_ACTIONS})
 
     add_executable(unit_tests
         unit/no_op_test.cpp
-        unit/thread_local_curl_test.cpp)
+        unit/thread_local_curl_test.cpp
+        unit/unit_tests.cpp)
     target_link_libraries(unit_tests PRIVATE gtest_main aws-lambda-runtime)
 
     # Register unit tests
@@ -30,6 +31,7 @@ else()
     add_executable(unit_tests
         unit/no_op_test.cpp
         unit/thread_local_curl_test.cpp
+        unit/unit_tests.cpp
         gtest/gtest-all.cc)
     target_include_directories(unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
     target_link_libraries(unit_tests PRIVATE aws-lambda-runtime pthread)
