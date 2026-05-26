@@ -167,7 +167,7 @@ public:
 
 private:
     void set_curl_next_options();
-    void set_curl_post_result_options();
+    static void set_curl_post_result_options();
     post_outcome do_post(
         std::string const& url,
         std::string const& request_id,

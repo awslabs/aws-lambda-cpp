@@ -156,7 +156,7 @@ static int rt_curl_debug_callback(CURL* handle, curl_infotype type, char* data, 
     (void)handle;
     (void)type;
     (void)userdata;
-    std::string s(data, size);
+    const std::string s(data, size);
     logging::log_debug(LOG_TAG, "CURL DBG: %s", s.c_str());
     return 0;
 }
@@ -175,11 +175,7 @@ runtime::runtime(std::string const& endpoint, std::string const& user_agent)
     }
 }
 
-runtime::~runtime()
-{
-    // The curl handle is thread_local and outlives any single runtime instance.
-    // Cleanup happens automatically when the thread exits.
-}
+runtime::~runtime() = default;
 
 void runtime::set_curl_next_options()
 {
@@ -240,7 +236,7 @@ runtime::next_outcome runtime::get_next()
     curl_easy_setopt(lambda_runtime::m_curl_handle, CURLOPT_HTTPHEADER, headers);
 
     logging::log_debug(LOG_TAG, "Making request to %s", m_endpoints[Endpoints::NEXT].c_str());
-    CURLcode curl_code = curl_easy_perform(lambda_runtime::m_curl_handle);
+    const CURLcode curl_code = curl_easy_perform(lambda_runtime::m_curl_handle);
     logging::log_debug(LOG_TAG, "Completed request to %s", m_endpoints[Endpoints::NEXT].c_str());
     curl_slist_free_all(headers);
 
@@ -312,7 +308,7 @@ runtime::next_outcome runtime::get_next()
     if (out.is_success()) {
         auto const& deadline_string = std::move(out).get_result();
         constexpr int base = 10;
-        unsigned long ms = strtoul(deadline_string.c_str(), nullptr, base);
+        const unsigned long ms = strtoul(deadline_string.c_str(), nullptr, base);
         assert(ms > 0);
         assert(ms < ULONG_MAX);
         req.deadline += std::chrono::milliseconds(ms);
@@ -368,7 +364,7 @@ runtime::post_outcome runtime::do_post(
     curl_easy_setopt(lambda_runtime::m_curl_handle, CURLOPT_HEADERDATA, &resp);
     curl_easy_setopt(lambda_runtime::m_curl_handle, CURLOPT_READDATA, &ctx);
     curl_easy_setopt(lambda_runtime::m_curl_handle, CURLOPT_HTTPHEADER, headers);
-    CURLcode curl_code = curl_easy_perform(lambda_runtime::m_curl_handle);
+    const CURLcode curl_code = curl_easy_perform(lambda_runtime::m_curl_handle);
     curl_slist_free_all(headers);
 
     if (curl_code != CURLE_OK) {
@@ -448,7 +444,7 @@ void run_handler(std::function<invocation_response(invocation_request const&)> c
 
         auto const req = std::move(next_outcome).get_result();
         logging::log_info(LOG_TAG, "Invoking user handler");
-        invocation_response res = handler(req);
+        const invocation_response res = handler(req);
         logging::log_info(LOG_TAG, "Invoking user handler completed.");
 
         if (res.is_success()) {
@@ -476,7 +472,7 @@ static std::string json_escape(std::string const& in)
     constexpr char last_non_printable_character = 31;
     std::string out;
     out.reserve(in.length()); // most strings will end up identical
-    for (char ch : in) {
+    for (const char ch : in) {
         if (ch > last_non_printable_character && ch != '\"' && ch != '\\') {
             out.append(1, ch);
         }
