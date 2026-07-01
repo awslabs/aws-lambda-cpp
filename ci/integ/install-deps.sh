@@ -5,15 +5,15 @@ OS=$1
 
 case "$OS" in
   al2023|al2023-arm)
-    dnf install -y cmake ninja-build gcc-c++ openssl-devel libcurl-devel zip tar gzip git
+    dnf install -y cmake ninja-build gcc-c++ openssl-devel libcurl-devel zip unzip tar gzip git curl
     ;;
   ubuntu)
-    apt-get update && apt-get install -y git clang zlib1g-dev libssl-dev libcurl4-openssl-dev cmake ninja-build zip
+    apt-get update && apt-get install -y git clang zlib1g-dev libssl-dev libcurl4-openssl-dev cmake ninja-build zip unzip curl
     update-alternatives --set cc /usr/bin/clang
     update-alternatives --set c++ /usr/bin/clang++
     ;;
   alpine)
-    apk add --no-cache bash cmake curl-dev g++ git ninja zlib-dev zip tar
+    apk add --no-cache bash cmake curl-dev curl g++ git ninja zlib-dev zip unzip tar
     ;;
   arch)
     pacman -Sy --noconfirm cmake ninja clang curl zip unzip git
