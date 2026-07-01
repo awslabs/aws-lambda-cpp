@@ -60,24 +60,35 @@ jobs:
 
   integration-test:
     runs-on: ${{ matrix.build.runner }}
+    container: ${{ matrix.deploy_type == 'zip' && matrix.build.container || '' }}
     strategy:
       fail-fast: false
       matrix:
+        deploy_type: [oci, zip]
         build:
           - os: al2023
+            container: public.ecr.aws/amazonlinux/amazonlinux:2023
+            dockerfile: al2023
             runner: ubuntu-latest
             lambda_arch: x86_64
           - os: al2023-arm
+            container: public.ecr.aws/amazonlinux/amazonlinux:2023
             dockerfile: al2023
             runner: ubuntu-24.04-arm
             lambda_arch: arm64
           - os: ubuntu
+            container: public.ecr.aws/ubuntu/ubuntu:24.04
+            dockerfile: ubuntu
             runner: ubuntu-latest
             lambda_arch: x86_64
           - os: alpine
+            container: public.ecr.aws/docker/library/alpine:3.23
+            dockerfile: alpine
             runner: ubuntu-latest
             lambda_arch: x86_64
           - os: arch
+            container: public.ecr.aws/docker/library/archlinux:latest
+            dockerfile: arch
             runner: ubuntu-latest
             lambda_arch: x86_64
         test:
@@ -102,14 +113,36 @@ jobs:
             payload: ""
             assertion: contains
         exclude:
-          # Alpine uses musl which doesn't provide backtrace()
+          - deploy_type: zip
+            build:
+              os: alpine
           - build:
               os: alpine
             test:
               name: crash_backtrace
 
     steps:
+      - name: Install checkout prerequisites
+        if: matrix.deploy_type == 'zip'
+        shell: sh
+        run: |
+          if command -v dnf > /dev/null 2>&1; then
+            dnf install -y tar gzip git
+          elif command -v pacman > /dev/null 2>&1; then
+            pacman -Sy --noconfirm tar git
+          fi
+
       - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        if: matrix.deploy_type == 'zip'
+        shell: bash
+        run: ./ci/integ/install-deps.sh ${{ matrix.build.os }}
+
+      - name: Build and package zip
+        if: matrix.deploy_type == 'zip'
+        shell: bash
+        run: ./ci/integ/package-zip.sh ${{ matrix.build.os }}
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -118,10 +151,12 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
+        if: matrix.deploy_type == 'oci'
         id: ecr-login
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Ensure ECR repository exists
+        if: matrix.deploy_type == 'oci'
         env:
           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
         run: |
@@ -140,11 +175,12 @@ jobs:
           }'
 
       - name: Build and push Docker image
+        if: matrix.deploy_type == 'oci'
         env:
           ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
           IMAGE_TAG: ${{ matrix.build.os }}-${{ matrix.test.name }}-${{ github.run_id }}
-          DOCKERFILE: ${{ matrix.build.dockerfile || matrix.build.os }}
+          DOCKERFILE: ${{ matrix.build.dockerfile }}
         run: |
           docker build \
             -f ci/integ/docker/Dockerfile.$DOCKERFILE \
@@ -153,10 +189,11 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image_uri=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> "$GITHUB_ENV"
 
-      - name: Deploy Lambda function
+      - name: Deploy Lambda function (oci)
+        if: matrix.deploy_type == 'oci'
         uses: aws-actions/aws-lambda-deploy@v1.1.0
         with:
-          function-name: ${{ env.FUNCTION_PREFIX }}-${{ matrix.build.os }}-${{ matrix.test.name }}-${{ github.run_id }}
+          function-name: ${{ env.FUNCTION_PREFIX }}-${{ matrix.deploy_type }}-${{ matrix.build.os }}-${{ matrix.test.name }}-${{ github.run_id }}
           package-type: Image
           image-uri: ${{ env.image_uri }}
           architectures: ${{ matrix.build.lambda_arch }}
@@ -164,20 +201,37 @@ jobs:
           role: ${{ secrets.LAMBDA_EXECUTION_ROLE_ARN }}
           environment: '{"HANDLER":"${{ matrix.test.handler }}"}'
 
+      - name: Deploy Lambda function (zip)
+        if: matrix.deploy_type == 'zip'
+        env:
+          FUNCTION_NAME: ${{ env.FUNCTION_PREFIX }}-${{ matrix.deploy_type }}-${{ matrix.build.os }}-${{ matrix.test.name }}-${{ github.run_id }}
+        run: |
+          aws lambda create-function \
+            --function-name "$FUNCTION_NAME" \
+            --runtime provided.al2023 \
+            --handler "${{ matrix.test.handler }}" \
+            --architectures ${{ matrix.build.lambda_arch }} \
+            --role "${{ secrets.LAMBDA_EXECUTION_ROLE_ARN }}" \
+            --timeout 30 \
+            --zip-file fileb://build/tests/resources/lambda-test-fun.zip \
+            --environment "Variables={HANDLER=${{ matrix.test.handler }}}"
+
+          aws lambda wait function-active-v2 --function-name "$FUNCTION_NAME"
+
       - name: Invoke Lambda function
         env:
           PAYLOAD: ${{ matrix.test.payload }}
-        run: ./ci/integ/invoke.sh "${{ env.FUNCTION_PREFIX }}-${{ matrix.build.os }}-${{ matrix.test.name }}-${{ github.run_id }}" "$PAYLOAD"
+        run: ./ci/integ/invoke.sh "${{ env.FUNCTION_PREFIX }}-${{ matrix.deploy_type }}-${{ matrix.build.os }}-${{ matrix.test.name }}-${{ github.run_id }}" "$PAYLOAD"
 
       - name: Assert result
         run: ./ci/integ/assert.sh ${{ matrix.test.assertion }} ${{ matrix.test.name }}
 
       - name: Cleanup Lambda function
         if: always()
-        run: aws lambda delete-function --function-name "${{ env.FUNCTION_PREFIX }}-${{ matrix.build.os }}-${{ matrix.test.name }}-${{ github.run_id }}" 2>/dev/null || true
+        run: aws lambda delete-function --function-name "${{ env.FUNCTION_PREFIX }}-${{ matrix.deploy_type }}-${{ matrix.build.os }}-${{ matrix.test.name }}-${{ github.run_id }}" 2>/dev/null || true
 
       - name: Cleanup ECR image
-        if: always()
+        if: always() && matrix.deploy_type == 'oci'
         env:
           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
           IMAGE_TAG: ${{ matrix.build.os }}-${{ matrix.test.name }}-${{ github.run_id }}
