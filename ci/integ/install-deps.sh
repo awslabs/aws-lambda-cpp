@@ -16,7 +16,7 @@ case "$OS" in
     apk add --no-cache bash cmake curl-dev g++ git ninja zlib-dev zip tar
     ;;
   arch)
-    pacman -Sy --noconfirm cmake ninja clang curl zip git
+    pacman -Sy --noconfirm cmake ninja clang curl zip unzip git
     ;;
   *)
     echo "Unknown OS: $OS" && exit 1

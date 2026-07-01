@@ -139,6 +139,17 @@ jobs:
         shell: bash
         run: ./ci/integ/install-deps.sh ${{ matrix.build.os }}
 
+      - name: Install AWS CLI
+        if: matrix.deploy_type == 'zip'
+        shell: bash
+        run: |
+          if ! command -v aws &> /dev/null; then
+            curl -sSL "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o /tmp/awscli.zip
+            unzip -q /tmp/awscli.zip -d /tmp
+            /tmp/aws/install
+            rm -rf /tmp/awscli.zip /tmp/aws
+          fi
+
       - name: Build and package zip
         if: matrix.deploy_type == 'zip'
         shell: bash
