@@ -5,7 +5,7 @@ OS=$1
 
 case "$OS" in
   al2023|al2023-arm)
-    dnf install -y cmake ninja-build gcc-c++ openssl-devel libcurl-devel zip unzip tar gzip git curl
+    dnf install -y cmake ninja-build gcc-c++ openssl-devel libcurl-devel zip tar gzip git
     ;;
   ubuntu)
     apt-get update && apt-get install -y git clang zlib1g-dev libssl-dev libcurl4-openssl-dev cmake ninja-build zip unzip curl
