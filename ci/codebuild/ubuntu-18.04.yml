@@ -1,9 +1,0 @@
-version: 0.2
-# This uses the docker image specified in ci/docker/ubuntu-linux-18.04
-phases:
-  build:
-    commands:
-      - echo Build started on `date`
-      - ./ci/codebuild/build.sh -DTEST_RESOURCE_PREFIX=lambda-cpp-ubuntu1804
-      - ./ci/codebuild/run-tests.sh aws-lambda-package-lambda-test-fun
-      - echo Build completed on `date`
