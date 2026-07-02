@@ -12,7 +12,7 @@ permissions:
 
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
-  FUNCTION_PREFIX: lambda-cpp-integ
+  FUNCTION_PREFIX: cpp-integ
 
 jobs:
   unit-test:
