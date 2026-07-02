@@ -1,9 +1,0 @@
-version: 0.2
-phases:
-  build:
-    commands:
-      - echo Build started on `date`
-      - ./ci/codebuild/build.sh -DTEST_RESOURCE_PREFIX=lambda-cpp-al2_$(arch)
-      - ./ci/codebuild/run-tests.sh aws-lambda-package-lambda-test-fun
-      - ./ci/codebuild/run-tests.sh aws-lambda-package-lambda-test-fun-no-glibc
-      - echo Build completed on `date`

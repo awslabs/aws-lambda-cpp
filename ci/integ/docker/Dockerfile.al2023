@@ -1,0 +1,12 @@
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023
+
+RUN dnf install -y cmake ninja-build gcc-c++ openssl-devel libcurl-devel zip tar gzip git
+
+WORKDIR /src
+COPY . .
+
+RUN mkdir build && cd build && \
+    cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=ON && \
+    ninja
+
+ENTRYPOINT ["/src/build/tests/resources/lambda-test-fun"]

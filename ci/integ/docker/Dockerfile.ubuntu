@@ -1,0 +1,14 @@
+FROM public.ecr.aws/ubuntu/ubuntu:24.04
+
+RUN apt-get update && apt-get install -y clang zlib1g-dev libssl-dev libcurl4-openssl-dev cmake ninja-build git
+
+ENV CC=clang CXX=clang++
+
+WORKDIR /src
+COPY . .
+
+RUN mkdir build && cd build && \
+    cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=ON && \
+    ninja
+
+ENTRYPOINT ["/src/build/tests/resources/lambda-test-fun"]

@@ -18,7 +18,7 @@ jobs:
     runs-on: ${{ matrix.arch }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
     - name: Install Dependencies
       run: sudo apt-get update && sudo apt-get install -y clang-tidy libcurl4-openssl-dev
 
@@ -34,7 +34,7 @@ jobs:
   build-demo:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
     - name: Install Dependencies
       run: sudo apt-get update && sudo apt-get install -y clang-tidy libcurl4-openssl-dev
@@ -57,7 +57,7 @@ jobs:
   format:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
     - name: Check Formatting
-      run: ./ci/codebuild/format-check.sh
+      run: ./ci/format-check.sh
