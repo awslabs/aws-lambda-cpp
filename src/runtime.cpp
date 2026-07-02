@@ -42,7 +42,21 @@ static constexpr auto COGNITO_IDENTITY_HEADER = "lambda-runtime-cognito-identity
 static constexpr auto DEADLINE_MS_HEADER = "lambda-runtime-deadline-ms";
 static constexpr auto FUNCTION_ARN_HEADER = "lambda-runtime-invoked-function-arn";
 static constexpr auto TENANT_ID_HEADER = "lambda-runtime-aws-tenant-id";
-thread_local static CURL* m_curl_handle = curl_easy_init();
+struct curl_handle_wrapper {
+    CURL* handle;
+    curl_handle_wrapper() : handle(curl_easy_init()) {}
+    ~curl_handle_wrapper()
+    {
+        if (handle) {
+            curl_easy_cleanup(handle);
+        }
+    }
+    curl_handle_wrapper(curl_handle_wrapper const&) = delete;
+    curl_handle_wrapper& operator=(curl_handle_wrapper const&) = delete;
+};
+
+thread_local static curl_handle_wrapper m_curl_handle_wrapper;
+thread_local static CURL*& m_curl_handle = m_curl_handle_wrapper.handle;
 
 enum Endpoints {
     INIT,

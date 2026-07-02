@@ -26,7 +26,7 @@ install_system_deps() {
 install_build_deps() {
   case "$OS" in
     al2023|al2023-arm)
-      dnf install -y cmake ninja-build gcc-c++ openssl-devel libcurl-devel zip
+      dnf install -y cmake ninja-build gcc-c++ openssl-devel libcurl-devel zip libasan libubsan
       ;;
     ubuntu)
       apt-get install -y clang zlib1g-dev libssl-dev libcurl4-openssl-dev cmake ninja-build zip
