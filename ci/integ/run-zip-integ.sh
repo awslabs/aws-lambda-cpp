@@ -6,6 +6,7 @@ HANDLER=${2:-echo_success}
 PAYLOAD=${3:-'{"barbaz":"Hello, Lambda!"}'}
 ASSERTION=${4:-snapshot}
 ARCH=${5:-x86_64}
+MODE=${6:-default}
 
 : "${AWS_REGION:?Set AWS_REGION}"
 : "${LAMBDA_EXECUTION_ROLE_ARN:?Set LAMBDA_EXECUTION_ROLE_ARN}"
@@ -18,8 +19,8 @@ cleanup() {
 }
 trap cleanup EXIT
 
-echo "==> Building and packaging zip ($OS)..."
-./ci/integ/package-zip.sh "$OS"
+echo "==> Building and packaging zip ($OS, mode=$MODE)..."
+./ci/integ/package-zip.sh "$OS" "$MODE"
 
 echo "==> Deploying Lambda function ($FUNCTION_NAME)..."
 aws lambda create-function \
@@ -32,12 +33,9 @@ aws lambda create-function \
   --zip-file fileb://build/tests/resources/lambda-test-fun.zip \
   --environment "Variables={HANDLER=$HANDLER}"
 
-aws lambda wait function-active-v2 --function-name "$FUNCTION_NAME"
+timeout 60 aws lambda wait function-active-v2 --function-name "$FUNCTION_NAME"
 
-echo "==> Invoking..."
-./ci/integ/invoke.sh "$FUNCTION_NAME" "$PAYLOAD"
-
-echo "==> Asserting ($ASSERTION: $HANDLER)..."
-./ci/integ/assert.sh "$ASSERTION" "$HANDLER"
+echo "==> Invoking and asserting ($ASSERTION: $HANDLER)..."
+./ci/integ/invoke-and-assert.sh "$FUNCTION_NAME" "$PAYLOAD" "$ASSERTION" "$HANDLER"
 
 echo "==> Passed!"

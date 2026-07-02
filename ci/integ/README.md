@@ -5,8 +5,10 @@ CI runs these automatically via GitHub Actions, but you can also run them locall
 
 ## Prerequisites
 
+- CMake and Ninja
 - AWS CLI configured with credentials that can create/invoke/delete Lambda functions
 - An IAM execution role for Lambda (with basic execution permissions)
+- OS-specific compiler (gcc/g++ on AL2023, clang on Ubuntu/Arch)
 
 ## Environment Variables
 

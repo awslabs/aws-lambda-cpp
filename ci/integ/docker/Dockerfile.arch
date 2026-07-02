@@ -1,6 +1,6 @@
 FROM public.ecr.aws/docker/library/archlinux:latest
 
-RUN pacman -Sy --noconfirm cmake ninja clang curl git
+RUN pacman -Syu --noconfirm cmake ninja clang curl git
 
 ENV CC=clang CXX=clang++
 
@@ -8,7 +8,7 @@ WORKDIR /src
 COPY . .
 
 RUN mkdir build && cd build && \
-    cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=ON && \
+    cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=ON -DENABLE_SANITIZERS=ON && \
     ninja
 
 ENTRYPOINT ["/src/build/tests/resources/lambda-test-fun"]

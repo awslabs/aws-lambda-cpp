@@ -1,6 +1,6 @@
 FROM public.ecr.aws/docker/library/alpine:3.23
 
-RUN apk add --no-cache cmake curl-dev g++ git ninja
+RUN apk add --no-cache cmake curl-dev g++ git ninja openssl-dev zlib-dev
 
 WORKDIR /src
 COPY . .
