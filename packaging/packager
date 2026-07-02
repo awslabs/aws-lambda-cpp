@@ -138,6 +138,13 @@ do
         continue
     fi
 
+    # Detect the loader even when path differs from package listing
+    # (e.g. ldd reports /lib64/ld-* but rpm lists /usr/lib64/ld-*)
+    filename=$(basename "$i")
+    if [[ -z "${filename##ld-*}" ]] && [[ -z "$PKG_LD" ]]; then
+        PKG_LD=$filename
+    fi
+
     cp "$i" $PKG_DIR/lib
 done
 
@@ -158,7 +165,7 @@ if [[ $INCLUDE_LIBC == true ]]; then
     done
 fi
 
-if [[ -z "$PKG_LD" ]]; then
+if [[ $INCLUDE_LIBC == true ]] && [[ -z "$PKG_LD" ]]; then
     echo "Failed to identify, locate or package the loader. Please file an issue on Github!" 1>&2
     exit 1
 fi
