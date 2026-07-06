@@ -14,6 +14,7 @@
  */
 #include "aws/logging/logging.h"
 #include <array>
+#include <cstdarg>
 #include <cstdio>
 #include <chrono>
 
@@ -21,8 +22,9 @@
 
 namespace aws {
 namespace logging {
+namespace {
 
-static inline char const* get_prefix(verbosity v)
+inline char const* get_prefix(verbosity v)
 {
     switch (v) {
         case verbosity::error:
@@ -35,6 +37,8 @@ static inline char const* get_prefix(verbosity v)
             return "[UNKNOWN]";
     }
 }
+
+} // namespace
 
 LAMBDA_RUNTIME_API
 void log(verbosity v, char const* tag, char const* msg, va_list args)

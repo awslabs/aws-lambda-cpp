@@ -3,11 +3,18 @@ set -euo pipefail
 
 OS=$1
 
-CMAKE_ARGS=""
-if [ "$OS" = "arch" ]; then
-  export CC=/usr/bin/clang CXX=/usr/bin/clang++
-  CMAKE_ARGS="-DENABLE_SANITIZERS=ON"
-fi
+CMAKE_ARGS="-DENABLE_SANITIZERS=ON"
+case "$OS" in
+  arch)
+    export CC=/usr/bin/clang CXX=/usr/bin/clang++
+    ;;
+  ubuntu)
+    export CC=/usr/bin/clang CXX=/usr/bin/clang++
+    ;;
+  alpine)
+    CMAKE_ARGS=""
+    ;;
+esac
 
 mkdir -p build && cd build
 cmake .. -GNinja \

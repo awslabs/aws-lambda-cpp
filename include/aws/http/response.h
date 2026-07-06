@@ -34,7 +34,7 @@ public:
     inline void append_body(const char* p, size_t sz);
     inline bool has_header(char const* header) const;
     inline lambda_runtime::outcome<std::string, bool> get_header(char const* header) const;
-    inline response_code get_response_code() const { return m_response_code; }
+    response_code get_response_code() const { return m_response_code; }
     inline void set_response_code(aws::http::response_code c);
     inline void set_content_type(char const* ct);
     inline std::string const& get_body() const;
