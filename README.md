@@ -1,6 +1,6 @@
 [![GitHub](https://img.shields.io/github/license/awslabs/aws-lambda-cpp.svg)](https://github.com/awslabs/aws-lambda-cpp/blob/master/LICENSE)
 ![Tests](https://github.com/awslabs/aws-lambda-cpp/actions/workflows/tests.yml/badge.svg)
-![Code Quality](https://github.com/awslabs/aws-lambda-cpp/actions/workflows/code-quality.yml/badge.svg)
+[![CodeQL](https://github.com/awslabs/aws-lambda-cpp/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/awslabs/aws-lambda-cpp/actions/workflows/github-code-scanning/codeql)
 
 ## AWS Lambda C++ Runtime
 
