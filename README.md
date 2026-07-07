@@ -1,14 +1,6 @@
 [![GitHub](https://img.shields.io/github/license/awslabs/aws-lambda-cpp.svg)](https://github.com/awslabs/aws-lambda-cpp/blob/master/LICENSE)
-![Code Quality badge](https://github.com/awslabs/aws-lambda-cpp/actions/workflows/code-quality.yml/badge.svg)
-
-| OS | Arch | Status |
-|----|------|--------|
-| Amazon Linux 2 | x86_64 | [![](https://codebuild.us-west-2.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiQ1EvQXE0ODBLK0VnQitMaVdvZ1J0QkhTMlpNbk8wS0lRbWZvRDlPSHB0V0VXb1VLazdSdzRMWHhMeUdpYjdOT1hCc1hjL3BKei96ZVpzeTdrMVd4c3BRPSIsIml2UGFyYW1ldGVyU3BlYyI6IkhjTTNoSzJwb1hldk9zZFYiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)](https://us-west-2.codebuild.aws.amazon.com/project/eyJlbmNyeXB0ZWREYXRhIjoicnpvbytDV0grMHh2c09ONi9kQ3ZuOVVwckxISElKRENEVy9CL0pvd3VvLzQwZ21pdzBOdGtNWUFLRy9VRkw1NldSMmRlVXV5R0NhN1k1OWI0bDY1N2MyMzR2SmhseWlma0hmWTlBUkwzcVp0TEJlQm1RPT0iLCJpdlBhcmFtZXRlclNwZWMiOiI3MzM4WDUybk9hSkl1bllRIiwibWF0ZXJpYWxTZXRTZXJpYWwiOjF9) |
-| Amazon Linux 2 | aarch64 | [![](https://codebuild.us-west-2.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoicWNGSmJtaGdPSCtqR25KQ1k3RWNZS1pwWlZScGZ3WU1JM0lISnZJVkhVNy8zbVIyVHp6RlBmRjN4cjZJd2xWNEd0eWZmUy9JaE1vRzBYWFcrbnpFdDUwPSIsIml2UGFyYW1ldGVyU3BlYyI6ImVoeHl5TTNtMmdERjJuWisiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)](https://us-west-2.codebuild.aws.amazon.com/project/eyJlbmNyeXB0ZWREYXRhIjoiVUVaNzBYMXVjUUl1djdlS3pTSXVxMUhKcHB4ZC96ZjlDOWM3bUxiRmtITnVGYzdxTDJveFY3eVFqanpHbzhYRUdWVjVhZFhnOGt0NldETEVMamN0alRoZzYwMyszU1lVMjJNR0lUWGNCQjVYNzhuUzZwZ0ptZz09IiwiaXZQYXJhbWV0ZXJTcGVjIjoicmtKaUVoM2pmUVdibVZuOSIsIm1hdGVyaWFsU2V0U2VyaWFsIjoxfQ%3D%3D) |
-| Amazon Linux (ALAMI) | x86_64 | [![](https://codebuild.us-west-2.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiWUNqeG9FcmUyQzVSaUkydFd6UkU5Sm42cTViSExXOFZURHRBQlM0dDJDOThMWEFYLzN4NitQR0w1ZzNKcjAwOVNUYXY5ZUljU1hzcEtrU0N0dEhUN0M0PSIsIml2UGFyYW1ldGVyU3BlYyI6ImtYU0ZjSzh3ekFKazlBVVUiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)](https://us-west-2.codebuild.aws.amazon.com/project/eyJlbmNyeXB0ZWREYXRhIjoiTEJJVVFIOXp6VjUvWExqODN1K1NPQmRTVm9iQy9ZK2tmKzkrbVdTNlh1LzV1UlpQL2lPN1Faak0yc0pOaGpEVlRpai9yS3JCRjBRQU5lMVFVU1hRU1hyekxpVi8yNWV0ZE44SElWdlRpNld4bmkwdE1oQjcxN0NtIiwiaXZQYXJhbWV0ZXJTcGVjIjoiZnBBUi9uOU8yVjJ4RENpRyIsIm1hdGVyaWFsU2V0U2VyaWFsIjoxfQ%3D%3D) |
-| Alpine | x86_64 | [![](https://codebuild.us-west-2.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiTkhhOEJGNjVOTG5NZWVNWDNjSGNEdWEwY0J2ZUNLMkE2aU83UVdYc3VMU0V5b1JqdXY0OXUxNkxYRDUxU0VJOTByL3NLUTE3djBMNWh2VldXdk0xamJZPSIsIml2UGFyYW1ldGVyU3BlYyI6ImQxSjc2Vnd3czF2QWphRS8iLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)](https://us-west-2.codebuild.aws.amazon.com/project/eyJlbmNyeXB0ZWREYXRhIjoiQzJVUzZML1dLTkpRNGcxSjVyUXVEd1BCY2poZUhydWZLeGE5MGU1c05vNDVObG44bnpKZFhlZVJKSm50ZnpaalRENUxxOHpPNGdPTDRlTGc4WW81UHd4L3hCeTgyTm5vRVR0RW5FempKdk00aDlPRk02WGQiLCJpdlBhcmFtZXRlclNwZWMiOiJUMFhCQktLMExQMXc3Q0lHIiwibWF0ZXJpYWxTZXRTZXJpYWwiOjF9) |
-| Arch Linux | x86_64 | [![](https://codebuild.us-west-2.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoib2cxaHp3bE5ndWhWR0RIRkxxQzRwR1dHa05DWmQ0bENnWGNHYzM2YmR3OFRHNWpPYStGYUM1WXBQVUNoZjJRa2xrZVpuRXVyWVVvQVNzNExqSlN5TGEwPSIsIml2UGFyYW1ldGVyU3BlYyI6Ii9zSjVybGNsNEJMUEZwSlUiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)](https://us-west-2.codebuild.aws.amazon.com/project/eyJlbmNyeXB0ZWREYXRhIjoiRWVOYlA5OHZqUVVLUTZLYlJzZmdOQkR5dmpVSTBPS1h1M3RxQkxXa3pyMC9OOUw5dDJlUDcyYm05Q3pBOEZ1aWJFYkFBajFGZ3RJWUM5WkpoZUE4K0IrdFIvYytyNVRYREpQTUNHL05vTXlLQ0E9PSIsIml2UGFyYW1ldGVyU3BlYyI6InFuS1hJY3JTaWpSWENLM1EiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D) |
-| Ubuntu 18.04 | x86_64 | [![](https://codebuild.us-west-2.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiVkhsbmdlYkk3M1JESVdiTHc0elpobXEvUk4wRWlBZUpEZzdmem1QbGJRZ3dMbVE2RWZpbHZjNmVCd0dJaUFSZ1pzQVlyZ1dvdndWTjZSRjg0WDRYRFh3PSIsIml2UGFyYW1ldGVyU3BlYyI6IjJic2dnR3ZpTEQyMmRPMXQiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)](https://us-west-2.codebuild.aws.amazon.com/project/eyJlbmNyeXB0ZWREYXRhIjoiSlNPak1vQmVBR3JnUlAwRWg2N3hHRHF1U2Z6RkQvY1NHRHM4RTJ0WEFBdjFTSzBzY21kZEpPMDk2QXdwRStUWUZmWWFmTkRkU1FGa0lQUGoxbU9GNU45QVJ1YVkzZkY0dmsxV2FRZVljakt3UmJpdTM2a0JnQT09IiwiaXZQYXJhbWV0ZXJTcGVjIjoieE5LSUlmNVN1UWdqbWg0cSIsIm1hdGVyaWFsU2V0U2VyaWFsIjoxfQ%3D%3D) |
+![Tests](https://github.com/awslabs/aws-lambda-cpp/actions/workflows/tests.yml/badge.svg)
+![Code Quality](https://github.com/awslabs/aws-lambda-cpp/actions/workflows/code-quality.yml/badge.svg)
 
 ## AWS Lambda C++ Runtime
 
@@ -162,6 +154,24 @@ You can update your supplied function:
 $ aws lambda update-function-code --function-name demo --zip-file fileb://demo.zip
 ```
 
+## Testing Locally with Docker
+
+You can test your Lambda function locally without deploying to AWS by using the [Lambda Runtime Interface Emulator (RIE)](https://github.com/aws/aws-lambda-runtime-interface-emulator/) Docker images.
+
+After building and packaging your function (see above), run:
+
+```bash
+$ unzip -d /tmp/lambda-package demo.zip
+$ docker run --rm -v /tmp/lambda-package:/var/task:ro -p 9000:8080 public.ecr.aws/lambda/provided:al2023 demo
+```
+
+Then invoke it from another terminal:
+```bash
+$ curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{"answer":42}'
+```
+
+> **N.B.** Use `public.ecr.aws/lambda/provided:al2023` for AL2023-based functions. For ARM64, use the equivalent `arm64` tag.
+
 ## Using the C++ SDK for AWS with this runtime
 This library is completely independent from the AWS C++ SDK. You should treat the AWS C++ SDK as just another dependency in your application.
 See [the examples section](https://github.com/awslabs/aws-lambda-cpp/tree/master/examples/) for a demo utilizing the AWS C++ SDK with this Lambda runtime.
@@ -239,9 +249,10 @@ curl_easy_setopt(curl_handle, CURLOPT_CAINFO, "/etc/pki/tls/certs/ca-bundle.crt"
      - If you are using the AWS C++ SDK, see [this FAQ](https://github.com/aws/aws-sdk-cpp/wiki#how-do-i-turn-on-logging) on how to adjust its logging verbosity
    - Run your code locally on an Amazon Linux AMI or Docker container to reproduce the problem
      - If you go the AMI route, [use the official one](https://docs.aws.amazon.com/lambda/latest/dg/current-supported-versions.html) recommended by AWS Lambda 
-     - If you go the Docker route, use the following command to launch a container running AL2017.03
-       `$ docker run -v /tmp:/tmp -it --security-opt seccomp=unconfined amazonlinux:2017.03`
+     - If you go the Docker route, use the following command to launch a container running Amazon Linux 2023
+       `$ docker run -v /tmp:/tmp -it --security-opt seccomp=unconfined amazonlinux:2023`
        The `security-opt` argument is necessary to run `gdb`, `strace`, etc.
+     - See the [Testing Locally with Docker](#testing-locally-with-docker) section above for running your function with the Lambda RIE.
 1. **CURL problem with the SSL CA cert**
    - Make sure you are using a `libcurl` version built with OpenSSL, or one of its flavors (BoringSSL, LibreSSL)
    - Make sure you tell `libcurl` where to find the CA bundle file.
