@@ -98,9 +98,11 @@ protected:
      * Instantiate an empty response.
      */
     runtime_response() = default;
+
 public:
-    /* Create a runtime response with the given payload, content type and xray response. This can be used for constructing an
-     * initialization error response. For invocation success and failure response, see invocation_response.
+    /* Create a runtime response with the given payload, content type and xray response. This can be used for
+     * constructing an initialization error response. For invocation success and failure response, see
+     * invocation_response.
      */
     runtime_response(std::string const& payload, std::string const& content_type, std::string const& xray_response)
         : m_payload(payload), m_content_type(content_type), m_xray_response(xray_response)
@@ -118,12 +120,12 @@ public:
     std::string const& get_content_type() const { return m_content_type; }
 
     /**
-    * Get the XRay response string. The string is assumed to be UTF-8 encoded.
-    */
+     * Get the XRay response string. The string is assumed to be UTF-8 encoded.
+     */
     std::string const& get_xray_response() const { return m_xray_response; }
 };
 
-class invocation_response: public runtime_response {
+class invocation_response : public runtime_response {
 private:
     /**
      * Flag to distinguish if the contents are for successful or unsuccessful invocations.
@@ -147,7 +149,11 @@ public:
     {
     }
 
-    invocation_response(std::string const& payload, std::string const& content_type, bool success, std::string const& xray_response)
+    invocation_response(
+        std::string const& payload,
+        std::string const& content_type,
+        bool success,
+        std::string const& xray_response)
         : runtime_response(payload, content_type, xray_response), m_success(success)
     {
     }
@@ -174,7 +180,8 @@ public:
     bool is_success() const { return m_success; }
 };
 
-struct no_result {};
+struct no_result {
+};
 
 class runtime {
 public:

@@ -338,19 +338,25 @@ runtime::next_outcome runtime::get_next()
 runtime::post_outcome runtime::post_success(std::string const& request_id, invocation_response const& handler_response)
 {
     std::string const url = m_endpoints[Endpoints::RESULT] + request_id + "/response";
-    return do_post(url, handler_response.get_content_type(), handler_response.get_payload(), handler_response.get_xray_response());
+    return do_post(
+        url, handler_response.get_content_type(), handler_response.get_payload(), handler_response.get_xray_response());
 }
 
 runtime::post_outcome runtime::post_failure(std::string const& request_id, invocation_response const& handler_response)
 {
     std::string const url = m_endpoints[Endpoints::RESULT] + request_id + "/error";
-    return do_post(url, handler_response.get_content_type(), handler_response.get_payload(), handler_response.get_xray_response());
+    return do_post(
+        url, handler_response.get_content_type(), handler_response.get_payload(), handler_response.get_xray_response());
 }
 
 runtime::post_outcome runtime::post_init_error(runtime_response const& init_error_response)
 {
     std::string const url = m_endpoints[Endpoints::INIT];
-    return do_post(url, init_error_response.get_content_type(), init_error_response.get_payload(), init_error_response.get_xray_response());
+    return do_post(
+        url,
+        init_error_response.get_content_type(),
+        init_error_response.get_payload(),
+        init_error_response.get_xray_response());
 }
 
 runtime::post_outcome runtime::do_post(

@@ -140,9 +140,7 @@ TEST(RuntimeResponseTest, large_payload)
 TEST(RuntimeResponseTest, can_be_used_for_init_error)
 {
     runtime_response init_err(
-        R"({"errorMessage":"module not found","errorType":"ImportError"})",
-        "application/json",
-        "xray-cause-data");
+        R"({"errorMessage":"module not found","errorType":"ImportError"})", "application/json", "xray-cause-data");
     EXPECT_EQ("application/json", init_err.get_content_type());
     EXPECT_NE(std::string::npos, init_err.get_payload().find("module not found"));
     EXPECT_EQ("xray-cause-data", init_err.get_xray_response());
