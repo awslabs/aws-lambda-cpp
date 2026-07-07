@@ -170,8 +170,6 @@ Then invoke it from another terminal:
 $ curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{"answer":42}'
 ```
 
-> **N.B.** Use `public.ecr.aws/lambda/provided:al2023` for AL2023-based functions. For ARM64, use the equivalent `arm64` tag.
-
 ## Using the C++ SDK for AWS with this runtime
 This library is completely independent from the AWS C++ SDK. You should treat the AWS C++ SDK as just another dependency in your application.
 See [the examples section](https://github.com/awslabs/aws-lambda-cpp/tree/master/examples/) for a demo utilizing the AWS C++ SDK with this Lambda runtime.
