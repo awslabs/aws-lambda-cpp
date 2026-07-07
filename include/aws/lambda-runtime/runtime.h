@@ -77,28 +77,58 @@ struct invocation_request {
     inline std::chrono::milliseconds get_time_remaining() const;
 };
 
-class invocation_response {
-private:
+class runtime_response {
+protected:
     /**
-     * The output of the function which is sent to the lambda caller.
+     * The response payload from the runtime.
      */
     std::string m_payload;
 
     /**
      * The MIME type of the payload.
-     * This is always set to 'application/json' in unsuccessful invocations.
      */
     std::string m_content_type;
-
-    /**
-     * Flag to distinguish if the contents are for successful or unsuccessful invocations.
-     */
-    bool m_success;
 
     /**
      * The serialized XRay response header.
      */
     std::string m_xray_response;
+
+    /**
+     * Instantiate an empty response.
+     */
+    runtime_response() = default;
+public:
+    /* Create a runtime response with the given payload, content type and xray response. This can be used for constructing an
+     * initialization error response. For invocation success and failure response, see invocation_response.
+     */
+    runtime_response(std::string const& payload, std::string const& content_type, std::string const& xray_response)
+        : m_payload(payload), m_content_type(content_type), m_xray_response(xray_response)
+    {
+    }
+
+    /**
+     * Get the payload string. The string is assumed to be UTF-8 encoded.
+     */
+    std::string const& get_payload() const { return m_payload; }
+
+    /**
+     * Get the MIME type of the payload.
+     */
+    std::string const& get_content_type() const { return m_content_type; }
+
+    /**
+    * Get the XRay response string. The string is assumed to be UTF-8 encoded.
+    */
+    std::string const& get_xray_response() const { return m_xray_response; }
+};
+
+class invocation_response: public runtime_response {
+private:
+    /**
+     * Flag to distinguish if the contents are for successful or unsuccessful invocations.
+     */
+    bool m_success;
 
     /**
      * Instantiate an empty response. Used by the static functions 'success' and 'failure' to create a populated
@@ -113,16 +143,12 @@ public:
     // constructor should be used instead.
     // Note: adding an overload to invocation_response::failure is not feasible since the parameter types are the same.
     invocation_response(std::string const& payload, std::string const& content_type, bool success)
-        : m_payload(payload), m_content_type(content_type), m_success(success)
+        : runtime_response(payload, content_type, ""), m_success(success)
     {
     }
 
-    invocation_response(
-        std::string const& payload,
-        std::string const& content_type,
-        bool success,
-        std::string const& xray_response)
-        : m_payload(payload), m_content_type(content_type), m_success(success), m_xray_response(xray_response)
+    invocation_response(std::string const& payload, std::string const& content_type, bool success, std::string const& xray_response)
+        : runtime_response(payload, content_type, xray_response), m_success(success)
     {
     }
 
@@ -143,24 +169,9 @@ public:
         std::string const& xray_response);
 
     /**
-     * Get the MIME type of the payload.
-     */
-    std::string const& get_content_type() const { return m_content_type; }
-
-    /**
-     * Get the payload string. The string is assumed to be UTF-8 encoded.
-     */
-    std::string const& get_payload() const { return m_payload; }
-
-    /**
      * Returns true if the payload and content-type are set. Returns false if the error message and error types are set.
      */
     bool is_success() const { return m_success; }
-
-    /**
-     * Get the XRay response string. The string isassumed to be UTF-8 encoded.
-     */
-    std::string const& get_xray_response() const { return m_xray_response; }
 };
 
 struct no_result {};
@@ -189,13 +200,19 @@ public:
      */
     post_outcome post_failure(std::string const& request_id, invocation_response const& handler_response);
 
+    /**
+     * Tells lambda that the runtime has failed during initialization.
+     */
+    post_outcome post_init_error(runtime_response const& init_error_response);
+
 private:
     void set_curl_next_options();
     static void set_curl_post_result_options();
     post_outcome do_post(
         std::string const& url,
-        std::string const& request_id,
-        invocation_response const& handler_response);
+        std::string const& content_type,
+        std::string const& payload,
+        std::string const& xray_response);
     std::string const m_user_agent_header;
     std::array<std::string const, 3> const m_endpoints;
 };

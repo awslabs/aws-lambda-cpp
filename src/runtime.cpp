@@ -338,40 +338,44 @@ runtime::next_outcome runtime::get_next()
 runtime::post_outcome runtime::post_success(std::string const& request_id, invocation_response const& handler_response)
 {
     std::string const url = m_endpoints[Endpoints::RESULT] + request_id + "/response";
-    return do_post(url, request_id, handler_response);
+    return do_post(url, handler_response.get_content_type(), handler_response.get_payload(), handler_response.get_xray_response());
 }
 
 runtime::post_outcome runtime::post_failure(std::string const& request_id, invocation_response const& handler_response)
 {
     std::string const url = m_endpoints[Endpoints::RESULT] + request_id + "/error";
-    return do_post(url, request_id, handler_response);
+    return do_post(url, handler_response.get_content_type(), handler_response.get_payload(), handler_response.get_xray_response());
+}
+
+runtime::post_outcome runtime::post_init_error(runtime_response const& init_error_response)
+{
+    std::string const url = m_endpoints[Endpoints::INIT];
+    return do_post(url, init_error_response.get_content_type(), init_error_response.get_payload(), init_error_response.get_xray_response());
 }
 
 runtime::post_outcome runtime::do_post(
     std::string const& url,
-    std::string const& request_id,
-    invocation_response const& handler_response)
+    std::string const& content_type,
+    std::string const& payload,
+    std::string const& xray_response)
 {
     set_curl_post_result_options();
     curl_easy_setopt(lambda_runtime::m_curl_handle, CURLOPT_URL, url.c_str());
     logging::log_info(LOG_TAG, "Making request to %s", url.c_str());
 
     curl_slist* headers = nullptr;
-    if (handler_response.get_content_type().empty()) {
+    if (content_type.empty()) {
         headers = curl_slist_append(headers, "content-type: text/html");
     }
     else {
-        headers = curl_slist_append(headers, ("content-type: " + handler_response.get_content_type()).c_str());
+        headers = curl_slist_append(headers, ("content-type: " + content_type).c_str());
     }
 
-    if (!handler_response.get_xray_response().empty()) {
-        headers = curl_slist_append(
-            headers, ("lambda-runtime-function-xray-error-cause: " + handler_response.get_xray_response()).c_str());
-    }
+    headers = curl_slist_append(headers, ("lambda-runtime-function-xray-error-cause: " + xray_response).c_str());
     headers = curl_slist_append(headers, "Expect:");
     headers = curl_slist_append(headers, "transfer-encoding:");
     headers = curl_slist_append(headers, m_user_agent_header.c_str());
-    auto const& payload = handler_response.get_payload();
+
     logging::log_debug(
         LOG_TAG, "calculating content length... %s", ("content-length: " + std::to_string(payload.length())).c_str());
     headers = curl_slist_append(headers, ("content-length: " + std::to_string(payload.length())).c_str());
@@ -388,10 +392,10 @@ runtime::post_outcome runtime::do_post(
     if (curl_code != CURLE_OK) {
         logging::log_debug(
             LOG_TAG,
-            "CURL returned error code %d - %s, for invocation %s",
+            "CURL returned error code %d - %s, when calling %s",
             curl_code,
             curl_easy_strerror(curl_code),
-            request_id.c_str());
+            url.c_str());
         return aws::http::response_code::REQUEST_NOT_MADE;
     }
 
@@ -400,7 +404,10 @@ runtime::post_outcome runtime::do_post(
 
     if (!is_success(aws::http::response_code(http_response_code))) {
         logging::log_error(
-            LOG_TAG, "Failed to post handler success response. Http response code: %ld.", http_response_code);
+            LOG_TAG,
+            "Failed to post handler success response. Http response code: %ld. %s",
+            http_response_code,
+            resp.get_body().c_str());
         return aws::http::response_code(http_response_code);
     }
 
