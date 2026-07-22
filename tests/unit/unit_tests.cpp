@@ -333,6 +333,7 @@ TEST(InvocationRequestTest, default_fields_are_empty)
     EXPECT_TRUE(req.cognito_identity.empty());
     EXPECT_TRUE(req.function_arn.empty());
     EXPECT_TRUE(req.tenant_id.empty());
+    EXPECT_TRUE(req.invocation_id.empty());
 }
 
 // --- version tests (no AWS SDK needed) ---
@@ -352,4 +353,12 @@ TEST(VersionTest, version_format)
             dots++;
     }
     EXPECT_EQ(2, dots);
+}
+
+// --- invocation_id cross-wiring protection tests ---
+
+TEST(InvocationRequestTest, invocation_id_default_empty)
+{
+    invocation_request req;
+    EXPECT_TRUE(req.invocation_id.empty());
 }

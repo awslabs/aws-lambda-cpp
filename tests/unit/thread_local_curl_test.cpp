@@ -60,3 +60,20 @@ TEST(ThreadLocalCurl, sequential_requests_on_same_runtime)
         ASSERT_FALSE(outcome.is_success());
     }
 }
+
+TEST(ThreadLocalCurl, post_success_with_invocation_id_does_not_crash)
+{
+    runtime rt("http://127.0.0.1:9001");
+    auto response = invocation_response::success("test payload", "application/json");
+    auto outcome = rt.post_success("test-request-id", response, "test-invocation-uuid-1234");
+    // Connection will fail but the invocation_id header path should not crash
+    ASSERT_FALSE(outcome.is_success());
+}
+
+TEST(ThreadLocalCurl, post_failure_with_invocation_id_does_not_crash)
+{
+    runtime rt("http://127.0.0.1:9001");
+    auto response = invocation_response::failure("error msg", "TestError", "");
+    auto outcome = rt.post_failure("test-request-id", response, "test-invocation-uuid-5678");
+    ASSERT_FALSE(outcome.is_success());
+}
