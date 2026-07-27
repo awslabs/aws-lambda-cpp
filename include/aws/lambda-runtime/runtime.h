@@ -72,6 +72,11 @@ struct invocation_request {
     std::string tenant_id;
 
     /**
+     * The unique invocation ID for cross-wiring protection.
+     */
+    std::string invocation_id;
+
+    /**
      * The number of milliseconds left before lambda terminates the current execution.
      */
     inline std::chrono::milliseconds get_time_remaining() const;
@@ -199,11 +204,21 @@ public:
     /**
      * Tells lambda that the function has succeeded.
      */
+    post_outcome post_success(
+        std::string const& request_id,
+        invocation_response const& handler_response,
+        std::string const& invocation_id);
+
     post_outcome post_success(std::string const& request_id, invocation_response const& handler_response);
 
     /**
      * Tells lambda that the function has failed.
      */
+    post_outcome post_failure(
+        std::string const& request_id,
+        invocation_response const& handler_response,
+        std::string const& invocation_id);
+
     post_outcome post_failure(std::string const& request_id, invocation_response const& handler_response);
 
     /**
@@ -218,7 +233,8 @@ private:
         std::string const& url,
         std::string const& content_type,
         std::string const& payload,
-        std::string const& xray_response);
+        std::string const& xray_response,
+        std::string const& invocation_id);
     std::string const m_user_agent_header;
     std::array<std::string const, 3> const m_endpoints;
 };
