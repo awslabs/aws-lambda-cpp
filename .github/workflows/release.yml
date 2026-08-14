@@ -46,11 +46,6 @@ jobs:
           CA_DOMAIN_OWNER: ${{ secrets.AWS_ACCOUNT_ID }}
           CA_REPO: pypi-store
         run: |
-          # The CodeBuild runners live in a VPC with no public egress, so the
-          # AL2023 repos (CloudFront) are unreachable and cmake/ninja aren't on
-          # the image. Install them from the in-VPC CodeArtifact PyPI proxy;
-          # gcc/g++/git are already present. `codeartifact login` configures pip
-          # and keeps the auth token out of the command line and logs.
           aws codeartifact login --tool pip \
             --domain "$CA_DOMAIN" --domain-owner "$CA_DOMAIN_OWNER" \
             --repository "$CA_REPO"
