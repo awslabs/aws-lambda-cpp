@@ -40,31 +40,24 @@ jobs:
             runner: codebuild-aws-lambda-cpp-test-trigger-arm64-${{ github.run_id }}-${{ github.run_attempt }}
 
     steps:
-      - name: Probe runner environment
+      - name: Install prerequisites
         env:
+          AWS_DEFAULT_REGION: eu-west-1
+          CA_DOMAIN: aws-lambda
           CA_DOMAIN_OWNER: ${{ secrets.AWS_ACCOUNT_ID }}
+          CA_REPO: pypi-store
         run: |
-          # TEMP DIAGNOSTIC: the CodeBuild runners have no public egress, so
-          # figure out exactly what is already available before committing to an
-          # install strategy. Prints tool availability and whether the service
-          # role can reach CodeArtifact. Never prints the auth token.
-          echo "=== tools on PATH ==="
-          for b in cmake ninja ninja-build gcc g++ python3 pip3 pip aws; do
-            printf '%-12s ' "$b"; command -v "$b" || echo "(absent)"
-          done
-          echo "=== versions (if present) ==="
-          cmake --version 2>/dev/null | head -1 || true
-          ninja --version 2>/dev/null || true
-          python3 -m pip --version 2>/dev/null || echo "python3 -m pip: unavailable"
-          python3 -m ensurepip --version 2>/dev/null || echo "ensurepip: unavailable"
-          echo "=== CodeArtifact reachability (service role) ==="
-          if aws codeartifact get-authorization-token \
-               --region eu-west-1 --domain aws-lambda --domain-owner "$CA_DOMAIN_OWNER" \
-               --query authorizationToken --output text >/dev/null 2>&1; then
-            echo "CodeArtifact auth: OK"
-          else
-            echo "CodeArtifact auth: FAILED"
-          fi
+          # The CodeBuild runners live in a VPC with no public egress, so the
+          # AL2023 repos (CloudFront) are unreachable and cmake/ninja aren't on
+          # the image. Install them from the in-VPC CodeArtifact PyPI proxy;
+          # gcc/g++/git are already present. `codeartifact login` configures pip
+          # and keeps the auth token out of the command line and logs.
+          aws codeartifact login --tool pip \
+            --domain "$CA_DOMAIN" --domain-owner "$CA_DOMAIN_OWNER" \
+            --repository "$CA_REPO"
+          pip install cmake ninja
+          cmake --version
+          ninja --version
 
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
