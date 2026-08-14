@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.9)
 set(CMAKE_CXX_STANDARD 11)
+set(AWS_LAMBDA_CPP_VERSION "0.0.0" CACHE STRING
+    "Library version, injected at release time from the git tag.")
 project(aws-lambda-runtime
-    VERSION 0.0.0
+    VERSION ${AWS_LAMBDA_CPP_VERSION}
     LANGUAGES CXX)
 
 option(ENABLE_LTO "Enables link-time optimization, requires compiler support." OFF)

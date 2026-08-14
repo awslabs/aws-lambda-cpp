@@ -1,7 +1,9 @@
 name: Release
 
 on:
-  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
 
 permissions:
   contents: read
@@ -58,10 +60,13 @@ jobs:
           ref: ${{ github.ref_name }}
 
       - name: Build in Release mode
+        env:
+          TAG: ${{ github.ref_name }}
         run: |
           cmake -B build -GNinja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DENABLE_TESTS=ON
+            -DENABLE_TESTS=ON \
+            -DAWS_LAMBDA_CPP_VERSION="${TAG#v}"
           cmake --build build
 
       - name: Run unit tests
