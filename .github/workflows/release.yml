@@ -41,7 +41,22 @@ jobs:
 
     steps:
       - name: Install prerequisites
-        run: dnf install -y tar gzip git cmake ninja-build gcc-c++ openssl-devel libcurl-devel
+        run: |
+          # The CodeBuild runners live in a VPC with no public egress, so the
+          # default cdn.amazonlinux.com mirrorlist (and the image's Corretto /
+          # gh-cli / mono repos) can't be reached. Point dnf at the regional
+          # AL2023 repo bucket, which is reachable via the VPC's S3 gateway
+          # endpoint, and disable everything else.
+          cat > /etc/yum.repos.d/al2023-s3.repo <<'EOF'
+          [al2023-s3]
+          name=AL2023 core via S3 gateway endpoint
+          mirrorlist=https://al2023-repos-eu-west-1.s3.dualstack.eu-west-1.amazonaws.com/core/mirrors/$releasever/$basearch/mirror.list
+          gpgcheck=1
+          gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-linux-2023
+          enabled=1
+          EOF
+          dnf --disablerepo='*' --enablerepo='al2023-s3' install -y \
+            tar gzip git cmake ninja-build gcc-c++ openssl-devel libcurl-devel
 
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
