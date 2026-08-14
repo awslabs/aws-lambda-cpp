@@ -156,3 +156,27 @@ jobs:
           gh release upload "$TAG" \
             --repo "$GITHUB_REPOSITORY" \
             artifacts/*
+
+  smoke-test:
+    needs: upload
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: OCI + RIE smoke test against the published artifact
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ci/integ/run-oci-smoke.sh "${{ matrix.arch }}" "${{ github.ref_name }}"
