@@ -103,52 +103,41 @@ jobs:
           role-to-assume: ${{ secrets.AWS_GPG_SIGNING_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Import GPG key from Secrets Manager
+      - name: Sign artifacts and generate checksums
         env:
           GPG_SECRET_ID: lambda-runtimes/cpp/gpg-signing-key
         run: |
-          # Isolate the keyring to the runner's workspace so nothing leaks into
-          # the default ~/.gnupg, and keep the key material off disk entirely:
-          # Secrets Manager streams it straight into gpg --import via stdin.
           GNUPGHOME="$(mktemp -d)"
           chmod 700 "$GNUPGHOME"
-          echo "GNUPGHOME=$GNUPGHOME" >> "$GITHUB_ENV"
+          export GNUPGHOME
+          trap 'gpgconf --kill all >/dev/null 2>&1 || true; rm -rf "$GNUPGHOME"' EXIT
 
           aws secretsmanager get-secret-value \
             --secret-id "$GPG_SECRET_ID" \
             --query SecretString \
             --output text \
-            | gpg --batch --homedir "$GNUPGHOME" --import
+            | gpg --batch --import
 
-          # Resolve the fingerprint rather than relying on gpg's default key
-          # selection, so signing fails loudly if the import went wrong.
-          FPR="$(gpg --homedir "$GNUPGHOME" --with-colons --list-secret-keys \
+          FPR="$(gpg --with-colons --list-secret-keys \
             | awk -F: '/^fpr:/ {print $10; exit}')"
           if [ -z "$FPR" ]; then
             echo "No secret key imported from $GPG_SECRET_ID" >&2
             exit 1
           fi
-          echo "GPG_FINGERPRINT=$FPR" >> "$GITHUB_ENV"
-          echo "Imported signing key $FPR"
 
-      - name: Sign artifacts and generate checksums
-        run: |
           cd artifacts
 
           # Sign each artifact
           for file in *.a; do
-            gpg --batch --yes --local-user "$GPG_FINGERPRINT" \
+            gpg --batch --yes --local-user "$FPR" \
               --armor --detach-sign "$file"
           done
 
           # Generate checksums file and sign it
           sha256sum ./*.a > SHA256SUMS
-          gpg --batch --yes --local-user "$GPG_FINGERPRINT" \
+          gpg --batch --yes --local-user "$FPR" \
             --armor --detach-sign SHA256SUMS
 
-      - name: Verify signatures
-        run: |
-          cd artifacts
           gpg --batch --verify SHA256SUMS.asc SHA256SUMS
           for file in *.a; do
             gpg --batch --verify "$file.asc" "$file"
@@ -162,11 +151,3 @@ jobs:
           gh release upload "$TAG" \
             --repo "$GITHUB_REPOSITORY" \
             artifacts/*
-
-      - name: Destroy imported key material
-        if: always()
-        run: |
-          if [ -n "${GNUPGHOME:-}" ] && [ -d "$GNUPGHOME" ]; then
-            gpgconf --homedir "$GNUPGHOME" --kill all || true
-            rm -rf "$GNUPGHOME"
-          fi
