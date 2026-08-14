@@ -1,8 +1,7 @@
 name: Release
 
 on:
-  push:
-    branches: [maxday/test-release]
+  workflow_dispatch:
 
 permissions:
   contents: read
