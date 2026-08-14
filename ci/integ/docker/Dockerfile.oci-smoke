@@ -1,0 +1,20 @@
+# Post-release OCI smoke test image.
+#
+# This links a dummy handler against the PREBUILT static library downloaded
+# from the release (context file `runtime.a`), the point is we do NOT rebuild the runtime
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023 AS builder
+
+RUN dnf install -y gcc-c++ libcurl-devel && dnf clean all
+
+WORKDIR /build
+COPY include/ include/
+COPY runtime.a runtime.a
+COPY main.cpp main.cpp
+
+RUN g++ -std=c++11 -O2 -Iinclude main.cpp runtime.a -lcurl -pthread -o bootstrap
+
+FROM public.ecr.aws/lambda/provided:al2023
+
+COPY --from=builder /build/bootstrap ${LAMBDA_RUNTIME_DIR}/bootstrap
+
+CMD [ "function.handler" ]
