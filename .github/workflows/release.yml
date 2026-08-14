@@ -30,7 +30,6 @@ jobs:
     needs: create-release
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 15
-    container: public.ecr.aws/amazonlinux/amazonlinux:2023
     strategy:
       fail-fast: false
       matrix:
