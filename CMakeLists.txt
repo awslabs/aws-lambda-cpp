@@ -19,7 +19,11 @@ add_library(${PROJECT_NAME}
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     SOVERSION 0
-    VERSION ${PROJECT_VERSION}-dev)
+    VERSION ${PROJECT_VERSION}-dev
+    # Emit position-independent code so the static archive can be linked into a
+    # shared object (e.g. the Java runtime interface client's JNI .so).
+    # PIC links fine into executables too, so this is safe for all consumers.
+    POSITION_INDEPENDENT_CODE ON)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
