@@ -13,6 +13,13 @@ COPY main.cpp main.cpp
 
 RUN g++ -std=c++11 -O2 -Iinclude main.cpp runtime.a -lcurl -pthread -o bootstrap
 
+# Position-independence guard. The link above only proves the archive works in a
+# position-dependent executable; it stays green even for a non-PIC build. But
+# downstream consumers embed this .a in a shared object -- e.g. the Java runtime
+# interface client's JNI .so
+RUN g++ -shared -Wl,--whole-archive runtime.a -Wl,--no-whole-archive \
+        -lcurl -pthread -o /build/libaws-lambda-runtime-pic-check.so
+
 FROM public.ecr.aws/lambda/provided:al2023
 
 COPY --from=builder /build/bootstrap ${LAMBDA_RUNTIME_DIR}/bootstrap
