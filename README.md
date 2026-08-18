@@ -170,6 +170,37 @@ Then invoke it from another terminal:
 $ curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{"answer":42}'
 ```
 
+## Verifying Release Artifacts
+
+The prebuilt static libraries attached to each [GitHub release](https://github.com/awslabs/aws-lambda-cpp/releases) are signed with GPG so you can verify their authenticity and integrity before use.
+
+The public half of the signing key is published in this repository as [`signing-public-key.asc`](signing-public-key.asc). Its fingerprint is:
+
+```
+4A25 1DDC 40B2 8DF1 5295  07B9 B24A 651A CB13 2CBA
+```
+
+### Steps
+
+1. Import the public key and confirm the fingerprint matches the value above:
+   ```bash
+   $ gpg --import signing-public-key.asc
+   $ gpg --fingerprint B24A651ACB132CBA
+   ```
+
+2. Download the artifacts you want along with `SHA256SUMS` and `SHA256SUMS.asc` from the release page.
+
+3. Verify the checksums file was signed by the key, then check the artifacts against it:
+   ```bash
+   $ gpg --verify SHA256SUMS.asc SHA256SUMS
+   $ sha256sum --check --ignore-missing SHA256SUMS
+   ```
+
+Alternatively, verify an individual library directly against its detached signature:
+```bash
+$ gpg --verify libaws-lambda-runtime-x86_64.a.asc libaws-lambda-runtime-x86_64.a
+```
+
 ## Using the C++ SDK for AWS with this runtime
 This library is completely independent from the AWS C++ SDK. You should treat the AWS C++ SDK as just another dependency in your application.
 See [the examples section](https://github.com/awslabs/aws-lambda-cpp/tree/master/examples/) for a demo utilizing the AWS C++ SDK with this Lambda runtime.
