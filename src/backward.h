@@ -28,10 +28,6 @@
 #    error "It's not going to compile without a C++ compiler..."
 #endif
 
-#ifdef no_backtrace
-#   pragma message "Disabling stacktracing"
-#else
-
 #if defined(BACKWARD_CXX11)
 #elif defined(BACKWARD_CXX98)
 #else
@@ -4542,7 +4538,5 @@ public:
 #endif // BACKWARD_SYSTEM_UNKNOWN
 
 } // namespace backward
-
-#endif /* no_backtrace */
 
 #endif /* H_GUARD */
