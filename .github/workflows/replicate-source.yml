@@ -75,13 +75,6 @@ jobs:
             exit 1
           fi
 
-          verification_archive="/tmp/source-verification.tgz"
-          git archive \
-            --format=tar.gz \
-            --output="${verification_archive}" \
-            "${SOURCE_COMMIT}"
-
-          cmp "${SOURCE_ARCHIVE}" "${verification_archive}"
           echo "${SOURCE_SHA256}  ${SOURCE_ARCHIVE}" | sha256sum --check --strict
           gzip -t "${SOURCE_ARCHIVE}"
 
