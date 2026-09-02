@@ -180,3 +180,103 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ci/integ/run-oci-smoke.sh "${{ matrix.arch }}" "${{ github.ref_name }}"
+
+  replicate:
+    needs: smoke-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: replication
+    permissions:
+      id-token: write
+      contents: read
+    concurrency:
+      group: repository-replication
+      cancel-in-progress: false
+
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
+        with:
+          role-to-assume: ${{ secrets.REPLICATION_ROLE_ARN }}
+          aws-region: us-west-2
+          role-session-name: release-replication-${{ github.run_id }}
+
+      - name: Upload immutable release artifacts
+        env:
+          REPLICATION_BUCKET_NAME: ${{ secrets.REPLICATION_BUCKET_NAME }}
+        run: |
+          set -euo pipefail
+          : > /tmp/replication-manifest.tsv
+
+          for artifact in artifacts/*; do
+            if [[ ! -f "${artifact}" ]]; then
+              continue
+            fi
+
+            artifact_key="releases/${GITHUB_REF_NAME}/$(basename "${artifact}")"
+            artifact_sha256="$(sha256sum "${artifact}" | awk '{print $1}')"
+            version_id="$(aws s3api put-object \
+              --bucket "${REPLICATION_BUCKET_NAME}" \
+              --key "${artifact_key}" \
+              --body "${artifact}" \
+              --checksum-algorithm SHA256 \
+              --metadata "source-commit=${GITHUB_SHA},sha256=${artifact_sha256}" \
+              --query VersionId \
+              --output text)"
+
+            if [[ -z "${version_id}" || "${version_id}" == "None" || "${version_id}" == "null" ]]; then
+              echo "The upload did not return an S3 object version." >&2
+              exit 1
+            fi
+
+            printf '%s\t%s\n' "${artifact_key}" "${version_id}" >> /tmp/replication-manifest.tsv
+          done
+
+          if [[ ! -s /tmp/replication-manifest.tsv ]]; then
+            echo "No release artifacts were uploaded." >&2
+            exit 1
+          fi
+
+      - name: Replicate release artifacts
+        env:
+          REPLICATION_FUNCTION_ARN: ${{ secrets.REPLICATION_FUNCTION_ARN }}
+          REPLICATION_REQUEST_CONFIG: ${{ secrets.REPLICATION_REQUEST_CONFIG }}
+        run: |
+          set -euo pipefail
+
+          while IFS=$'\t' read -r artifact_key version_id; do
+            jq -n \
+              --argjson config "${REPLICATION_REQUEST_CONFIG}" \
+              --arg source_path "${artifact_key}" \
+              --arg source_version "${version_id}" \
+              --arg repository "${GITHUB_REPOSITORY}" \
+              --arg commit "${GITHUB_SHA}" \
+              '$config + {
+                s3FilePath: $source_path,
+                s3ObjectVersion: $source_version,
+                gitHubRepo: $repository,
+                gitHubCommit: $commit,
+                extractArchive: false
+              }' > /tmp/replication-request.json
+
+            function_error="$(aws lambda invoke \
+              --function-name "${REPLICATION_FUNCTION_ARN}" \
+              --cli-binary-format raw-in-base64-out \
+              --payload file:///tmp/replication-request.json \
+              --query FunctionError \
+              --output text \
+              /tmp/replication-response.json)"
+
+            if [[ "${function_error}" != "None" ]]; then
+              echo "Replication failed; inspect the function logs for details." >&2
+              exit 1
+            fi
+
+            printf 'Replicated %s successfully.\n' "${artifact_key}"
+          done < /tmp/replication-manifest.tsv

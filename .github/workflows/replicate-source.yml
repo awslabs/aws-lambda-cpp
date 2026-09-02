@@ -1,0 +1,128 @@
+name: Replicate source
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Avoid the start of the hour, when scheduled Actions experience higher load.
+    - cron: '17 * * * *'
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: repository-replication
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-west-2
+
+jobs:
+  replicate:
+    name: Replicate source snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: replication
+
+    steps:
+      - name: Check out master
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: master
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Create immutable source snapshot
+        id: snapshot
+        run: |
+          set -euo pipefail
+
+          commit="$(git rev-parse HEAD)"
+          archive="/tmp/aws-lambda-cpp-${commit}.tgz"
+          object_key="source/${commit}.tgz"
+
+          git archive \
+            --format=tar.gz \
+            --output="${archive}" \
+            "${commit}"
+
+          gzip -t "${archive}"
+          tar -tzf "${archive}" >/dev/null
+          archive_sha256="$(sha256sum "${archive}" | awk '{print $1}')"
+
+          echo "archive=${archive}" >> "${GITHUB_OUTPUT}"
+          echo "commit=${commit}" >> "${GITHUB_OUTPUT}"
+          echo "object_key=${object_key}" >> "${GITHUB_OUTPUT}"
+          echo "sha256=${archive_sha256}" >> "${GITHUB_OUTPUT}"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
+        with:
+          role-to-assume: ${{ secrets.REPLICATION_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: repository-replication-${{ github.run_id }}
+
+      - name: Upload source snapshot
+        id: upload
+        env:
+          REPLICATION_BUCKET_NAME: ${{ secrets.REPLICATION_BUCKET_NAME }}
+          SOURCE_ARCHIVE: ${{ steps.snapshot.outputs.archive }}
+          SOURCE_COMMIT: ${{ steps.snapshot.outputs.commit }}
+          SOURCE_KEY: ${{ steps.snapshot.outputs.object_key }}
+          SOURCE_SHA256: ${{ steps.snapshot.outputs.sha256 }}
+        run: |
+          set -euo pipefail
+
+          version_id="$(aws s3api put-object \
+            --bucket "${REPLICATION_BUCKET_NAME}" \
+            --key "${SOURCE_KEY}" \
+            --body "${SOURCE_ARCHIVE}" \
+            --checksum-algorithm SHA256 \
+            --metadata "source-commit=${SOURCE_COMMIT},sha256=${SOURCE_SHA256}" \
+            --query VersionId \
+            --output text)"
+
+          if [[ -z "${version_id}" || "${version_id}" == "None" || "${version_id}" == "null" ]]; then
+            echo "The upload did not return an S3 object version." >&2
+            exit 1
+          fi
+
+          echo "version_id=${version_id}" >> "${GITHUB_OUTPUT}"
+
+      - name: Replicate source snapshot
+        env:
+          REPLICATION_FUNCTION_ARN: ${{ secrets.REPLICATION_FUNCTION_ARN }}
+          REPLICATION_REQUEST_CONFIG: ${{ secrets.REPLICATION_REQUEST_CONFIG }}
+          SOURCE_COMMIT: ${{ steps.snapshot.outputs.commit }}
+          SOURCE_KEY: ${{ steps.snapshot.outputs.object_key }}
+          SOURCE_VERSION_ID: ${{ steps.upload.outputs.version_id }}
+        run: |
+          set -euo pipefail
+
+          jq -e \
+            --arg source_path "${SOURCE_KEY}" \
+            --arg source_version "${SOURCE_VERSION_ID}" \
+            --arg repository "${GITHUB_REPOSITORY}" \
+            --arg commit "${SOURCE_COMMIT}" \
+            '. + {
+              s3FilePath: $source_path,
+              s3ObjectVersion: $source_version,
+              gitHubRepo: $repository,
+              gitHubCommit: $commit,
+              extractArchive: true
+            }' <<< "${REPLICATION_REQUEST_CONFIG}" > /tmp/replication-request.json
+
+          function_error="$(aws lambda invoke \
+            --function-name "${REPLICATION_FUNCTION_ARN}" \
+            --cli-binary-format raw-in-base64-out \
+            --payload file:///tmp/replication-request.json \
+            --query FunctionError \
+            --output text \
+            /tmp/replication-response.json)"
+
+          if [[ "${function_error}" != "None" ]]; then
+            echo "Replication failed; inspect the function logs for details." >&2
+            exit 1
+          fi
+
+          echo "Source snapshot replicated successfully."
