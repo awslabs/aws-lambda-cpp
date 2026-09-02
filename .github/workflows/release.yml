@@ -183,7 +183,7 @@ jobs:
 
   replicate:
     needs: smoke-test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     environment: replication
     permissions:
@@ -194,11 +194,71 @@ jobs:
       cancel-in-progress: false
 
     steps:
-      - name: Download release artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - name: Check out release signing key
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          path: artifacts
-          merge-multiple: true
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: signing-public-key.asc
+          sparse-checkout-cone-mode: false
+
+      - name: Download published release artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          mkdir artifacts
+          gh release download "${TAG}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --dir artifacts
+
+      - name: Verify release artifact integrity
+        run: |
+          set -euo pipefail
+
+          expected_artifacts=(
+            libaws-lambda-runtime-x86_64.a
+            libaws-lambda-runtime-aarch64.a
+            SHA256SUMS
+            SHA256SUMS.asc
+          )
+          for artifact in "${expected_artifacts[@]}"; do
+            if [[ ! -f "artifacts/${artifact}" ]]; then
+              echo "Missing release artifact: ${artifact}" >&2
+              exit 1
+            fi
+          done
+
+          GNUPGHOME="$(mktemp -d)"
+          chmod 700 "${GNUPGHOME}"
+          export GNUPGHOME
+          trap 'gpgconf --kill all >/dev/null 2>&1 || true; rm -rf "${GNUPGHOME}"' EXIT
+
+          expected_fingerprint="4A251DDC40B28DF1529507B9B24A651ACB132CBA"
+          actual_fingerprint="$(gpg --batch --with-colons --show-keys signing-public-key.asc \
+            | awk -F: '$1 == "fpr" { print $10; exit }')"
+          if [[ "${actual_fingerprint}" != "${expected_fingerprint}" ]]; then
+            echo "The release signing key fingerprint does not match the trusted fingerprint." >&2
+            exit 1
+          fi
+
+          gpg --batch --import signing-public-key.asc
+          gpg --batch --verify artifacts/SHA256SUMS.asc artifacts/SHA256SUMS
+
+          (
+            cd artifacts
+            sha256sum --check --strict SHA256SUMS
+          )
+
+          for artifact in artifacts/*.a; do
+            if [[ ! -f "${artifact}.asc" ]]; then
+              echo "Missing detached signature for $(basename "${artifact}")." >&2
+              exit 1
+            fi
+            gpg --batch --verify "${artifact}.asc" "${artifact}"
+          done
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
@@ -206,6 +266,7 @@ jobs:
           role-to-assume: ${{ secrets.REPLICATION_ROLE_ARN }}
           aws-region: us-west-2
           role-session-name: release-replication-${{ github.run_id }}
+          mask-aws-account-id: true
 
       - name: Upload immutable release artifacts
         env:

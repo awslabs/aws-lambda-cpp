@@ -20,15 +20,16 @@ env:
 jobs:
   replicate:
     name: Replicate source snapshot
-    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment: replication
 
     steps:
-      - name: Check out master
+      - name: Check out triggering commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: master
+          ref: ${{ github.sha }}
           fetch-depth: 1
           persist-credentials: false
 
@@ -55,12 +56,49 @@ jobs:
           echo "object_key=${object_key}" >> "${GITHUB_OUTPUT}"
           echo "sha256=${archive_sha256}" >> "${GITHUB_OUTPUT}"
 
+      - name: Verify source snapshot integrity
+        env:
+          SOURCE_ARCHIVE: ${{ steps.snapshot.outputs.archive }}
+          SOURCE_COMMIT: ${{ steps.snapshot.outputs.commit }}
+          SOURCE_SHA256: ${{ steps.snapshot.outputs.sha256 }}
+          TRIGGER_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          if [[ "${SOURCE_COMMIT}" != "${TRIGGER_COMMIT}" ]]; then
+            echo "The snapshot commit does not match the triggering commit." >&2
+            exit 1
+          fi
+
+          if [[ "${SOURCE_COMMIT}" != "$(git rev-parse HEAD)" ]]; then
+            echo "The snapshot commit does not match the checked-out commit." >&2
+            exit 1
+          fi
+
+          verification_archive="/tmp/source-verification.tgz"
+          git archive \
+            --format=tar.gz \
+            --output="${verification_archive}" \
+            "${SOURCE_COMMIT}"
+
+          cmp "${SOURCE_ARCHIVE}" "${verification_archive}"
+          echo "${SOURCE_SHA256}  ${SOURCE_ARCHIVE}" | sha256sum --check --strict
+          gzip -t "${SOURCE_ARCHIVE}"
+
+          while IFS= read -r archive_path; do
+            if [[ "/${archive_path}/" == *"/.git/"* ]]; then
+              echo "The snapshot unexpectedly contains Git metadata." >&2
+              exit 1
+            fi
+          done < <(tar -tzf "${SOURCE_ARCHIVE}")
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
         with:
           role-to-assume: ${{ secrets.REPLICATION_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: repository-replication-${{ github.run_id }}
+          mask-aws-account-id: true
 
       - name: Upload source snapshot
         id: upload
