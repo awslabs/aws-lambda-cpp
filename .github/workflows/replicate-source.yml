@@ -40,7 +40,7 @@ jobs:
 
           commit="$(git rev-parse HEAD)"
           archive="/tmp/aws-lambda-cpp-${commit}.tgz"
-          object_key="source/${commit}.tgz"
+          object_key="aws-lambda-cpp/source/${commit}.tgz"
 
           git archive \
             --format=tar.gz \
